@@ -11,7 +11,7 @@
         name="viewport"
         content="width=device-width, initial-scale=1, maximum-scale=1"
       />
-      <title> WXR</title>
+      <title>自然语言处理 |  WXR</title>
   <meta name="generator" content="hexo-theme-ayer">
       
       <link rel="shortcut icon" href="/favicon.ico" />
@@ -51,231 +51,60 @@
     
       
     <main class="content on">
-      
-<section class="cover">
-    
-  <div class="cover-frame">
-    <div class="bg-box">
-      <img src="/images/cover3.jpg" alt="image frame" />
-    </div>
-    <div class="cover-inner text-center text-white">
-      <h1><a href="/">WXR</a></h1>
-      <div id="subtitle-box">
-        
-        <span id="subtitle"></span>
-        
-      </div>
-      <div>
-        
-      </div>
-    </div>
-  </div>
-  <div class="cover-learn-more">
-    <a href="javascript:void(0)" class="anchor"><i class="ri-arrow-down-line"></i></a>
-  </div>
-</section>
-
-
-
-<script src="https://cdn.staticfile.org/typed.js/2.0.12/typed.min.js"></script>
-
-
-<!-- Subtitle -->
-
-  <script>
-    try {
-      var typed = new Typed("#subtitle", {
-        strings: ['人生若只如初见，何事秋风悲画扇', '等闲变却故人心，却道故人心易变', '想要的都拥有，得不到的都释怀'],
-        startDelay: 0,
-        typeSpeed: 200,
-        loop: true,
-        backSpeed: 100,
-        showCursor: true
-      });
-    } catch (err) {
-      console.log(err)
-    }
-  </script>
+      <section class="outer">
   
-<div id="main">
-  <section class="outer">
-  
-  
-  
-
-<div class="notice" style="margin-top:50px">
-    <i class="ri-heart-fill"></i>
-    <div class="notice-content" id="broad"></div>
-</div>
-<script type="text/javascript">
-    fetch('https://v1.hitokoto.cn')
-        .then(response => response.json())
-        .then(data => {
-            document.getElementById("broad").innerHTML = data.hitokoto;
-        })
-        .catch(console.error)
-</script>
-
-<style>
-    .notice {
-        padding: 20px;
-        border: 1px dashed #e6e6e6;
-        color: #969696;
-        position: relative;
-        display: inline-block;
-        width: 100%;
-        background: #fbfbfb50;
-        border-radius: 10px;
-    }
-
-    .notice i {
-        float: left;
-        color: #999;
-        font-size: 16px;
-        padding-right: 10px;
-        vertical-align: middle;
-        margin-top: -2px;
-    }
-
-    .notice-content {
-        display: initial;
-        vertical-align: middle;
-    }
-</style>
   
   <article class="articles">
     
     
+    <h1 class="page-type-title">自然语言处理</h1>
     
     
-    <article
-  id="post-Word2Vec"
-  class="article article-type-post"
-  itemscope
-  itemprop="blogPost"
-  data-scroll-reveal
->
-  <div class="article-inner">
-    
-    <header class="article-header">
+  
+  
+  
+  
+  
+  
+  <div class="archives-wrap">
+    <div class="archive-year-wrap">
+      <a href="/archives/2022" class="archive-year">2022</a>
+    </div>
+    <div class="archives">
+      
+      <article class="archive-article archive-type-post">
+  <div class="archive-article-inner">
+    <header class="archive-article-header">
+      <a href="/2022/08/28/Word2Vec/" class="archive-article-date">
+  <time datetime="2022-08-28T03:21:24.308Z" itemprop="datePublished">08/28</time>
+</a>
        
 <h2 itemprop="name">
-  <a class="article-title" href="/2022/08/28/Word2Vec/"
+  <a class="archive-article-title" href="/2022/08/28/Word2Vec/"
     >Word2Vec</a> 
 </h2>
  
 
-      
     </header>
-     
-    <div class="article-meta">
-      <a href="/2022/08/28/Word2Vec/" class="article-date">
-  <time datetime="2022-08-28T03:21:24.308Z" itemprop="datePublished">2022-08-28</time>
-</a> 
+    
+      
   <div class="article-category">
     <a class="article-category-link" href="/categories/%E8%87%AA%E7%84%B6%E8%AF%AD%E8%A8%80%E5%A4%84%E7%90%86/">自然语言处理</a>
   </div>
-   
-    </div>
-      
-    <div class="article-entry" itemprop="articleBody">
-       
-  <h3 id="什么是Word2Vec"><a href="#什么是Word2Vec" class="headerlink" title="什么是Word2Vec?"></a>什么是Word2Vec?</h3><p>Word2Vec模型实际上分了两个部分，第一部分建立模型，第二部分通过模型获取嵌入词向量。<br>Word2Vec的整个建模过程实际上与自编码器的思想很相似。</p>
-<blockquote>
-<p>先基于训练数据构建神经网络。当模型训练好以后，我们并不会使用这个训练好的模型处理新的任务，我们需要的是通过训练数据学习得到的参数，例如隐层的权重矩阵。</p>
-</blockquote>
-<p>Word2Vec的训练模型本质上是只具有一个隐含层的神经元网络，从大量文本语料中以无监督的方式学习语义知识。<br><img src="/pictures/Word2Vec/img1.jpg.png" alt="Word2Vec单层网络结构"></p>
-<blockquote>
-<ul>
-<li>输入是One-Hot向量，Hidden Layer的激活函数是线性。Output Layer维度和Input Layer维度相同，用的是Softmax回归；</li>
-<li>训练Word2Vec需要用到反向传播算法，本质是链式求导；</li>
-<li>我们并不关心模型训练任务，我们真正需要的是这个模型通过学习得到的参数，即隐层的权重矩阵；</li>
-<li>Word2Vec本质是一种降维操作。</li>
-</ul>
-</blockquote>
-<p>Word2Vec其实就是通过学习文本来用词向量的方式表征词的语义信息，即通过一个嵌入空间是的语义相似的单词在该空间内距离很近。<br><strong>Embedding</strong> 其实就是一个映射，将单词从原先所属的空间映射到新的多维空间中。通过对词汇表中单词进行这种数值表示方式的学习，能够进行 <em><strong>向量化</strong></em> 的操作。  </p>
-<h3 id="模型结构"><a href="#模型结构" class="headerlink" title="模型结构"></a>模型结构</h3><p>Word2Vec模型中，主要有两种结构：</p>
-<blockquote>
-<ul>
-<li><strong>CBOW模型</strong> ：训练输入是某一个特征词的上下文相关的词对应的词向量，而输出就是这特定的一个词的词向量；  </li>
-<li><strong>Skip-gram模型</strong> ：输入是特定的一个词的词向量，而输出是特定词对应的上下文词向量；</li>
-</ul>
-</blockquote>
-<p><img src="/pictures/Word2Vec/img2.png" alt="Word2Vec网络结构"></p>
-<h4 id="Skip-gram"><a href="#Skip-gram" class="headerlink" title="Skip-gram"></a>Skip-gram</h4><p>Skip-gram模型，通过中间词预测上下文。</p>
-<ul>
-<li>首先，选择句子中的一个词作为中心词；</li>
-<li>定义skip_window参数，限制从中心词左右可以选词的范围；</li>
-<li>神经网络基于这些训练数据将会输出一个概率分布，这个概率代表词典中每个词是上下文的可能性。</li>
-</ul>
-<p>训练样本的构成是通过选择输入词前后skip_window范围内的词语与输入词进行组合。下图中，蓝色代表input word，方框内代表位于窗口内的单词。<br><img src="/pictures/Word2Vec/img5.png" alt="训练样本构建"><br>模型将会从每对单词出现的次数中学习得到统计规律。</p>
-<p>以下是Skip-gram模型结构：<br><img src="/pictures/Word2Vec/img3.png" alt="Skip-gram网络结构"><br>隐层没有使用任何激活函数，但是输出层使用了softmax。<br>我们基于成对的单词来对神经网络进行训练，训练样本是上述单词对，其中input word和output word都是onehot向量。最终模型输出是一个概率分布。</p>
-<blockquote>
-<p>可以看成y &#x3D; f(x)模型的并联，cost function是单个cost function的累加 <strong>（取log之后）</strong>。</p>
-</blockquote>
-<h4 id="CBOW"><a href="#CBOW" class="headerlink" title="CBOW"></a>CBOW</h4><p><img src="/pictures/Word2Vec/img4.jpg" alt="CBOW网络结构"><br>注意到，跟Skip-gram模型的并联不同，CBOW输入要对多个单词进行输入处理，一般是求和然后平均，输出的cost function不变。</p>
-<blockquote>
-<ol>
-<li>输入层：上下文单词的one-hot向量表示；</li>
-<li>所有one-hot向量分别乘以共享的输入权重矩阵W；</li>
-<li>所得的向量 <strong>相加求平均</strong> 作为隐层向量；</li>
-<li>乘以输出矩阵W’；</li>
-<li>得到向量，经过softmax函数处理得到V-dim概率分布；</li>
-<li>概率最大的index所指示的单词作为预测词与true label的one-hot做比较，误差越小越好（根据误差更新权重矩阵）。</li>
-</ol>
-</blockquote>
-<h3 id="训练Tricks"><a href="#训练Tricks" class="headerlink" title="训练Tricks"></a>训练Tricks</h3><p>Word2Vec本质上是一个语言模型，它的输出节点数是V个，对应了V个词语，本质上是一个多分类问题。但实际当中，词表数量巨大，计算复杂度巨高，所以需要技巧来加速训练。</p>
-<blockquote>
-<ul>
-<li>层级softmax：本质是把N分类问题变成log(N)次的二分类；</li>
-<li>负采样：本质是预测总体类别的一个子集</li>
-</ul>
-</blockquote>
-<h4 id="负采样"><a href="#负采样" class="headerlink" title="负采样"></a>负采样</h4><p>在训练神经网络时，每个训练样本都将会调整所有神经网络中参数。词汇表决定了Word2Vec模型将会有非常大的权重矩阵，并且所有权重参数会随着数十亿训练昂呢不断调整。<br>负采样每次让一个训练样本更新一小部分的权重参数，从而降低梯度下降过程中的计算成本。  </p>
-<p>负样本的选择规则：一个单词被选作负采样的概率与它出现的频次有关，出现频次越高的单词越容易被选择作为负样本，经验公式如下：<br><img src="/pictures/Word2Vec/img6.png.webp" alt="负采样概率"><br>f(w)代表每个单词被赋予的一个权重，即出现的词频。</p>
-<h4 id="层序Softmax"><a href="#层序Softmax" class="headerlink" title="层序Softmax"></a>层序Softmax</h4><p>Huffman原理：权重越大的节点，越靠近根节点。</p>
-<blockquote>
-<ol>
-<li>对每个词按照权重进行排序，将每次词看成一个独立的单节点的树；</li>
-<li>合并最小的两个子树，新的根节点权重为两者根节点权重之和；</li>
-<li>将新的树插入排序进树集合中；</li>
-<li>重复2，3步骤，直到合并所有树。</li>
-</ol>
-</blockquote>
-<h3 id="区别"><a href="#区别" class="headerlink" title="区别"></a>区别</h3><blockquote>
-<p>cbow是用周围词预测中心词，训练过程中其实是在从output的loss学习周围词的信息也就是embedding，但是在中间层是average的，一共预测V次；<br>skip-gram是用中心词预测周围词，对每一个中心词都有K个词作为output，对一个词的预测有K次，所以能够更有效的从context中学习信息，共预测K*V次，因此，skip-gram的训练时间更长。</p>
-</blockquote>
-<p>鉴于skip-gram学习的词向量更细致，当 <strong>数据量较少或者语料库中有大量低频词</strong> 时，使用skip-gram学习比较合适。</p>
-<blockquote>
-<p>CBOW中的目标函数是使条件概率P(w|context(w))最大化<br>Skip-gram中的目标函数是使条件概率P(context(w)|w)最大化</p>
-</blockquote>
- 
-      <!-- reward -->
-      
-    </div>
-    
 
-    <!-- copyright -->
     
-    <footer class="article-footer">
-       
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/NLP/" rel="tag">NLP</a></li></ul>
-
-    </footer>
+    
   </div>
-
-   
-    
 </article>
-
-    
-  </article>
+      
+      
+    </div>
+  </div>
+  
   
 
   
 </section>
-</div>
-
       <footer class="footer">
   <div class="outer">
     <ul>
