@@ -1,69 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
-    <title>TransX</title>
-    <url>/2022/09/11/KG/TransX/</url>
-    <content><![CDATA[<p>参考信息：<a href="https://zhuanlan.zhihu.com/p/354867179">https://zhuanlan.zhihu.com/p/354867179</a></p>
-<h3 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h3><p>知识图谱&#x2F;知识库通常以网络的形式组织知识，网络中每个节点代表实体，边代表实体间关系，因此大部分知识往往可以用三元组（实体1，关系，实体2）来表示。</p>
-<p>知识表示学习(Knowledge Representation Learning)，又称知识图谱嵌入(Knowledge Graph Embedding)，是指将由组成知识的实体和关系在低维连续向量空间中表征的过程。</p>
-<p>我们以h,r,t分别表示头实体、关系、尾实体，对于一个三元组&lt;h[i],r[i],t[i]&gt;，如果其符合事实，我们称其为置信度(plausibility)为1，如果其不成立，则其置信度为0。</p>
-<p>知识表示学习的一般流程为：</p>
-<blockquote>
-<ol>
-<li>随机初始化实体和关系向量；</li>
-<li>定义打分函数(Scoring Function)来计算一个三元组的 <strong>置信度</strong>；</li>
-<li>最大化置信度来训练实体、关系向量。</li>
-</ol>
-</blockquote>
-<p>从工作流程上而言，可以将KRL分解为四部分：</p>
-<blockquote>
-<ol>
-<li>表征空间，关系和实体表征在一个什么样的空间；</li>
-<li>打分函数，如何计算给定三元组的置信度；</li>
-<li>补充信息，采用了哪些补充信息（实体类别、实体描述、关系路径等）来参与表示学习；</li>
-<li>训练方式，如何生成正负样本，使用何种loss函数等。</li>
-</ol>
-</blockquote>
-<h3 id="表征空间"><a href="#表征空间" class="headerlink" title="表征空间"></a>表征空间</h3><p>表征空间需要满足三个条件：<strong>可微分，可计算概率，可定义打分函数</strong>。</p>
-<h4 id="实内积空间模型"><a href="#实内积空间模型" class="headerlink" title="实内积空间模型"></a>实内积空间模型</h4><p>将实体和关系表征在实内积空间中。</p>
-<h4 id="复空间模型"><a href="#复空间模型" class="headerlink" title="复空间模型"></a>复空间模型</h4><p>将实体和关系表征在复空间中。复空间主要是能表征平移信息之外的旋转信息。</p>
-<h4 id="高斯分布模型"><a href="#高斯分布模型" class="headerlink" title="高斯分布模型"></a>高斯分布模型</h4><p>使用高斯分布去表征实体和关系中的不确定性信息。</p>
-<h4 id="流行和群"><a href="#流行和群" class="headerlink" title="流行和群"></a>流行和群</h4><p>这一类模型将知识表征在流形空间(manifold space)，李群(Lie group)或二面体群(dihedral group)。典型代表是ManifoldE，TorusE和DihEdra。</p>
-<h3 id="打分函数"><a href="#打分函数" class="headerlink" title="打分函数"></a>打分函数</h3><p>打分函数用于衡量一个三元组的置信度。</p>
-<h4 id="基于距离的打分函数"><a href="#基于距离的打分函数" class="headerlink" title="基于距离的打分函数"></a>基于距离的打分函数</h4><p>通过计算实体间的距离来衡量三元组的置信度。其中，基于加性平移的关系模型应用最广。</p>
-<blockquote>
-<p>h + r &#x3D; t</p>
-</blockquote>
-<p><img src="/pictures/KGE/TransX/img1.jpg" alt="传统基于距离变换模型"></p>
-<p>基于平移表征的关系模型，即将 <strong>关系表示为头实体向尾实体的平移向量</strong>。</p>
-<ul>
-<li>TransE：基于平移表征；</li>
-<li>TransH: 将实体和关系映射到超平面；</li>
-<li>TransR：将实体和关系映射到不同的空间；</li>
-<li>TransD：构建动态映射矩阵完成实体空间的映射；</li>
-<li>TransA：将欧式距离替换成马氏距离；</li>
-<li>TransF：松弛了严格平移条件，使用内积作为度量函数</li>
-</ul>
-<p><img src="/pictures/KGE/TransX/img2.jpg" alt="距离变换模型总结"></p>
-<h4 id="基于语义匹配度的打分函数"><a href="#基于语义匹配度的打分函数" class="headerlink" title="基于语义匹配度的打分函数"></a>基于语义匹配度的打分函数</h4><p>基于语义匹配度衡量三元组置信度，通常使用关系矩阵将头实体映射至尾实体。</p>
-<blockquote>
-<p>h * M &#x3D; t</p>
-</blockquote>
-<h5 id="线性-x2F-双线性模型"><a href="#线性-x2F-双线性模型" class="headerlink" title="线性 &#x2F; 双线性模型"></a>线性 &#x2F; 双线性模型</h5><p>RESCAL将语义相似度定义为实体关系对的匹配程度，使用双线性函数对其进行表征。但是由于双线性函数满足交换律，所以RESCAL不能表达非对称关系，即(h,r,t)成立而(t,r,h)不成立的情况。同时其计算复杂度较高。</p>
-<p>DistMult将双线性映射加以简化为对角阵。但由于DistMult仍然满足交换律，也不能表达非对称关系。</p>
-<p>HolE提出使用头尾实体的循环相关操作来表示实体对，定义循环相关运算符，使用循环相关操作表示语义匹配程度。HolE的循环相关操作不满足交换律，所以可以表达非对称关系。</p>
-<p><img src="/pictures/KGE/TransX/img3.jpg" alt="语义匹配模型"></p>
-<h5 id="张量分解模型"><a href="#张量分解模型" class="headerlink" title="张量分解模型"></a>张量分解模型</h5><p>TuckerER使用Tucker张量分解(Tucker Decomposition)方法对原始矩阵进行分解，并使用分解的核心矩阵来参与打分函数计算。</p>
-<p>LowFER提出多模态张量分解双线性池化机制来更好地表达实体和关系之间的语义联系，并通过低秩估计相较于TuckerER降低了计算复杂度。</p>
-<h5 id="神经网络模型"><a href="#神经网络模型" class="headerlink" title="神经网络模型"></a>神经网络模型</h5><h6 id="MLP"><a href="#MLP" class="headerlink" title="MLP"></a>MLP</h6>]]></content>
-      <categories>
-        <category>知识表示学习</category>
-      </categories>
-      <tags>
-        <tag>KGE</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>Hadoop</title>
     <url>/2022/09/05/tools/Hadoop/</url>
     <content><![CDATA[<h2 id="Hadoop概念"><a href="#Hadoop概念" class="headerlink" title="Hadoop概念"></a>Hadoop概念</h2><p>Hadoop 框架是用于计算机集群大数据处理的框架，所以它必须是一个可以部署在多台计算机上的软件。部署了 Hadoop 软件的主机之间通过<strong>套接字</strong> (网络) 进行通讯。<br>Hadoop 主要包含 <strong>HDFS</strong> 和 <strong>MapReduce</strong> 两大组件。</p>
@@ -264,6 +201,65 @@
       </tags>
   </entry>
   <entry>
+    <title>K-BERT</title>
+    <url>/2022/09/09/NLP/K-BERT/</url>
+    <content><![CDATA[<h3 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h3><p>预训练的语言表示模型从大型语料库中捕获一般语言的表示，但是 <strong>缺乏领域特定的知识</strong>。</p>
+<p>过多的知识加入会使得 <strong>句子偏离正确的含义</strong>，这就是知识噪声问题。</p>
+<blockquote>
+<p>如何将外部知识整合到模型中成了一个关键点，这一步通常存在两个难点：</p>
+<ul>
+<li>异构嵌入空间（Heterogeneous Embedding Space）： 即文本的单词embedding和知识库的实体embedding通常是通过不同方式获取的，使得向量空间不一致。</li>
+<li>知识噪声（Knowledge Noise）： 即过多的知识融合可能会使原始句子偏离正确的本意。</li>
+</ul>
+</blockquote>
+<p>为了克服上述问题，K-Bert引入了<strong>软定位</strong> 和 <strong>可见矩阵</strong> 来限制插入知识的影响。</p>
+<p>K-BERT能够从预先训练好的BERT中加载模型参数，因此不需要单独的预训练，只需要一个KG数据，K-BERT就很容易将领域知识注入到模型中。</p>
+<h3 id="模型架构"><a href="#模型架构" class="headerlink" title="模型架构"></a>模型架构</h3><p>K-BERT模型主要包括四部分：知识层（Knowledge layer）、嵌入层（Embedding layer）、可见层（Seeing layer）和 Mask-Transformer编码层（Mask-Transformer Encoder）<br><img src="/pictures/NLP/K-BERT/img1.jpg" alt="K-BERT模型架构"></p>
+<p>如上图所示，K-BERT主要由4个层组成，分别是：</p>
+<ul>
+<li>knowledge layer：知识层，顾名思义是将知识图谱的事实融入到输入中，构建 <strong>sentence tree</strong> 作为新的输入。</li>
+<li>embedding layer：将sentence tree 进行embedding，转换成向量表达。</li>
+<li>seeing layer：该层的作用是为了避免知识噪声（Knowledge Noise）而引入的，主要是通过构建 visible matrix，<strong>限定每个字只能够看到跟自己相关的上下文以及知识</strong>，从而避免了知识噪声的引入。</li>
+<li>mask-transformer：mask-transformer 是在对transformer的一个改进，对于其中的self-attention，根据 <strong>visible matrix 限制了每个字的attention的范围</strong>，避免了字对于其他无相关的信息的关注。</li>
+</ul>
+<p>对于一个输入的句子，</p>
+<ol>
+<li>knowledge layer 首先是从知识图谱KG中找到相关的三元组，</li>
+<li>然后将这些三元组插入到输入的 input sentence 中，形成知识丰富（knowledge-rich）的句子树（sentence tree）。</li>
+<li>句子树然后同时输入给 embedding layer 以及 seeing layer，从而获得一个 token 级别的 embedding 表示以及一个 visible matrix。</li>
+<li>这个visible matrix 是用来控制每个token的可见域（visible scope），以防止输入的句子因为太多的知识嵌入而发生意思的改变。</li>
+</ol>
+<h4 id="Knowledge-Layer"><a href="#Knowledge-Layer" class="headerlink" title="Knowledge Layer"></a>Knowledge Layer</h4><p>知识层主要用于句子知识嵌入（knowledge injection）以及句子树（sentence tree）的转换。<br><img src="/pictures/NLP/K-BERT/img2.jpg" alt="句子树结构"></p>
+<p>举例说明句子树的构建：<br><img src="/pictures/NLP/K-BERT/img3.jpg" alt="句子树构建的例子"></p>
+<h4 id="Embedding-Layer"><a href="#Embedding-Layer" class="headerlink" title="Embedding Layer"></a>Embedding Layer</h4><p>和 BERT 类似，输入的句子需要经过embedding，作为模型的输入。具体 embedding 由三个部分组成，分别是 token embedding，soft position embedding 以及 segment embedding。<br><img src="/pictures/NLP/K-BERT/img4.jpg" alt="Embedding表示"></p>
+<h5 id="token-embedding"><a href="#token-embedding" class="headerlink" title="token embedding"></a>token embedding</h5><p>token embbeding 是将句子中的每个 token 通过look up table 映射成为一个维度为 H 的向量表示。此外，每个句子的开头有一个 [CLS] 这个特殊token，主要是为了句子分类的作用，同时 [MAKS] 是作为mask任务使用的。</p>
+<h5 id="soft-position-embedding"><a href="#soft-position-embedding" class="headerlink" title="soft-position embedding"></a>soft-position embedding</h5><p>我们可以发现，BERT 使用的时position embedding，并且使用的是绝对的position 表示。<br><img src="/pictures/NLP/K-BERT/img5.jpg" alt="Sentence Tree"></p>
+<p>如果使用BERT的position embedding方式，即hard-position index。这就导致<strong>原本的句子顺序发生了变化，失去了句子主干的信息位置</strong>。<br>解决方案就是：使用soft-position index。</p>
+<p>这就引发了另一个问题：知识噪音。一般字会给周围其他的字很大的attention score。<br>解决方案：引入seeing layer，控制self-attention的可见域。</p>
+<h4 id="seeing-layer"><a href="#seeing-layer" class="headerlink" title="seeing layer"></a>seeing layer</h4><p>Seeing layer是BERT和K-BERT之间最大的不同。</p>
+<blockquote>
+<p>我们插入的知识，只作用于它自身的三元组中的元素，对于其他的token，不产生任何影响。</p>
+</blockquote>
+<p>根据上述规则，我们可以得到一个visible matrix：<br><img src="/pictures/NLP/K-BERT/img6.jpg" alt="Visible Matrix"></p>
+<p>具体可见下图，红色表示可见区域，白色表示不可见区域。<br><img src="/pictures/NLP/K-BERT/img7.jpg" alt="Visible Matrix应用"></p>
+<h4 id="mask-attention"><a href="#mask-attention" class="headerlink" title="mask-attention"></a>mask-attention</h4><p>我们可以认为 visible matrix 获得了它的 sentence tree 的结构信息，我们根据这个矩阵构造 mask-self-attention, 实现了在嵌入知识的情况下，不增加噪音的目的。具体公式如下：<br><img src="/pictures/NLP/K-BERT/img8.png" alt="mask-self-attention计算公式"></p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>K-BERT 主要的创新点是将知识图谱的事实三元组融入到了预训练的语言模型中，并且不要我们自己进行预训练的操作，只需要在 fine-tuning 以及 inference 阶段进行知识嵌入即可，大大地方便了使用，并且在知识驱动的任务，例如QA，NER，推理任务中取得了很好的效果。</p>
+<blockquote>
+<p>文章主要解决了两个问题，包括了</p>
+<ul>
+<li>如何将异质向量空间（heterogeneous embedding space）的知识和预训练的语言空间进行结合，主要就是采用了knowledge layer 结合知识构建 sentence tree。</li>
+<li>另外就是在引入了 knowledge 之后，如何避免 knowledge noise，这边就是采用 soft position embedding 以及 seeing layer 中产生的 visible matrix，通过改造 transformer 的self-attetion 为 mask self-attention，控制每个 token 的可见域，从而解决KN问题。</li>
+</ul>
+</blockquote>
+]]></content>
+      <categories>
+        <category>自然语言处理</category>
+      </categories>
+      <tags>
+        <tag>NLP</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>Transformer</title>
     <url>/2022/09/04/NLP/Transformer/</url>
     <content><![CDATA[<p>参考资料：<a href="https://zhuanlan.zhihu.com/p/420820453">https://zhuanlan.zhihu.com/p/420820453</a></p>
@@ -407,62 +403,79 @@
       </tags>
   </entry>
   <entry>
-    <title>K-BERT</title>
-    <url>/2022/09/09/NLP/K-BERT/</url>
-    <content><![CDATA[<h3 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h3><p>预训练的语言表示模型从大型语料库中捕获一般语言的表示，但是 <strong>缺乏领域特定的知识</strong>。</p>
-<p>过多的知识加入会使得 <strong>句子偏离正确的含义</strong>，这就是知识噪声问题。</p>
+    <title>TransX</title>
+    <url>/2022/09/11/KG/TransX/</url>
+    <content><![CDATA[<p>参考信息：<a href="https://zhuanlan.zhihu.com/p/354867179">https://zhuanlan.zhihu.com/p/354867179</a></p>
+<h3 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h3><p>知识图谱&#x2F;知识库通常以网络的形式组织知识，网络中每个节点代表实体，边代表实体间关系，因此大部分知识往往可以用三元组（实体1，关系，实体2）来表示。</p>
+<p>知识表示学习(Knowledge Representation Learning)，又称知识图谱嵌入(Knowledge Graph Embedding)，是指将由组成知识的实体和关系在低维连续向量空间中表征的过程。</p>
+<p>我们以h,r,t分别表示头实体、关系、尾实体，对于一个三元组&lt;h[i],r[i],t[i]&gt;，如果其符合事实，我们称其为置信度(plausibility)为1，如果其不成立，则其置信度为0。</p>
+<p>知识表示学习的一般流程为：</p>
 <blockquote>
-<p>如何将外部知识整合到模型中成了一个关键点，这一步通常存在两个难点：</p>
-<ul>
-<li>异构嵌入空间（Heterogeneous Embedding Space）： 即文本的单词embedding和知识库的实体embedding通常是通过不同方式获取的，使得向量空间不一致。</li>
-<li>知识噪声（Knowledge Noise）： 即过多的知识融合可能会使原始句子偏离正确的本意。</li>
-</ul>
-</blockquote>
-<p>为了克服上述问题，K-Bert引入了<strong>软定位</strong> 和 <strong>可见矩阵</strong> 来限制插入知识的影响。</p>
-<p>K-BERT能够从预先训练好的BERT中加载模型参数，因此不需要单独的预训练，只需要一个KG数据，K-BERT就很容易将领域知识注入到模型中。</p>
-<h3 id="模型架构"><a href="#模型架构" class="headerlink" title="模型架构"></a>模型架构</h3><p>K-BERT模型主要包括四部分：知识层（Knowledge layer）、嵌入层（Embedding layer）、可见层（Seeing layer）和 Mask-Transformer编码层（Mask-Transformer Encoder）<br><img src="/pictures/NLP/K-BERT/img1.jpg" alt="K-BERT模型架构"></p>
-<p>如上图所示，K-BERT主要由4个层组成，分别是：</p>
-<ul>
-<li>knowledge layer：知识层，顾名思义是将知识图谱的事实融入到输入中，构建 <strong>sentence tree</strong> 作为新的输入。</li>
-<li>embedding layer：将sentence tree 进行embedding，转换成向量表达。</li>
-<li>seeing layer：该层的作用是为了避免知识噪声（Knowledge Noise）而引入的，主要是通过构建 visible matrix，<strong>限定每个字只能够看到跟自己相关的上下文以及知识</strong>，从而避免了知识噪声的引入。</li>
-<li>mask-transformer：mask-transformer 是在对transformer的一个改进，对于其中的self-attention，根据 <strong>visible matrix 限制了每个字的attention的范围</strong>，避免了字对于其他无相关的信息的关注。</li>
-</ul>
-<p>对于一个输入的句子，</p>
 <ol>
-<li>knowledge layer 首先是从知识图谱KG中找到相关的三元组，</li>
-<li>然后将这些三元组插入到输入的 input sentence 中，形成知识丰富（knowledge-rich）的句子树（sentence tree）。</li>
-<li>句子树然后同时输入给 embedding layer 以及 seeing layer，从而获得一个 token 级别的 embedding 表示以及一个 visible matrix。</li>
-<li>这个visible matrix 是用来控制每个token的可见域（visible scope），以防止输入的句子因为太多的知识嵌入而发生意思的改变。</li>
+<li>随机初始化实体和关系向量；</li>
+<li>定义打分函数(Scoring Function)来计算一个三元组的 <strong>置信度</strong>；</li>
+<li>最大化置信度来训练实体、关系向量。</li>
 </ol>
-<h4 id="Knowledge-Layer"><a href="#Knowledge-Layer" class="headerlink" title="Knowledge Layer"></a>Knowledge Layer</h4><p>知识层主要用于句子知识嵌入（knowledge injection）以及句子树（sentence tree）的转换。<br><img src="/pictures/NLP/K-BERT/img2.jpg" alt="句子树结构"></p>
-<p>举例说明句子树的构建：<br><img src="/pictures/NLP/K-BERT/img3.jpg" alt="句子树构建的例子"></p>
-<h4 id="Embedding-Layer"><a href="#Embedding-Layer" class="headerlink" title="Embedding Layer"></a>Embedding Layer</h4><p>和 BERT 类似，输入的句子需要经过embedding，作为模型的输入。具体 embedding 由三个部分组成，分别是 token embedding，soft position embedding 以及 segment embedding。<br><img src="/pictures/NLP/K-BERT/img4.jpg" alt="Embedding表示"></p>
-<h5 id="token-embedding"><a href="#token-embedding" class="headerlink" title="token embedding"></a>token embedding</h5><p>token embbeding 是将句子中的每个 token 通过look up table 映射成为一个维度为 H 的向量表示。此外，每个句子的开头有一个 [CLS] 这个特殊token，主要是为了句子分类的作用，同时 [MAKS] 是作为mask任务使用的。</p>
-<h5 id="soft-position-embedding"><a href="#soft-position-embedding" class="headerlink" title="soft-position embedding"></a>soft-position embedding</h5><p>我们可以发现，BERT 使用的时position embedding，并且使用的是绝对的position 表示。<br><img src="/pictures/NLP/K-BERT/img5.jpg" alt="Sentence Tree"></p>
-<p>如果使用BERT的position embedding方式，即hard-position index。这就导致<strong>原本的句子顺序发生了变化，失去了句子主干的信息位置</strong>。<br>解决方案就是：使用soft-position index。</p>
-<p>这就引发了另一个问题：知识噪音。一般字会给周围其他的字很大的attention score。<br>解决方案：引入seeing layer，控制self-attention的可见域。</p>
-<h4 id="seeing-layer"><a href="#seeing-layer" class="headerlink" title="seeing layer"></a>seeing layer</h4><p>Seeing layer是BERT和K-BERT之间最大的不同。</p>
-<blockquote>
-<p>我们插入的知识，只作用于它自身的三元组中的元素，对于其他的token，不产生任何影响。</p>
 </blockquote>
-<p>根据上述规则，我们可以得到一个visible matrix：<br><img src="/pictures/NLP/K-BERT/img6.jpg" alt="Visible Matrix"></p>
-<p>具体可见下图，红色表示可见区域，白色表示不可见区域。<br><img src="/pictures/NLP/K-BERT/img7.jpg" alt="Visible Matrix应用"></p>
-<h4 id="mask-attention"><a href="#mask-attention" class="headerlink" title="mask-attention"></a>mask-attention</h4><p>我们可以认为 visible matrix 获得了它的 sentence tree 的结构信息，我们根据这个矩阵构造 mask-self-attention, 实现了在嵌入知识的情况下，不增加噪音的目的。具体公式如下：<br><img src="/pictures/NLP/K-BERT/img8.png" alt="mask-self-attention计算公式"></p>
-<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>K-BERT 主要的创新点是将知识图谱的事实三元组融入到了预训练的语言模型中，并且不要我们自己进行预训练的操作，只需要在 fine-tuning 以及 inference 阶段进行知识嵌入即可，大大地方便了使用，并且在知识驱动的任务，例如QA，NER，推理任务中取得了很好的效果。</p>
+<p>从工作流程上而言，可以将KRL分解为四部分：</p>
 <blockquote>
-<p>文章主要解决了两个问题，包括了</p>
+<ol>
+<li>表征空间，关系和实体表征在一个什么样的空间；</li>
+<li>打分函数，如何计算给定三元组的置信度；</li>
+<li>补充信息，采用了哪些补充信息（实体类别、实体描述、关系路径等）来参与表示学习；</li>
+<li>训练方式，如何生成正负样本，使用何种loss函数等。</li>
+</ol>
+</blockquote>
+<h3 id="表征空间"><a href="#表征空间" class="headerlink" title="表征空间"></a>表征空间</h3><p>表征空间需要满足三个条件：<strong>可微分，可计算概率，可定义打分函数</strong>。</p>
+<h4 id="实内积空间模型"><a href="#实内积空间模型" class="headerlink" title="实内积空间模型"></a>实内积空间模型</h4><p>将实体和关系表征在实内积空间中。</p>
+<h4 id="复空间模型"><a href="#复空间模型" class="headerlink" title="复空间模型"></a>复空间模型</h4><p>将实体和关系表征在复空间中。复空间主要是能表征平移信息之外的旋转信息。</p>
+<h4 id="高斯分布模型"><a href="#高斯分布模型" class="headerlink" title="高斯分布模型"></a>高斯分布模型</h4><p>使用高斯分布去表征实体和关系中的不确定性信息。</p>
+<h4 id="流行和群"><a href="#流行和群" class="headerlink" title="流行和群"></a>流行和群</h4><p>这一类模型将知识表征在流形空间(manifold space)，李群(Lie group)或二面体群(dihedral group)。典型代表是ManifoldE，TorusE和DihEdra。</p>
+<h3 id="打分函数"><a href="#打分函数" class="headerlink" title="打分函数"></a>打分函数</h3><p>打分函数用于衡量一个三元组的置信度。</p>
+<h4 id="基于距离的打分函数"><a href="#基于距离的打分函数" class="headerlink" title="基于距离的打分函数"></a>基于距离的打分函数</h4><p>通过计算实体间的距离来衡量三元组的置信度。其中，基于加性平移的关系模型应用最广。</p>
+<blockquote>
+<p>h + r &#x3D; t</p>
+</blockquote>
+<p><img src="/pictures/KG/TransX/img1.jpg" alt="传统基于距离变换模型"></p>
+<p>基于平移表征的关系模型，即将 <strong>关系表示为头实体向尾实体的平移向量</strong>。</p>
 <ul>
-<li>如何将异质向量空间（heterogeneous embedding space）的知识和预训练的语言空间进行结合，主要就是采用了knowledge layer 结合知识构建 sentence tree。</li>
-<li>另外就是在引入了 knowledge 之后，如何避免 knowledge noise，这边就是采用 soft position embedding 以及 seeing layer 中产生的 visible matrix，通过改造 transformer 的self-attetion 为 mask self-attention，控制每个 token 的可见域，从而解决KN问题。</li>
+<li>TransE：基于平移表征；</li>
+<li>TransH: 将实体和关系映射到超平面；</li>
+<li>TransR：将实体和关系映射到不同的空间；</li>
+<li>TransD：构建动态映射矩阵完成实体空间的映射；</li>
+<li>TransA：将欧式距离替换成马氏距离；</li>
+<li>TransF：松弛了严格平移条件，使用内积作为度量函数</li>
 </ul>
+<p><img src="/pictures/KG/TransX/img2.jpg" alt="距离变换模型总结"></p>
+<h4 id="基于语义匹配度的打分函数"><a href="#基于语义匹配度的打分函数" class="headerlink" title="基于语义匹配度的打分函数"></a>基于语义匹配度的打分函数</h4><p>基于语义匹配度衡量三元组置信度，通常使用关系矩阵将头实体映射至尾实体。</p>
+<blockquote>
+<p>h * M &#x3D; t</p>
 </blockquote>
+<h5 id="线性-x2F-双线性模型"><a href="#线性-x2F-双线性模型" class="headerlink" title="线性 &#x2F; 双线性模型"></a>线性 &#x2F; 双线性模型</h5><p>RESCAL将语义相似度定义为实体关系对的匹配程度，使用双线性函数对其进行表征。但是由于双线性函数满足交换律，所以RESCAL不能表达非对称关系，即(h,r,t)成立而(t,r,h)不成立的情况。同时其计算复杂度较高。</p>
+<p>DistMult将双线性映射加以简化为对角阵。但由于DistMult仍然满足交换律，也不能表达非对称关系。</p>
+<p>HolE提出使用头尾实体的循环相关操作来表示实体对，定义循环相关运算符，使用循环相关操作表示语义匹配程度。HolE的循环相关操作不满足交换律，所以可以表达非对称关系。</p>
+<p><img src="/pictures/KG/TransX/img3.jpg" alt="语义匹配模型"></p>
+<h5 id="张量分解模型"><a href="#张量分解模型" class="headerlink" title="张量分解模型"></a>张量分解模型</h5><p>TuckerER使用Tucker张量分解(Tucker Decomposition)方法对原始矩阵进行分解，并使用分解的核心矩阵来参与打分函数计算。</p>
+<p>LowFER提出多模态张量分解双线性池化机制来更好地表达实体和关系之间的语义联系，并通过低秩估计相较于TuckerER降低了计算复杂度。</p>
+<h5 id="神经网络模型"><a href="#神经网络模型" class="headerlink" title="神经网络模型"></a>神经网络模型</h5><p><img src="/pictures/KG/TransX/img7.jpg" alt="神经网络模型"></p>
+<h6 id="MLP"><a href="#MLP" class="headerlink" title="MLP"></a>MLP</h6><p>SME（Semantic Matching Model）、NTN（Neural Tensor Network）、NAM（Neural Association Model）等都使用MLP对实体和关系进行编码。<br><img src="/pictures/KG/TransX/img4.png" alt="MLP模型公式"></p>
+<h6 id="CNN"><a href="#CNN" class="headerlink" title="CNN"></a>CNN</h6><p>ConvE使用二维卷积来表征实体和关系：<br><img src="/pictures/KG/TransX/img5.png" alt="ConvE模型公式"><br>其中的ω是卷积层的卷积核，vec(·)是对张量的flatten操作，在卷积层抽取空域特征后，使用多个非线性函数得到语义信息。</p>
+<p>ConvKB则直接将实体和关系concat起来加以卷积：<br><img src="/pictures/KG/TransX/img6.png" alt="ConvKB模型公式"></p>
+<h6 id="RNN"><a href="#RNN" class="headerlink" title="RNN"></a>RNN</h6><p>RSN在RNN基础上加入skip connection来捕捉路径上的长程依赖。先使用Random Walk的方法生成随机路径(x[1], x[2], …, x[T])，使用RNN计算隐状态h[t] &#x3D; tanh(W_h<em>h[t-1] + W_x</em>x[t] + b)，skip connection对于实体和关系的计算不同。</p>
+<h6 id="Transformer"><a href="#Transformer" class="headerlink" title="Transformer"></a>Transformer</h6><p>CoKE使用Transformer的结构对边和路径进行编码，KG-BERT则利用预训练语言模型BERT作为编码器对实体和关系进行编码。</p>
+<h6 id="GNN"><a href="#GNN" class="headerlink" title="GNN"></a>GNN</h6><p>图神经网络对于图结构信息的挖掘具有一定优势。SACN使用Encoder-Decoder结构，将带权GCN作为Encoder，将Conv-TransE作为Decoder。</p>
+<p><img src="/pictures/KG/TransX/img8.jpg" alt="语义匹配模型计算公式"></p>
+<h3 id="训练"><a href="#训练" class="headerlink" title="训练"></a>训练</h3><h4 id="基于开放世界假设"><a href="#基于开放世界假设" class="headerlink" title="基于开放世界假设"></a>基于开放世界假设</h4><p>KGS只包含真实的事实，D+只存储正例。</p>
+<p>可以定义logistic loss:<br><img src="/pictures/KG/TransX/img9.png" alt="logistic loss定义"></p>
+<p>可以定义pairwise ranking loss:<br><img src="/pictures/KG/TransX/img10.png" alt="pairwise ranking loss定义"></p>
+<h4 id="基于闭合世界假设"><a href="#基于闭合世界假设" class="headerlink" title="基于闭合世界假设"></a>基于闭合世界假设</h4><p>没有包含在D+中的样例都是错误的。不存在负样本。</p>
+<p>定义squared loss:<br><img src="/pictures/KG/TransX/img11.png" alt="squared loss定义"></p>
 ]]></content>
       <categories>
-        <category>自然语言处理</category>
+        <category>知识表示学习</category>
       </categories>
       <tags>
-        <tag>NLP</tag>
+        <tag>KGE</tag>
       </tags>
   </entry>
 </search>
