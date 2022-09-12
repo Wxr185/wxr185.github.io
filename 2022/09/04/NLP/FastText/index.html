@@ -11,7 +11,7 @@
         name="viewport"
         content="width=device-width, initial-scale=1, maximum-scale=1"
       />
-      <title>归档 |  WXR</title>
+      <title>FastText |  WXR</title>
   <meta name="generator" content="hexo-theme-ayer">
       
       <link rel="shortcut icon" href="/favicon.ico" />
@@ -52,178 +52,236 @@
       
     <main class="content on">
       <section class="outer">
-  
-  
-  <article class="articles">
+  <article
+  id="post-NLP/FastText"
+  class="article article-type-post"
+  itemscope
+  itemprop="blogPost"
+  data-scroll-reveal
+>
+  <div class="article-inner">
     
-    
-    <h1 class="page-type-title">归档</h1>
-    
-    
+    <header class="article-header">
+       
+<h1 class="article-title sea-center" style="border-left:0" itemprop="name">
+  FastText
+</h1>
+ 
+
+      
+    </header>
+     
+    <div class="article-meta">
+      <a href="/2022/09/04/NLP/FastText/" class="article-date">
+  <time datetime="2022-09-04T09:02:29.407Z" itemprop="datePublished">2022-09-04</time>
+</a> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E8%87%AA%E7%84%B6%E8%AF%AD%E8%A8%80%E5%A4%84%E7%90%86/">自然语言处理</a>
+  </div>
   
-  
-  
-  
-  
-  
-  <div class="archives-wrap">
-    <div class="archive-year-wrap">
-      <a href="/archives/2022" class="archive-year">2022</a>
+<div class="word_count">
+    <span class="post-time">
+        <span class="post-meta-item-icon">
+            <i class="ri-quill-pen-line"></i>
+            <span class="post-meta-item-text"> 字数统计:</span>
+            <span class="post-count">1.2k</span>
+        </span>
+    </span>
+
+    <span class="post-time">
+        &nbsp; | &nbsp;
+        <span class="post-meta-item-icon">
+            <i class="ri-book-open-line"></i>
+            <span class="post-meta-item-text"> 阅读时长≈</span>
+            <span class="post-count">4 分钟</span>
+        </span>
+    </span>
+</div>
+ 
     </div>
-    <div class="archives">
       
-      <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      <a href="/2022/09/11/KG/TransX/" class="archive-article-date">
-  <time datetime="2022-09-11T02:43:35.693Z" itemprop="datePublished">09/11</time>
-</a>
-       
-<h2 itemprop="name">
-  <a class="archive-article-title" href="/2022/09/11/KG/TransX/"
-    >TransX</a> 
-</h2>
- 
+    <div class="tocbot"></div>
 
-    </header>
-    
-    
-  </div>
-</article>
-      
-  
-  
-      <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      <a href="/2022/09/09/NLP/K-BERT/" class="archive-article-date">
-  <time datetime="2022-09-09T02:02:49.987Z" itemprop="datePublished">09/09</time>
-</a>
-       
-<h2 itemprop="name">
-  <a class="archive-article-title" href="/2022/09/09/NLP/K-BERT/"
-    >K-BERT</a> 
-</h2>
- 
 
-    </header>
-    
-    
-  </div>
-</article>
-      
-  
-  
-      <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      <a href="/2022/09/05/tools/Hadoop/" class="archive-article-date">
-  <time datetime="2022-09-05T13:25:03.893Z" itemprop="datePublished">09/05</time>
-</a>
-       
-<h2 itemprop="name">
-  <a class="archive-article-title" href="/2022/09/05/tools/Hadoop/"
-    >Hadoop</a> 
-</h2>
- 
 
-    </header>
-    
-    
-  </div>
-</article>
-      
-  
-  
-      <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      <a href="/2022/09/04/NLP/Transformer/" class="archive-article-date">
-  <time datetime="2022-09-04T09:05:38.247Z" itemprop="datePublished">09/04</time>
-</a>
-       
-<h2 itemprop="name">
-  <a class="archive-article-title" href="/2022/09/04/NLP/Transformer/"
-    >Transformer</a> 
-</h2>
- 
 
-    </header>
-    
-    
-  </div>
-</article>
-      
   
-  
-      <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      <a href="/2022/09/04/NLP/Word2Vec/" class="archive-article-date">
-  <time datetime="2022-09-04T09:03:53.269Z" itemprop="datePublished">09/04</time>
-</a>
+    <div class="article-entry" itemprop="articleBody">
        
-<h2 itemprop="name">
-  <a class="archive-article-title" href="/2022/09/04/NLP/Word2Vec/"
-    >Word2Vec</a> 
-</h2>
+  <h3 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h3><p>fasttext是facebook开源的一个词向量与文本分类工具，在2016年开源，典型应用场景是“带监督的文本分类问题”。提供简单而高效的 <strong>文本分类</strong> 和 <strong>表征学习</strong> 的方法，性能比肩深度学习而且速度更快。</p>
+<p>FastText结合了自然语言处理和机器学习中的思想：</p>
+<ul>
+<li>使用词袋以及N-gram袋表征语句；</li>
+<li>使用子字信息；</li>
+<li>通过隐藏表征在类别间共享信息</li>
+</ul>
+<h3 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h3><p>核心思想：将整篇文档的词以及N-gram向量 <strong>叠加平均</strong> 得到文档向量，然后使用文档向量做softmax分类。</p>
+<h4 id="模型架构"><a href="#模型架构" class="headerlink" title="模型架构"></a>模型架构</h4><p>FastText架构和CBOW架构类似。不同之处在于，FastText预测标签，CBOW通过上下文预测中间词。<br><img src="/pictures/NLP/FastText/img1.jpg" alt="FastText模型架构"></p>
+<blockquote>
+<p><strong>注意：</strong> 此架构图并没有展示词向量的训练过程。FastText模型也只有三层：输入层，隐含层，输出层。输入是多个向量表示的单词，输出是特定的Target，隐含层是对多个词向量的叠加平均。</p>
+</blockquote>
+<p>与CBOW模型不同的是，</p>
+<ul>
+<li>CBOW的输入是目标单词的上下文，FastText的输入是多个单词以及其N-gram特征，这些特征用来表示单个文档；</li>
+<li>CBOW的输入单词是被one-hot编码过后的，FastText的输入特征是被embedding后的；</li>
+<li>CBOW的输出是目标词汇，FastText的输出是文档对应的类标。</li>
+</ul>
+<h4 id="层序softmax"><a href="#层序softmax" class="headerlink" title="层序softmax"></a>层序softmax</h4><p>对于有大量类别的数据集，FastText使用一个分层分类器，降低计算复杂度。<br>FastText利用了类别不均衡这个事实，通过使用Huffman算法建立用于表征类别的树形结构。因此，出现频次较高的类别更加接近根节点。</p>
+<h4 id="N-gram特征"><a href="#N-gram特征" class="headerlink" title="N-gram特征"></a>N-gram特征</h4><p>Word2Vec把语料库中的每个单词作为一个原子。这忽略了单词内部的形态特征，比如apple和apples。传统的Word2Vec中，这种单词内部形态信息因为它们被转换为不同的id丢失了。</p>
+<p>为了克服这个问题，FastText使用了字符级别的N-gram来表示一个单词。对于单词apple，假设N的取值为3，则它的trigram有：</p>
+<blockquote>
+<p>“&lt;ap”,  “app”,  “ppl”,  “ple”, “le&gt;”</p>
+</blockquote>
+<p>其中，&lt;表示前缀，&gt;表示后缀。于是，我们可以用这些trigram来表示“apple”这个单词，进一步，我们可以用这5个trigram的向量叠加来表示“apple”的词向量。</p>
+<p>这带来两点好处：</p>
+<ul>
+<li>对于低频词生成的词向量效果会更好。因为它们的N-gram可以和其他词共享；</li>
+<li>对于训练词库之外的单词，仍然可以构建它们的词向量。我们可以叠加它们的字符级N-gram向量。</li>
+</ul>
+<h3 id="应用"><a href="#应用" class="headerlink" title="应用"></a>应用</h3><p><strong>模型搭建步骤：</strong></p>
+<ol>
+<li>添加输入层：Embedding层输入是一批文档，每个文档有一个词汇索引序列构成；</li>
+<li>添加隐含层：投影层对一个文档中所有单词的向量进行叠加平均；</li>
+<li>添加输出层：Softmax层</li>
+<li>指定损失函数，优化器类型，评价指标，编译模型。</li>
+</ol>
+<p><strong>训练数据feed模型步骤</strong></p>
+<ol>
+<li>将文档分好词，构建词汇表；</li>
+<li>对类标进行one-hot化；</li>
+<li>对一批文本，将每个文本转化为词索引序列，每个类标转化为one-hot向量</li>
+</ol>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><h4 id="如何获得词向量？"><a href="#如何获得词向量？" class="headerlink" title="如何获得词向量？"></a>如何获得词向量？</h4><p><strong>累加平均</strong> 一个词的N-gram集合包括自身整个词的隐向量表示。</p>
+<h4 id="FastText和Word2Vec区别"><a href="#FastText和Word2Vec区别" class="headerlink" title="FastText和Word2Vec区别"></a>FastText和Word2Vec区别</h4><p>相似处：</p>
+<blockquote>
+<ol>
+<li>图模型结构很想，都是采用embedding向量形式，得到word的隐向量表达；</li>
+<li>采用很多相似的优化，比如使用层级sotmax优化训练和预测中的打分速度</li>
+</ol>
+</blockquote>
+<p>不同之处：</p>
+<blockquote>
+<ol>
+<li>输入层：Word2Vec的输出层，是context window内的term；而FastText对应的整个sentence的内容，包括term和N-gram的内容；</li>
+<li>输出层：Word2Vec的输出层，对应的是每个term，计算某个term的概率最大；而FastText的输出层对应的分类的label</li>
+</ol>
+</blockquote>
+<p>两者本质的不同，体现在H-softmax的使用：</p>
+<blockquote>
+<ul>
+<li>Word2Vec的目标是得到词向量，该词向量最终是在输入层中得到。输出层对应的H-softmax也会生成一系列的向量，但最终都会被抛弃；</li>
+<li>FastText充分利用H-softmax的分类功能，遍历分类树的所有叶节点，找到概率最大的label</li>
+</ul>
+</blockquote>
+<h4 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h4><p>FastText的学习速度比较快，效果不错。fastText适用于分类类别非常大而且数据集足够多的情况。当分类类别比较小或者数据集比较少的话，很容易过拟合。</p>
+<p>可以完成无监督的词向量的学习，可以学习得到词向量；也可以用于有监督学习的分类任务（新闻文本分类，垃圾邮件分类，情感分析，电商中用户评论的褒贬分析）</p>
  
-
-    </header>
-    
-    
-  </div>
-</article>
-      
-  
-  
-      <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      <a href="/2022/09/04/NLP/FastText/" class="archive-article-date">
-  <time datetime="2022-09-04T09:02:29.407Z" itemprop="datePublished">09/04</time>
-</a>
-       
-<h2 itemprop="name">
-  <a class="archive-article-title" href="/2022/09/04/NLP/FastText/"
-    >FastText</a> 
-</h2>
- 
-
-    </header>
-    
-    
-  </div>
-</article>
-      
-  
-  
-      <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      <a href="/2022/09/04/NLP/BERT/" class="archive-article-date">
-  <time datetime="2022-09-04T09:01:46.173Z" itemprop="datePublished">09/04</time>
-</a>
-       
-<h2 itemprop="name">
-  <a class="archive-article-title" href="/2022/09/04/NLP/BERT/"
-    >BERT</a> 
-</h2>
- 
-
-    </header>
-    
-    
-  </div>
-</article>
-      
+      <!-- reward -->
       
     </div>
+    
+
+    <!-- copyright -->
+    
+    <div class="declare">
+      <ul class="post-copyright">
+        <li>
+          <i class="ri-copyright-line"></i>
+          <strong>版权声明： </strong>
+          
+          本博客所有文章除特别声明外，著作权归作者所有。转载请注明出处！
+          
+        </li>
+      </ul>
+    </div>
+    
+    <footer class="article-footer">
+       
+<div class="share-btn">
+      <span class="share-sns share-outer">
+        <i class="ri-share-forward-line"></i>
+        分享
+      </span>
+      <div class="share-wrap">
+        <i class="arrow"></i>
+        <div class="share-icons">
+          
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="ri-weibo-fill"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="ri-wechat-fill"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="ri-qq-fill"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="ri-douban-line"></i>
+          </a>
+          <!-- <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a> -->
+          
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="ri-facebook-circle-fill"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="ri-twitter-fill"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="ri-google-fill"></i>
+          </a>
+        </div>
+      </div>
+</div>
+
+<div class="wx-share-modal">
+    <a class="modal-close" href="javascript:;"><i class="ri-close-circle-line"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=http://example.com/2022/09/04/NLP/FastText/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div id="share-mask"></div>  
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/NLP/" rel="tag">NLP</a></li></ul>
+
+    </footer>
   </div>
-  
-  
+
+   
+  <nav class="article-nav">
+    
+      <a href="/2022/09/04/NLP/Word2Vec/" class="article-nav-link">
+        <strong class="article-nav-caption">上一篇</strong>
+        <div class="article-nav-title">
+          
+            Word2Vec
+          
+        </div>
+      </a>
+    
+    
+      <a href="/2022/09/04/NLP/BERT/" class="article-nav-link">
+        <strong class="article-nav-caption">下一篇</strong>
+        <div class="article-nav-title">BERT</div>
+      </a>
+    
+  </nav>
 
   
+   
+    
+    <script src="https://cdn.staticfile.org/twikoo/1.4.18/twikoo.all.min.js"></script>
+    <div id="twikoo" class="twikoo"></div>
+    <script>
+        twikoo.init({
+            envId: ""
+        })
+    </script>
+ 
+</article>
+
 </section>
       <footer class="footer">
   <div class="outer">
@@ -353,6 +411,22 @@
 <script src="/js/lazyload.min.js"></script>
 
 <!-- Tocbot -->
+ 
+<script src="/js/tocbot.min.js"></script>
+
+<script>
+  tocbot.init({
+    tocSelector: ".tocbot",
+    contentSelector: ".article-entry",
+    headingSelector: "h1, h2, h3, h4, h5, h6",
+    hasInnerContainers: true,
+    scrollSmooth: true,
+    scrollContainer: "main",
+    positionFixedSelector: ".tocbot",
+    positionFixedClass: "is-position-fixed",
+    fixedSidebarOffset: "auto",
+  });
+</script>
 
 <script src="https://cdn.staticfile.org/jquery-modal/0.9.2/jquery.modal.min.js"></script>
 <link

@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+
+
+<html lang="zh-CN">
+  
+
+    <head>
+      <meta charset="utf-8" />
+        
+      <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1"
+      />
+      <title>Hadoop |  WXR</title>
+  <meta name="generator" content="hexo-theme-ayer">
+      
+      <link rel="shortcut icon" href="/favicon.ico" />
+       
+<link rel="stylesheet" href="/dist/main.css">
+
+      
+<link rel="stylesheet" href="/css/fonts/remixicon.css">
+
+      
+<link rel="stylesheet" href="/css/custom.css">
+ 
+      <script src="https://cdn.staticfile.org/pace/1.2.4/pace.min.js"></script>
+       
+ 
+
+      <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bulma@5.0.1/bulma.min.css"
+      />
+      <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.min.js"></script>
+
+      <!-- mermaid -->
+      
+      <style>
+        .swal2-styled.swal2-confirm {
+          font-size: 1.6rem;
+        }
+      </style>
+    </head>
+  </html>
+</html>
+
+
+<body>
+  <div id="app">
+    
+      
+    <main class="content on">
+      <section class="outer">
+  <article
+  id="post-tools/Hadoop"
+  class="article article-type-post"
+  itemscope
+  itemprop="blogPost"
+  data-scroll-reveal
+>
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h1 class="article-title sea-center" style="border-left:0" itemprop="name">
+  Hadoop
+</h1>
+ 
+
+      
+    </header>
+     
+    <div class="article-meta">
+      <a href="/2022/09/05/tools/Hadoop/" class="article-date">
+  <time datetime="2022-09-05T13:25:03.893Z" itemprop="datePublished">2022-09-05</time>
+</a> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E5%B7%A5%E5%85%B7/">工具</a> / <a class="article-category-link" href="/categories/%E5%B7%A5%E5%85%B7/%E5%A4%A7%E6%95%B0%E6%8D%AE/">大数据</a>
+  </div>
+  
+<div class="word_count">
+    <span class="post-time">
+        <span class="post-meta-item-icon">
+            <i class="ri-quill-pen-line"></i>
+            <span class="post-meta-item-text"> 字数统计:</span>
+            <span class="post-count">1.9k</span>
+        </span>
+    </span>
+
+    <span class="post-time">
+        &nbsp; | &nbsp;
+        <span class="post-meta-item-icon">
+            <i class="ri-book-open-line"></i>
+            <span class="post-meta-item-text"> 阅读时长≈</span>
+            <span class="post-count">6 分钟</span>
+        </span>
+    </span>
+</div>
+ 
+    </div>
+      
+    <div class="tocbot"></div>
+
+
+
+
+  
+    <div class="article-entry" itemprop="articleBody">
+       
+  <h2 id="Hadoop概念"><a href="#Hadoop概念" class="headerlink" title="Hadoop概念"></a>Hadoop概念</h2><p>Hadoop 框架是用于计算机集群大数据处理的框架，所以它必须是一个可以部署在多台计算机上的软件。部署了 Hadoop 软件的主机之间通过<strong>套接字</strong> (网络) 进行通讯。<br>Hadoop 主要包含 <strong>HDFS</strong> 和 <strong>MapReduce</strong> 两大组件。</p>
+<blockquote>
+<ul>
+<li>HDFS 负责分布储存数据;</li>
+<li>MapReduce 负责对数据进行映射、规约处理，并汇总处理结果。</li>
+</ul>
+</blockquote>
+<p>Hadoop 框架最根本的原理就是利用大量的计算机同时运算来加快大量数据的处理速度。</p>
+<h3 id="HDFS"><a href="#HDFS" class="headerlink" title="HDFS"></a>HDFS</h3><p>Hadoop Distributed File System，Hadoop 分布式文件系统，简称 HDFS。<br>HDFS 用于在集群中储存文件，它所使用的核心思想是 Google 的 GFS 思想，可以存储很大的文件。</p>
+<p>在服务器集群中，文件存储往往被要求高效而稳定，HDFS同时实现了这两个优点。</p>
+<blockquote>
+<ul>
+<li>HDFS 高效的存储是通过 <strong>计算机集群独立处理请求</strong> 实现的。因为用户 (一半是后端程序) 在发出数据存储请求时，往往 <em><strong>响应服务器</strong></em> 正在处理其他请求，这是导致服务效率缓慢的主要原因。但如果响应服务器直接分配一个数据服务器给用户，然后 <em><strong>用户直接与数据服务器交互</strong></em>，效率会快很多。</li>
+<li>数据存储的稳定性往往通过”多存几份”的方式实现，HDFS 也使用了这种方式。<strong>HDFS 的存储单位是块 (Block)</strong> ，一个文件可能会被分为多个块储存在物理存储器中。因此 HDFS 往往会按照设定者的要求把数据块复制 n 份并存储在不同的数据节点 (储存数据的服务器) 上，如果一个数据节点发生故障数据也不会丢失。</li>
+</ul>
+</blockquote>
+<p><img src="/pictures/tools/Hadoop/img1.png" alt="HDFS架构图"></p>
+<h4 id="Block数据块"><a href="#Block数据块" class="headerlink" title="Block数据块"></a>Block数据块</h4><ul>
+<li>基本存储单位，一般大小为 <strong>64M</strong> （配置大的块主要是因为：<ul>
+<li>减少搜寻时间，一般硬盘传输速率比寻道时间要快，大的块可以减少寻道时间；</li>
+<li>减少管理块的数据开销，每个块都需要在NameNode上有对应的记录；</li>
+<li>对数据块进行读写，减少建立网络的连接成本）</li>
+</ul>
+</li>
+<li>一个大文件会被拆分成一个个的块，然后存储于不同的机器。如果一个文件少于Block大小，那么实际占用的空间为其文件的大小</li>
+<li>基本的读写单位，类似于磁盘的页，每次都是读写一个块</li>
+<li>每个块都会被复制到多台机器，默认复制 <strong>3</strong> 份</li>
+</ul>
+<blockquote>
+<p>HDFS 2.x以后的block默认为 <strong>128M</strong></p>
+</blockquote>
+<h4 id="HDFS节点"><a href="#HDFS节点" class="headerlink" title="HDFS节点"></a>HDFS节点</h4><p>HDFS 运行在许多不同的计算机上，有的计算机专门用于存储数据，有的计算机专门用于指挥其它计算机储存数据。这里所提到的”计算机”我们可以称之为集群中的节点。</p>
+<h5 id="命名节点-NameNode"><a href="#命名节点-NameNode" class="headerlink" title="命名节点 NameNode"></a>命名节点 NameNode</h5><p>命名节点 (NameNode) 是用于指挥其它节点存储的节点。任何一个”文件系统”(File System, FS) 都需要具备 <strong>根据文件路径映射到文件</strong> 的功能，命名节点就是用于储存这些映射信息并提供映射服务的计算机，在整个 HDFS 系统中扮演”管理员”的角色，因此 <em><strong>一个 HDFS 集群中只有一个命名节点</strong></em>。</p>
+<h5 id="数据节点-DataNode"><a href="#数据节点-DataNode" class="headerlink" title="数据节点 (DataNode)"></a>数据节点 (DataNode)</h5><p>数据节点 (DataNode) 使用来储存数据块的节点。当一个文件被命名节点承认并分块之后将会被储存到被分配的数据节点中去。数据节点具有储存数据、读写数据的功能，其中 <strong>存储的数据块比较类似于硬盘中的”扇区”概念，是 HDFS 存储的基本单位</strong>。</p>
+<blockquote>
+<ol>
+<li>保存具体的block数据</li>
+<li>负责数据的读写操作和复制操作</li>
+<li>DataNode启动时会向NameNode报告当前存储的数据块信息，后续也会定时报告修改信息</li>
+<li>DataNode之间会进行通信，复制数据块，保证数据的冗余性</li>
+</ol>
+</blockquote>
+<h5 id="副命名节点-Secondary-NameNode"><a href="#副命名节点-Secondary-NameNode" class="headerlink" title="副命名节点 (Secondary NameNode)"></a>副命名节点 (Secondary NameNode)</h5><p>副命名节点 (Secondary NameNode) 别名”次命名节点”，是命名节点的”秘书”。这个形容很贴切，因为它并不能代替命名节点的工作，无论命名节点是否有能力继续工作。它主要负责 <strong>分摊命名节点的压力、备份命名节点的状态并执行一些管理工作</strong>，如果命名节点要求它这样做的话。如果命名节点坏掉了，它也可以提供备份数据以恢复命名节点。副命名节点可以有多个。</p>
+<h4 id="Hadoop写文件"><a href="#Hadoop写文件" class="headerlink" title="Hadoop写文件"></a>Hadoop写文件</h4><blockquote>
+<ol>
+<li>客户端将文件写入本地磁盘的 HDFS Client 文件中</li>
+<li>当临时文件大小达到一个 block 大小时，HDFS client 通知 NameNode，申请写入文件</li>
+<li>NameNode 在 HDFS 的文件系统中创建一个文件，并把该 block id 和要写入的 DataNode 的列表返回给客户端</li>
+<li>客户端收到这些信息后，将临时文件写入 DataNodes<br>4.1. 客户端将文件内容写入第一个 DataNode（一般以 4kb 为单位进行传输）<br>4.2. 第一个 DataNode 接收后，将数据写入本地磁盘，同时也传输给第二个 DataNode<br>4.3. 依此类推到最后一个 DataNode，数据在 DataNode 之间是通过 pipeline 的方式进行复制的<br>4.4. 后面的 DataNode 接收完数据后，都会发送一个确认给前一个 DataNode，最终第一个 DataNode 返回确认给客户端<br>4.5. 当客户端接收到整个 block 的确认后，会向 NameNode 发送一个最终的确认信息<br>4.6. 如果写入某个 DataNode 失败，数据会继续写入其他的 DataNode。然后 NameNode 会找另外一个好的 DataNode 继续复制，以保证冗余性<br>4.7. 每个 block 都会有一个校验码，并存放到独立的文件中，以便读的时候来验证其完整性</li>
+<li>文件写完后（客户端关闭），NameNode 提交文件（这时文件才可见，如果提交前，NameNode 垮掉，那文件也就丢失了。fsync：只保证数据的信息写到 NameNode 上，但并不保证数据已经被写到DataNode 中）</li>
+</ol>
+</blockquote>
+<p><img src="/pictures/tools/Hadoop/img2.png" alt="HDFS写入数据流程"></p>
+<h4 id="Hadoop读文件"><a href="#Hadoop读文件" class="headerlink" title="Hadoop读文件"></a>Hadoop读文件</h4><blockquote>
+<ol>
+<li>客户端向NameNode发送读取请求</li>
+<li>NameNode返回文件的所有block和这些block所在的DataNodes（包括复制节点）</li>
+<li>客户端直接从DataNode中读取数据，如果该DataNode读取失败（DataNode失效或校验码不对），则从复制节点中读取（如果读取的数据就在本机，则直接读取，否则通过网络读取）</li>
+</ol>
+</blockquote>
+<p><img src="/pictures/tools/Hadoop/img3.png" alt="HDFS读取数据流程"></p>
+<h3 id="MapReduce"><a href="#MapReduce" class="headerlink" title="MapReduce"></a>MapReduce</h3><p>MapReduce是一种可用于数据处理的编程模型。Hadoop可以运行各种版本的MapReduce程序。MapReduce程序本质上是并行运行的，它可以将大规模的数据分析任务分发给任何一个拥有足够多机器的数据中心。</p>
+<p>MapReduce任务过程分为两个处理阶段：map阶段和reduce阶段。每个阶段都以键值对作为输入和输出，其类型由程序员选择。</p>
+<blockquote>
+<ul>
+<li><strong>map阶段</strong> – 输入是原始数据。键是某一行起始位置相对于文件起始位置的偏移量。map函数是一个数据准备阶段。</li>
+<li><strong>reduce阶段</strong> – 对map阶段的输出值进行处理。reduce函数进行数据进一步的筛选及其他操作。</li>
+</ul>
+</blockquote>
+<p><img src="/pictures/tools/Hadoop/img4.png" alt="MapReduce计算逻辑"></p>
+<blockquote>
+<p>map: (K1, V1) → list(K2, V2)<br>combine: (K2, list(V2)) → list(K2, V2)<br>reduce: (K2, list(V2)) → list(K3, V3)</p>
+</blockquote>
+<p>MapReduce主要是先读取文件数据，然后进行Map处理，接着Reduce处理，最后把处理结果写到文件中<br><img src="/pictures/tools/Hadoop/img5.png" alt="MapReduce基本流程"></p>
+<h3 id="Hadoop数据倾斜"><a href="#Hadoop数据倾斜" class="headerlink" title="Hadoop数据倾斜"></a>Hadoop数据倾斜</h3> 
+      <!-- reward -->
+      
+    </div>
+    
+
+    <!-- copyright -->
+    
+    <div class="declare">
+      <ul class="post-copyright">
+        <li>
+          <i class="ri-copyright-line"></i>
+          <strong>版权声明： </strong>
+          
+          本博客所有文章除特别声明外，著作权归作者所有。转载请注明出处！
+          
+        </li>
+      </ul>
+    </div>
+    
+    <footer class="article-footer">
+       
+<div class="share-btn">
+      <span class="share-sns share-outer">
+        <i class="ri-share-forward-line"></i>
+        分享
+      </span>
+      <div class="share-wrap">
+        <i class="arrow"></i>
+        <div class="share-icons">
+          
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="ri-weibo-fill"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="ri-wechat-fill"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="ri-qq-fill"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="ri-douban-line"></i>
+          </a>
+          <!-- <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a> -->
+          
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="ri-facebook-circle-fill"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="ri-twitter-fill"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="ri-google-fill"></i>
+          </a>
+        </div>
+      </div>
+</div>
+
+<div class="wx-share-modal">
+    <a class="modal-close" href="javascript:;"><i class="ri-close-circle-line"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=http://example.com/2022/09/05/tools/Hadoop/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div id="share-mask"></div>  
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Big-Data/" rel="tag">Big Data</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/tools/" rel="tag">tools</a></li></ul>
+
+    </footer>
+  </div>
+
+   
+  <nav class="article-nav">
+    
+      <a href="/2022/09/09/NLP/K-BERT/" class="article-nav-link">
+        <strong class="article-nav-caption">上一篇</strong>
+        <div class="article-nav-title">
+          
+            K-BERT
+          
+        </div>
+      </a>
+    
+    
+      <a href="/2022/09/04/NLP/Transformer/" class="article-nav-link">
+        <strong class="article-nav-caption">下一篇</strong>
+        <div class="article-nav-title">Transformer</div>
+      </a>
+    
+  </nav>
+
+  
+   
+    
+    <script src="https://cdn.staticfile.org/twikoo/1.4.18/twikoo.all.min.js"></script>
+    <div id="twikoo" class="twikoo"></div>
+    <script>
+        twikoo.init({
+            envId: ""
+        })
+    </script>
+ 
+</article>
+
+</section>
+      <footer class="footer">
+  <div class="outer">
+    <ul>
+      <li>
+        Copyrights &copy;
+        2022
+        <i class="ri-heart-fill heart_icon"></i> Xueru Wang
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+      </li>
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      <li>
+        <!-- cnzz统计 -->
+        
+        <script type="text/javascript" src='https://s9.cnzz.com/z_stat.php?id=1278069914&amp;web_id=1278069914'></script>
+        
+      </li>
+    </ul>
+  </div>
+</footer>    
+    </main>
+    <div class="float_btns">
+      <div class="totop" id="totop">
+  <i class="ri-arrow-up-line"></i>
+</div>
+
+<div class="todark" id="todark">
+  <i class="ri-moon-line"></i>
+</div>
+
+    </div>
+    <aside class="sidebar on">
+      <button class="navbar-toggle"></button>
+<nav class="navbar">
+  
+  <div class="logo">
+    <a href="/"><img src="/images/ayer-side.svg" alt="WXR"></a>
+  </div>
+  
+  <ul class="nav nav-main">
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/">主页</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/archives">归档</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/categories">分类</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/tags">标签</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/about">关于我</a>
+    </li>
+    
+  </ul>
+</nav>
+<nav class="navbar navbar-bottom">
+  <ul class="nav">
+    <li class="nav-item">
+      
+      <a class="nav-item-link nav-item-search"  title="搜索">
+        <i class="ri-search-line"></i>
+      </a>
+      
+      
+      <a class="nav-item-link" target="_blank" href="/atom.xml" title="RSS Feed">
+        <i class="ri-rss-line"></i>
+      </a>
+      
+    </li>
+  </ul>
+</nav>
+<div class="search-form-wrap">
+  <div class="local-search local-search-plugin">
+  <input type="search" id="local-search-input" class="local-search-input" placeholder="Search...">
+  <div id="local-search-result" class="local-search-result"></div>
+</div>
+</div>
+    </aside>
+    <div id="mask"></div>
+
+<!-- #reward -->
+<div id="reward">
+  <span class="close"><i class="ri-close-line"></i></span>
+  <p class="reward-p"><i class="ri-cup-line"></i>请我喝杯咖啡吧~</p>
+  <div class="reward-box">
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/alipay.jpg">
+      <span class="reward-type">支付宝</span>
+    </div>
+    
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/wechat.jpg">
+      <span class="reward-type">微信</span>
+    </div>
+    
+  </div>
+</div>
+    
+<script src="/js/jquery-3.6.0.min.js"></script>
+ 
+<script src="/js/lazyload.min.js"></script>
+
+<!-- Tocbot -->
+ 
+<script src="/js/tocbot.min.js"></script>
+
+<script>
+  tocbot.init({
+    tocSelector: ".tocbot",
+    contentSelector: ".article-entry",
+    headingSelector: "h1, h2, h3, h4, h5, h6",
+    hasInnerContainers: true,
+    scrollSmooth: true,
+    scrollContainer: "main",
+    positionFixedSelector: ".tocbot",
+    positionFixedClass: "is-position-fixed",
+    fixedSidebarOffset: "auto",
+  });
+</script>
+
+<script src="https://cdn.staticfile.org/jquery-modal/0.9.2/jquery.modal.min.js"></script>
+<link
+  rel="stylesheet"
+  href="https://cdn.staticfile.org/jquery-modal/0.9.2/jquery.modal.min.css"
+/>
+<script src="https://cdn.staticfile.org/justifiedGallery/3.8.1/js/jquery.justifiedGallery.min.js"></script>
+
+<script src="/dist/main.js"></script>
+
+<!-- ImageViewer -->
+ <!-- Root element of PhotoSwipe. Must have class pswp. -->
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    <!-- Background of PhotoSwipe. 
+         It's a separate element as animating opacity is faster than rgba(). -->
+    <div class="pswp__bg"></div>
+
+    <!-- Slides wrapper with overflow:hidden. -->
+    <div class="pswp__scroll-wrap">
+
+        <!-- Container that holds slides. 
+            PhotoSwipe keeps only 3 of them in the DOM to save memory.
+            Don't modify these 3 pswp__item elements, data is added later on. -->
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                <!--  Controls are self-explanatory. Order can be changed. -->
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" style="display:none" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->
+                <!-- element will get class pswp__preloader--active when preloader is running -->
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<link rel="stylesheet" href="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/photoswipe/4.1.3/default-skin/default-skin.min.css">
+<script src="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe.min.js"></script>
+<script src="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe-ui-default.min.js"></script>
+
+<script>
+    function viewer_init() {
+        let pswpElement = document.querySelectorAll('.pswp')[0];
+        let $imgArr = document.querySelectorAll(('.article-entry img:not(.reward-img)'))
+
+        $imgArr.forEach(($em, i) => {
+            $em.onclick = () => {
+                // slider展开状态
+                // todo: 这样不好，后面改成状态
+                if (document.querySelector('.left-col.show')) return
+                let items = []
+                $imgArr.forEach(($em2, i2) => {
+                    let img = $em2.getAttribute('data-idx', i2)
+                    let src = $em2.getAttribute('data-target') || $em2.getAttribute('src')
+                    let title = $em2.getAttribute('alt')
+                    // 获得原图尺寸
+                    const image = new Image()
+                    image.src = src
+                    items.push({
+                        src: src,
+                        w: image.width || $em2.width,
+                        h: image.height || $em2.height,
+                        title: title
+                    })
+                })
+                var gallery = new PhotoSwipe(pswpElement, PhotoSwipeUI_Default, items, {
+                    index: parseInt(i)
+                });
+                gallery.init()
+            }
+        })
+    }
+    viewer_init()
+</script> 
+<!-- MathJax -->
+
+<!-- Katex -->
+
+<!-- busuanzi  -->
+
+<!-- ClickLove -->
+
+<!-- ClickBoom1 -->
+
+<!-- ClickBoom2 -->
+
+<!-- CodeCopy -->
+ 
+<link rel="stylesheet" href="/css/clipboard.css">
+ <script src="https://cdn.staticfile.org/clipboard.js/2.0.10/clipboard.min.js"></script>
+<script>
+  function wait(callback, seconds) {
+    var timelag = null;
+    timelag = window.setTimeout(callback, seconds);
+  }
+  !function (e, t, a) {
+    var initCopyCode = function(){
+      var copyHtml = '';
+      copyHtml += '<button class="btn-copy" data-clipboard-snippet="">';
+      copyHtml += '<i class="ri-file-copy-2-line"></i><span>COPY</span>';
+      copyHtml += '</button>';
+      $(".highlight .code pre").before(copyHtml);
+      $(".article pre code").before(copyHtml);
+      var clipboard = new ClipboardJS('.btn-copy', {
+        target: function(trigger) {
+          return trigger.nextElementSibling;
+        }
+      });
+      clipboard.on('success', function(e) {
+        let $btn = $(e.trigger);
+        $btn.addClass('copied');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-checkbox-circle-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPIED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-checkbox-circle-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+      clipboard.on('error', function(e) {
+        e.clearSelection();
+        let $btn = $(e.trigger);
+        $btn.addClass('copy-failed');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-time-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPY FAILED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-time-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+    }
+    initCopyCode();
+  }(window, document);
+</script>
+ 
+<!-- CanvasBackground -->
+
+<script>
+  if (window.mermaid) {
+    mermaid.initialize({ theme: "forest" });
+  }
+</script>
+
+
+    
+    
+
+  </div>
+</body>
+
+</html>

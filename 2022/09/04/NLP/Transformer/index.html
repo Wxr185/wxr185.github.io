@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+
+
+<html lang="zh-CN">
+  
+
+    <head>
+      <meta charset="utf-8" />
+        
+      <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1"
+      />
+      <title>Transformer |  WXR</title>
+  <meta name="generator" content="hexo-theme-ayer">
+      
+      <link rel="shortcut icon" href="/favicon.ico" />
+       
+<link rel="stylesheet" href="/dist/main.css">
+
+      
+<link rel="stylesheet" href="/css/fonts/remixicon.css">
+
+      
+<link rel="stylesheet" href="/css/custom.css">
+ 
+      <script src="https://cdn.staticfile.org/pace/1.2.4/pace.min.js"></script>
+       
+ 
+
+      <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bulma@5.0.1/bulma.min.css"
+      />
+      <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.min.js"></script>
+
+      <!-- mermaid -->
+      
+      <style>
+        .swal2-styled.swal2-confirm {
+          font-size: 1.6rem;
+        }
+      </style>
+    </head>
+  </html>
+</html>
+
+
+<body>
+  <div id="app">
+    
+      
+    <main class="content on">
+      <section class="outer">
+  <article
+  id="post-NLP/Transformer"
+  class="article article-type-post"
+  itemscope
+  itemprop="blogPost"
+  data-scroll-reveal
+>
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h1 class="article-title sea-center" style="border-left:0" itemprop="name">
+  Transformer
+</h1>
+ 
+
+      
+    </header>
+     
+    <div class="article-meta">
+      <a href="/2022/09/04/NLP/Transformer/" class="article-date">
+  <time datetime="2022-09-04T09:05:38.247Z" itemprop="datePublished">2022-09-04</time>
+</a> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E8%87%AA%E7%84%B6%E8%AF%AD%E8%A8%80%E5%A4%84%E7%90%86/">自然语言处理</a>
+  </div>
+  
+<div class="word_count">
+    <span class="post-time">
+        <span class="post-meta-item-icon">
+            <i class="ri-quill-pen-line"></i>
+            <span class="post-meta-item-text"> 字数统计:</span>
+            <span class="post-count">2.7k</span>
+        </span>
+    </span>
+
+    <span class="post-time">
+        &nbsp; | &nbsp;
+        <span class="post-meta-item-icon">
+            <i class="ri-book-open-line"></i>
+            <span class="post-meta-item-text"> 阅读时长≈</span>
+            <span class="post-count">9 分钟</span>
+        </span>
+    </span>
+</div>
+ 
+    </div>
+      
+    <div class="tocbot"></div>
+
+
+
+
+  
+    <div class="article-entry" itemprop="articleBody">
+       
+  <p>参考资料：<a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/420820453">https://zhuanlan.zhihu.com/p/420820453</a></p>
+<h3 id="多头注意力机制"><a href="#多头注意力机制" class="headerlink" title="多头注意力机制"></a>多头注意力机制</h3><h4 id="提出背景"><a href="#提出背景" class="headerlink" title="提出背景"></a>提出背景</h4><p>现在主流的序列模型都是基于复杂的循环神经网络或者卷积神经网络构造而来的Encoder-Decoder模型。传统的Encoder-Decoder架构在建模过程中，下一时刻的计算过程会很依赖于上一时刻的输出，这种固有属性导致很难以 <strong>并行</strong> 的方式进行计算。<br>基于以上原因，提出了一种全新的Transformer架构来解决这一问题。Transformer架构的优点在于它完全摒弃了传统的循环结构，取而代之的是通过 <strong>注意力机制</strong> 来计算模型输入与输出的隐含表示，即自注意力机制。<br><img src="/pictures/NLP/Transformer/img1.png" alt="Transformer的网络结构"></p>
+<blockquote>
+<p>自注意力机制就是通过某种运算直接计算得到句子在编码过程中每个位置上的注意力权重；然后再以权重和的形式来计算得到整个句子的隐含向量表示。</p>
+</blockquote>
+<h4 id="什么是self-attention"><a href="#什么是self-attention" class="headerlink" title="什么是self-attention?"></a>什么是self-attention?</h4><p>注意力机制可以描述为将query和一系列的key-value对映射到某个输出的过程，而这个输出向量就是根据query和key计算得到的权重作用于value上的权重和。<br><img src="/pictures/NLP/Transformer/img2.png" alt="自注意力机制"><br>自注意力机制的核心过程就是通过Q和K计算得到注意力权重；然后再作用于V得到整个权重和的输出。计算公式如下：<br><img src="/pictures/NLP/Transformer/img3.png" alt="自注意力机制计算公式"><br>之所以要对QK进行缩放，是因为对于较大的dk来说，完成QK计算后会得到很大的值。而这将导致在经过 <strong>softmax</strong> 操作后产生非常小的梯度，不利于网络的训练。</p>
+<h4 id="Q-K-V怎么来的？"><a href="#Q-K-V怎么来的？" class="headerlink" title="Q,K,V怎么来的？"></a>Q,K,V怎么来的？</h4><p>假设输入序列“我是谁”，通过embedding映射得到3x4的矩阵进行句子表示。<br>Q、K和V其实就是输入X分别乘以3个不同的矩阵计算而来（但这仅仅局限于Encoder和Decoder在各自输入部分利用自注意力机制进行编码的过程，Encoder和Decoder交互部分的Q、K和V另有指代）。此处对于计算得到的Q、K、V，你可以理解为这是 <em><strong>对于同一个输入进行3次不同的线性变换来表示其不同的3种状态</strong></em>。<br><img src="/pictures/NLP/Transformer/img4.jpg" alt="QKV是怎么来的"><br>在计算得到Q、K、V之后，就可以进一步计算得到权重向量。<br><img src="/pictures/NLP/Transformer/img5.jpg" alt="注意力权重计算图"><br>从上图可以知道，通过权重矩阵模型就可以知道当前位置的向量，应该以何种方式（权重）将注意力集中到不同的位置上。 <em><strong>模型在对当前位置的信息进行编码时，会过度将注意力集中于自身位置</strong></em>，而这会导致其忽略其他位置信息。因此，作者使用的解决方案就是 <strong>多头注意力机制</strong>。<br>计算得到权重矩阵后，便可以将其作用于V，进而得到最终的编码输出。<br><img src="/pictures/NLP/Transformer/img6.jpg" alt="编码输出计算"><br>对于最终的输出的编码向量，每个位置的编码向量其实就是 <strong>所有向量的加权和</strong>。这也就体现了自注意力机制在编码过程中的权重分配过程。</p>
+<blockquote>
+<p>有了自注意力机制后，仅需要对于原始输入进行几次矩阵变换就能够得到最终包含不同注意力信息的编码向量。解决了传统序列逆袭那个在编码过程中需要无法并行的弊端。</p>
+</blockquote>
+<h4 id="Multi-Head-Attention"><a href="#Multi-Head-Attention" class="headerlink" title="Multi-Head-Attention"></a>Multi-Head-Attention</h4><p>自注意力机制的缺陷在于：<em><strong>模型对于当前位置的信息进行整合编码时候，会过多的将注意力集中于自身位置</strong></em>，影响模型的表征能力。<br>多头注意力机制可以解决上述问题（对于周围信息获取受限的问题），并且还能够给予注意力层的输出包含有不同子空间的编码表示信息，增强模型的表达能力。<br>多头注意力机制就是将原始的输入序列进行多组的自注意力处理；然后将每组自注意力机制的结果 <strong>拼接</strong>起来进行一次线性变换得到最终的输出结果。<br><img src="/pictures/NLP/Transformer/img7.png" alt="多头注意力机制网络结构"><br>其计算公式为：<br><img src="/pictures/NLP/Transformer/img8.png" alt="多头注意力机制计算公式"><br>论文中，作者使用 <strong>8</strong> 个并行的自注意力模块来构建一个自注意力层，并且限定每个模块的维度为 <strong>64</strong>。论文中使用的多头注意力机制其实就是将一个大的高维单头拆分成h个多头。<br><img src="/pictures/NLP/Transformer/img9.jpg" alt="多头注意力计算"><br>根据输入序列X和W1可以得到Q1,K1,V1，进一步根据自注意力计算公式得到输出Z1；同理，可以得到另一个自注意力模块得到输出Z2；最后，将Z1,Z2水平堆叠形成Z，乘以W便可以得到最终的多头注意力层的输出。</p>
+<h3 id="位置编码与编码解码过程"><a href="#位置编码与编码解码过程" class="headerlink" title="位置编码与编码解码过程"></a>位置编码与编码解码过程</h3><h4 id="Embedding机制"><a href="#Embedding机制" class="headerlink" title="Embedding机制"></a>Embedding机制</h4><h5 id="Token-Embedding"><a href="#Token-Embedding" class="headerlink" title="Token Embedding"></a>Token Embedding</h5><p>在Transformer模型中，首先要将文本通过Embedding层映射到低维稠密的向量空间，得到向量化表示，即Token Embedding。</p>
+<blockquote>
+<p>如果是换做之前的网络模型，例如CNN或者RNN，那么对于文本向量化的步骤就到此结束了，因为这些网络结构本身已经具备了捕捉时序特征的能力，不管是CNN中的n-gram形式还是RNN中的时序形式。</p>
+</blockquote>
+<p>自注意力机制在实际运算过程中，不过是几个矩阵来回相乘进行线性变换，这就导致即使打乱词序，最终计算得到的结果本质上没有任何变化。 <strong>自注意力机制会丢失文本原有的序列信息！</strong></p>
+<blockquote>
+<p>举个例子：在经过词嵌入表示后，序列“武松 打 虎”和“虎 打 武松”经过相同的权重矩阵后，输出结果并没有任何区别，只是交换了对应的位置。</p>
+</blockquote>
+<p>为了解决自注意力机制丢失序列信息问题，引入了positional Embedding来刻画数据在时序上的特征。</p>
+<h5 id="Positional-Embedding"><a href="#Positional-Embedding" class="headerlink" title="Positional Embedding"></a>Positional Embedding</h5><p>作者采用如下规则生成各个维度的位置信息：<br><img src="/pictures/NLP/Transformer/img10.png" alt="位置信息生成公式"></p>
+<p>在交换位置前与交换位置后，与同一个权重矩阵进行线性变换后的结果截然不同。因此，这就证明通过Positional Embedding可以弥补自注意力机制不能捕捉序列时序信息的缺陷。</p>
+<h4 id="Transformer网络结构"><a href="#Transformer网络结构" class="headerlink" title="Transformer网络结构"></a>Transformer网络结构</h4><p>一个单层Transformer网络结构图。<br><img src="/pictures/NLP/Transformer/img11.png" alt="Transformer网络结构"></p>
+<h5 id="Encoder层"><a href="#Encoder层" class="headerlink" title="Encoder层"></a>Encoder层</h5><p>对于Encoder部分来说其内部主要由两部分网络所构成(6层堆叠)：<em><strong>多头注意力机制</strong></em> 和 <em><strong>两层前馈神经网络</strong></em>。<br>同时，对于这两部分网络来说，都加入了残差连接，并且在残差连接后还进行了层归一化操作。对于每个部分来说其输出均为LayNorm(x + Sub-Layer(x))，并且在都加入了Dropout操作。<br>进一步，为了便于在这些地方使用残差连接，这两部分网络输出向量的维度均为 <strong>512</strong>。<br>对于第2部分的两层全连接网络来说，其具体计算过程为<br><img src="/pictures/NLP/Transformer/img12.png" alt="FFN层计算"><br>其中输入的维度为 <strong>512</strong>，第1层全连接层的输出维度为 <strong>2048</strong>，第2层全连接层的输出为 <strong>512</strong>，且同时 <em><strong>仅对于第1层网络的输出</strong></em> 还运用了Relu激活函数。</p>
+<h5 id="Decoder层"><a href="#Decoder层" class="headerlink" title="Decoder层"></a>Decoder层</h5><p>对于Decoder部分来说，其整体上与Encoder类似（6层堆叠），只是多了一个用于与Encoder输出进行交互的多头注意力机制。<br>不同于Encoder部分，在Decoder中一共包含有3个部分的网络结构。最上面的和最下面的部分（暂时忽略Mask）与Encoder相同，只是多了中间这个与Encoder输出（Memory）进行交互的部分，作者称之为“Encoder-Decoder attention”。<br>对于这部分的输入，<strong>Q来自于下面多头注意力机制的输出，K和V均是Encoder部分的输出（Memory）经过线性变换后得到</strong>。而作者之所以这样设计也是在模仿传统Encoder-Decoder网络模型的解码过程。<br>传统的基于Encoder-Decoder的Seq2Seq翻译模型的解码过程：<br><img src="/pictures/NLP/Transformer/img13.jpg" alt="传统的Seq2Seq翻译模型"><br>左半部分是编码器，右下部分为解码器，右上部分为注意力机制部分。 ~h[i]表示<strong>编码过程</strong>中，各个时刻的隐含状态，称之为每个时刻的Memory；h[t]表示解码当前时刻的隐含状态。此时，注意力机制的思想在于，<strong>希望模型能够在解码时，参考编码阶段每个时刻的记忆</strong>。</p>
+<blockquote>
+<ol>
+<li>解码第一个时刻”s”时，h[t]会首先同每一个记忆状态~h[i]进行相似度计算，得到注意力权重；</li>
+<li>然后，通过对隐含状态的加权求和，得到context vector内容</li>
+</ol>
+</blockquote>
+<p>以上是传统的解码交互方案。在Transformer中，K和V均是编码部分的输出Memory经过线性变换后的结果（此时Memory中包含了原始输入序列每个位置的编码信息），而Q是解码部分多头注意力机制输出的隐含向量经过线性变换后的结果。</p>
+<blockquote>
+<ol>
+<li>首先，通过Q和K交互计算得到注意力权重矩阵；</li>
+<li>然后，通过注意力权重与V进行计算，得到权重解码向量。此向量考虑了memory中各个位置编码信息的输出向量。</li>
+<li>最后，得到解码向量后，经过两层全连接层后，将其输入到分类层进行分类得到当前时刻的解码输出值。</li>
+</ol>
+</blockquote>
+<h5 id="QKV的来源"><a href="#QKV的来源" class="headerlink" title="QKV的来源"></a>QKV的来源</h5><p>根据Transformer结构图可知，在整个Transformer中涉及到自注意力机制的一共有3个部分：</p>
+<blockquote>
+<ul>
+<li>Encoder中的Multi-Head Attention；</li>
+<li>Decoder中的Masked Multi-Head Attention；</li>
+<li>Encoder和Decoder交互部分的Multi-Head Attention。</li>
+</ul>
+</blockquote>
+<ol>
+<li>对于Encoder中的Multi-Head Attention来说，其原始q、k、v均是Encoder的Token输入经过Embedding后的结果。q、k、v分别经过一次线性变换（各自乘以一个权重矩阵）后得到了Q、K、V，然后再进行自注意力运算得到Encoder部分的输出结果Memory。</li>
+<li>对于Decoder中的Masked Multi-Head Attention来说，其原始q、k、v均是Decoder的Token输入经过Embedding后的结果。q、k、v分别经过一次线性变换后得到了Q、K、V，然后再进行自注意力运算得到Masked Multi-Head Attention部分的输出结果，即待解码向量。</li>
+<li>对于Encoder和Decoder交互部分的Multi-Head Attention，其原始q、k、v分别是上面的带解码向量、Memory和Memory。q、k、v分别经过一次线性变换后得到了Q、K、V，然后再进行自注意力运算得到Decoder部分的输出结果。之所以这样设计也是在模仿传统Encoder-Decoder网络模型的解码过程。</li>
+</ol>
+ 
+      <!-- reward -->
+      
+    </div>
+    
+
+    <!-- copyright -->
+    
+    <div class="declare">
+      <ul class="post-copyright">
+        <li>
+          <i class="ri-copyright-line"></i>
+          <strong>版权声明： </strong>
+          
+          本博客所有文章除特别声明外，著作权归作者所有。转载请注明出处！
+          
+        </li>
+      </ul>
+    </div>
+    
+    <footer class="article-footer">
+       
+<div class="share-btn">
+      <span class="share-sns share-outer">
+        <i class="ri-share-forward-line"></i>
+        分享
+      </span>
+      <div class="share-wrap">
+        <i class="arrow"></i>
+        <div class="share-icons">
+          
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="ri-weibo-fill"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="ri-wechat-fill"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="ri-qq-fill"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="ri-douban-line"></i>
+          </a>
+          <!-- <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a> -->
+          
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="ri-facebook-circle-fill"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="ri-twitter-fill"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="ri-google-fill"></i>
+          </a>
+        </div>
+      </div>
+</div>
+
+<div class="wx-share-modal">
+    <a class="modal-close" href="javascript:;"><i class="ri-close-circle-line"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=http://example.com/2022/09/04/NLP/Transformer/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div id="share-mask"></div>  
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/NLP/" rel="tag">NLP</a></li></ul>
+
+    </footer>
+  </div>
+
+   
+  <nav class="article-nav">
+    
+      <a href="/2022/09/05/tools/Hadoop/" class="article-nav-link">
+        <strong class="article-nav-caption">上一篇</strong>
+        <div class="article-nav-title">
+          
+            Hadoop
+          
+        </div>
+      </a>
+    
+    
+      <a href="/2022/09/04/NLP/Word2Vec/" class="article-nav-link">
+        <strong class="article-nav-caption">下一篇</strong>
+        <div class="article-nav-title">Word2Vec</div>
+      </a>
+    
+  </nav>
+
+  
+   
+    
+    <script src="https://cdn.staticfile.org/twikoo/1.4.18/twikoo.all.min.js"></script>
+    <div id="twikoo" class="twikoo"></div>
+    <script>
+        twikoo.init({
+            envId: ""
+        })
+    </script>
+ 
+</article>
+
+</section>
+      <footer class="footer">
+  <div class="outer">
+    <ul>
+      <li>
+        Copyrights &copy;
+        2022
+        <i class="ri-heart-fill heart_icon"></i> Xueru Wang
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+      </li>
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      <li>
+        <!-- cnzz统计 -->
+        
+        <script type="text/javascript" src='https://s9.cnzz.com/z_stat.php?id=1278069914&amp;web_id=1278069914'></script>
+        
+      </li>
+    </ul>
+  </div>
+</footer>    
+    </main>
+    <div class="float_btns">
+      <div class="totop" id="totop">
+  <i class="ri-arrow-up-line"></i>
+</div>
+
+<div class="todark" id="todark">
+  <i class="ri-moon-line"></i>
+</div>
+
+    </div>
+    <aside class="sidebar on">
+      <button class="navbar-toggle"></button>
+<nav class="navbar">
+  
+  <div class="logo">
+    <a href="/"><img src="/images/ayer-side.svg" alt="WXR"></a>
+  </div>
+  
+  <ul class="nav nav-main">
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/">主页</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/archives">归档</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/categories">分类</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/tags">标签</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/about">关于我</a>
+    </li>
+    
+  </ul>
+</nav>
+<nav class="navbar navbar-bottom">
+  <ul class="nav">
+    <li class="nav-item">
+      
+      <a class="nav-item-link nav-item-search"  title="搜索">
+        <i class="ri-search-line"></i>
+      </a>
+      
+      
+      <a class="nav-item-link" target="_blank" href="/atom.xml" title="RSS Feed">
+        <i class="ri-rss-line"></i>
+      </a>
+      
+    </li>
+  </ul>
+</nav>
+<div class="search-form-wrap">
+  <div class="local-search local-search-plugin">
+  <input type="search" id="local-search-input" class="local-search-input" placeholder="Search...">
+  <div id="local-search-result" class="local-search-result"></div>
+</div>
+</div>
+    </aside>
+    <div id="mask"></div>
+
+<!-- #reward -->
+<div id="reward">
+  <span class="close"><i class="ri-close-line"></i></span>
+  <p class="reward-p"><i class="ri-cup-line"></i>请我喝杯咖啡吧~</p>
+  <div class="reward-box">
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/alipay.jpg">
+      <span class="reward-type">支付宝</span>
+    </div>
+    
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/wechat.jpg">
+      <span class="reward-type">微信</span>
+    </div>
+    
+  </div>
+</div>
+    
+<script src="/js/jquery-3.6.0.min.js"></script>
+ 
+<script src="/js/lazyload.min.js"></script>
+
+<!-- Tocbot -->
+ 
+<script src="/js/tocbot.min.js"></script>
+
+<script>
+  tocbot.init({
+    tocSelector: ".tocbot",
+    contentSelector: ".article-entry",
+    headingSelector: "h1, h2, h3, h4, h5, h6",
+    hasInnerContainers: true,
+    scrollSmooth: true,
+    scrollContainer: "main",
+    positionFixedSelector: ".tocbot",
+    positionFixedClass: "is-position-fixed",
+    fixedSidebarOffset: "auto",
+  });
+</script>
+
+<script src="https://cdn.staticfile.org/jquery-modal/0.9.2/jquery.modal.min.js"></script>
+<link
+  rel="stylesheet"
+  href="https://cdn.staticfile.org/jquery-modal/0.9.2/jquery.modal.min.css"
+/>
+<script src="https://cdn.staticfile.org/justifiedGallery/3.8.1/js/jquery.justifiedGallery.min.js"></script>
+
+<script src="/dist/main.js"></script>
+
+<!-- ImageViewer -->
+ <!-- Root element of PhotoSwipe. Must have class pswp. -->
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    <!-- Background of PhotoSwipe. 
+         It's a separate element as animating opacity is faster than rgba(). -->
+    <div class="pswp__bg"></div>
+
+    <!-- Slides wrapper with overflow:hidden. -->
+    <div class="pswp__scroll-wrap">
+
+        <!-- Container that holds slides. 
+            PhotoSwipe keeps only 3 of them in the DOM to save memory.
+            Don't modify these 3 pswp__item elements, data is added later on. -->
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                <!--  Controls are self-explanatory. Order can be changed. -->
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" style="display:none" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->
+                <!-- element will get class pswp__preloader--active when preloader is running -->
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<link rel="stylesheet" href="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/photoswipe/4.1.3/default-skin/default-skin.min.css">
+<script src="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe.min.js"></script>
+<script src="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe-ui-default.min.js"></script>
+
+<script>
+    function viewer_init() {
+        let pswpElement = document.querySelectorAll('.pswp')[0];
+        let $imgArr = document.querySelectorAll(('.article-entry img:not(.reward-img)'))
+
+        $imgArr.forEach(($em, i) => {
+            $em.onclick = () => {
+                // slider展开状态
+                // todo: 这样不好，后面改成状态
+                if (document.querySelector('.left-col.show')) return
+                let items = []
+                $imgArr.forEach(($em2, i2) => {
+                    let img = $em2.getAttribute('data-idx', i2)
+                    let src = $em2.getAttribute('data-target') || $em2.getAttribute('src')
+                    let title = $em2.getAttribute('alt')
+                    // 获得原图尺寸
+                    const image = new Image()
+                    image.src = src
+                    items.push({
+                        src: src,
+                        w: image.width || $em2.width,
+                        h: image.height || $em2.height,
+                        title: title
+                    })
+                })
+                var gallery = new PhotoSwipe(pswpElement, PhotoSwipeUI_Default, items, {
+                    index: parseInt(i)
+                });
+                gallery.init()
+            }
+        })
+    }
+    viewer_init()
+</script> 
+<!-- MathJax -->
+
+<!-- Katex -->
+
+<!-- busuanzi  -->
+
+<!-- ClickLove -->
+
+<!-- ClickBoom1 -->
+
+<!-- ClickBoom2 -->
+
+<!-- CodeCopy -->
+ 
+<link rel="stylesheet" href="/css/clipboard.css">
+ <script src="https://cdn.staticfile.org/clipboard.js/2.0.10/clipboard.min.js"></script>
+<script>
+  function wait(callback, seconds) {
+    var timelag = null;
+    timelag = window.setTimeout(callback, seconds);
+  }
+  !function (e, t, a) {
+    var initCopyCode = function(){
+      var copyHtml = '';
+      copyHtml += '<button class="btn-copy" data-clipboard-snippet="">';
+      copyHtml += '<i class="ri-file-copy-2-line"></i><span>COPY</span>';
+      copyHtml += '</button>';
+      $(".highlight .code pre").before(copyHtml);
+      $(".article pre code").before(copyHtml);
+      var clipboard = new ClipboardJS('.btn-copy', {
+        target: function(trigger) {
+          return trigger.nextElementSibling;
+        }
+      });
+      clipboard.on('success', function(e) {
+        let $btn = $(e.trigger);
+        $btn.addClass('copied');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-checkbox-circle-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPIED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-checkbox-circle-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+      clipboard.on('error', function(e) {
+        e.clearSelection();
+        let $btn = $(e.trigger);
+        $btn.addClass('copy-failed');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-time-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPY FAILED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-time-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+    }
+    initCopyCode();
+  }(window, document);
+</script>
+ 
+<!-- CanvasBackground -->
+
+<script>
+  if (window.mermaid) {
+    mermaid.initialize({ theme: "forest" });
+  }
+</script>
+
+
+    
+    
+
+  </div>
+</body>
+
+</html>
