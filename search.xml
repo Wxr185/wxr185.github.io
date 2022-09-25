@@ -76,6 +76,431 @@
       </tags>
   </entry>
   <entry>
+    <title>Hadoop</title>
+    <url>/2022/09/05/tools/Hadoop/</url>
+    <content><![CDATA[<h2 id="Hadoop概念"><a href="#Hadoop概念" class="headerlink" title="Hadoop概念"></a>Hadoop概念</h2><p>Hadoop 框架是用于计算机集群大数据处理的框架，所以它必须是一个可以部署在多台计算机上的软件。部署了 Hadoop 软件的主机之间通过<strong>套接字</strong> (网络) 进行通讯。<br>Hadoop 主要包含 <strong>HDFS</strong> 和 <strong>MapReduce</strong> 两大组件。</p>
+<blockquote>
+<ul>
+<li>HDFS 负责分布储存数据;</li>
+<li>MapReduce 负责对数据进行映射、规约处理，并汇总处理结果。</li>
+</ul>
+</blockquote>
+<p>Hadoop 框架最根本的原理就是利用大量的计算机同时运算来加快大量数据的处理速度。</p>
+<h3 id="HDFS"><a href="#HDFS" class="headerlink" title="HDFS"></a>HDFS</h3><p>Hadoop Distributed File System，Hadoop 分布式文件系统，简称 HDFS。<br>HDFS 用于在集群中储存文件，它所使用的核心思想是 Google 的 GFS 思想，可以存储很大的文件。</p>
+<p>在服务器集群中，文件存储往往被要求高效而稳定，HDFS同时实现了这两个优点。</p>
+<blockquote>
+<ul>
+<li>HDFS 高效的存储是通过 <strong>计算机集群独立处理请求</strong> 实现的。因为用户 (一半是后端程序) 在发出数据存储请求时，往往 <em><strong>响应服务器</strong></em> 正在处理其他请求，这是导致服务效率缓慢的主要原因。但如果响应服务器直接分配一个数据服务器给用户，然后 <em><strong>用户直接与数据服务器交互</strong></em>，效率会快很多。</li>
+<li>数据存储的稳定性往往通过”多存几份”的方式实现，HDFS 也使用了这种方式。<strong>HDFS 的存储单位是块 (Block)</strong> ，一个文件可能会被分为多个块储存在物理存储器中。因此 HDFS 往往会按照设定者的要求把数据块复制 n 份并存储在不同的数据节点 (储存数据的服务器) 上，如果一个数据节点发生故障数据也不会丢失。</li>
+</ul>
+</blockquote>
+<p><img src="/pictures/tools/Hadoop/img1.png" alt="HDFS架构图"></p>
+<h4 id="Block数据块"><a href="#Block数据块" class="headerlink" title="Block数据块"></a>Block数据块</h4><ul>
+<li>基本存储单位，一般大小为 <strong>64M</strong> （配置大的块主要是因为：<ul>
+<li>减少搜寻时间，一般硬盘传输速率比寻道时间要快，大的块可以减少寻道时间；</li>
+<li>减少管理块的数据开销，每个块都需要在NameNode上有对应的记录；</li>
+<li>对数据块进行读写，减少建立网络的连接成本）</li>
+</ul>
+</li>
+<li>一个大文件会被拆分成一个个的块，然后存储于不同的机器。如果一个文件少于Block大小，那么实际占用的空间为其文件的大小</li>
+<li>基本的读写单位，类似于磁盘的页，每次都是读写一个块</li>
+<li>每个块都会被复制到多台机器，默认复制 <strong>3</strong> 份</li>
+</ul>
+<blockquote>
+<p>HDFS 2.x以后的block默认为 <strong>128M</strong></p>
+</blockquote>
+<h4 id="HDFS节点"><a href="#HDFS节点" class="headerlink" title="HDFS节点"></a>HDFS节点</h4><p>HDFS 运行在许多不同的计算机上，有的计算机专门用于存储数据，有的计算机专门用于指挥其它计算机储存数据。这里所提到的”计算机”我们可以称之为集群中的节点。</p>
+<h5 id="命名节点-NameNode"><a href="#命名节点-NameNode" class="headerlink" title="命名节点 NameNode"></a>命名节点 NameNode</h5><p>命名节点 (NameNode) 是用于指挥其它节点存储的节点。任何一个”文件系统”(File System, FS) 都需要具备 <strong>根据文件路径映射到文件</strong> 的功能，命名节点就是用于储存这些映射信息并提供映射服务的计算机，在整个 HDFS 系统中扮演”管理员”的角色，因此 <em><strong>一个 HDFS 集群中只有一个命名节点</strong></em>。</p>
+<h5 id="数据节点-DataNode"><a href="#数据节点-DataNode" class="headerlink" title="数据节点 (DataNode)"></a>数据节点 (DataNode)</h5><p>数据节点 (DataNode) 使用来储存数据块的节点。当一个文件被命名节点承认并分块之后将会被储存到被分配的数据节点中去。数据节点具有储存数据、读写数据的功能，其中 <strong>存储的数据块比较类似于硬盘中的”扇区”概念，是 HDFS 存储的基本单位</strong>。</p>
+<blockquote>
+<ol>
+<li>保存具体的block数据</li>
+<li>负责数据的读写操作和复制操作</li>
+<li>DataNode启动时会向NameNode报告当前存储的数据块信息，后续也会定时报告修改信息</li>
+<li>DataNode之间会进行通信，复制数据块，保证数据的冗余性</li>
+</ol>
+</blockquote>
+<h5 id="副命名节点-Secondary-NameNode"><a href="#副命名节点-Secondary-NameNode" class="headerlink" title="副命名节点 (Secondary NameNode)"></a>副命名节点 (Secondary NameNode)</h5><p>副命名节点 (Secondary NameNode) 别名”次命名节点”，是命名节点的”秘书”。这个形容很贴切，因为它并不能代替命名节点的工作，无论命名节点是否有能力继续工作。它主要负责 <strong>分摊命名节点的压力、备份命名节点的状态并执行一些管理工作</strong>，如果命名节点要求它这样做的话。如果命名节点坏掉了，它也可以提供备份数据以恢复命名节点。副命名节点可以有多个。</p>
+<h4 id="Hadoop写文件"><a href="#Hadoop写文件" class="headerlink" title="Hadoop写文件"></a>Hadoop写文件</h4><blockquote>
+<ol>
+<li>客户端将文件写入本地磁盘的 HDFS Client 文件中</li>
+<li>当临时文件大小达到一个 block 大小时，HDFS client 通知 NameNode，申请写入文件</li>
+<li>NameNode 在 HDFS 的文件系统中创建一个文件，并把该 block id 和要写入的 DataNode 的列表返回给客户端</li>
+<li>客户端收到这些信息后，将临时文件写入 DataNodes<br>4.1. 客户端将文件内容写入第一个 DataNode（一般以 4kb 为单位进行传输）<br>4.2. 第一个 DataNode 接收后，将数据写入本地磁盘，同时也传输给第二个 DataNode<br>4.3. 依此类推到最后一个 DataNode，数据在 DataNode 之间是通过 pipeline 的方式进行复制的<br>4.4. 后面的 DataNode 接收完数据后，都会发送一个确认给前一个 DataNode，最终第一个 DataNode 返回确认给客户端<br>4.5. 当客户端接收到整个 block 的确认后，会向 NameNode 发送一个最终的确认信息<br>4.6. 如果写入某个 DataNode 失败，数据会继续写入其他的 DataNode。然后 NameNode 会找另外一个好的 DataNode 继续复制，以保证冗余性<br>4.7. 每个 block 都会有一个校验码，并存放到独立的文件中，以便读的时候来验证其完整性</li>
+<li>文件写完后（客户端关闭），NameNode 提交文件（这时文件才可见，如果提交前，NameNode 垮掉，那文件也就丢失了。fsync：只保证数据的信息写到 NameNode 上，但并不保证数据已经被写到DataNode 中）</li>
+</ol>
+</blockquote>
+<p><img src="/pictures/tools/Hadoop/img2.png" alt="HDFS写入数据流程"></p>
+<h4 id="Hadoop读文件"><a href="#Hadoop读文件" class="headerlink" title="Hadoop读文件"></a>Hadoop读文件</h4><blockquote>
+<ol>
+<li>客户端向NameNode发送读取请求</li>
+<li>NameNode返回文件的所有block和这些block所在的DataNodes（包括复制节点）</li>
+<li>客户端直接从DataNode中读取数据，如果该DataNode读取失败（DataNode失效或校验码不对），则从复制节点中读取（如果读取的数据就在本机，则直接读取，否则通过网络读取）</li>
+</ol>
+</blockquote>
+<p><img src="/pictures/tools/Hadoop/img3.png" alt="HDFS读取数据流程"></p>
+<h3 id="MapReduce"><a href="#MapReduce" class="headerlink" title="MapReduce"></a>MapReduce</h3><p>MapReduce是一种可用于数据处理的编程模型。Hadoop可以运行各种版本的MapReduce程序。MapReduce程序本质上是并行运行的，它可以将大规模的数据分析任务分发给任何一个拥有足够多机器的数据中心。</p>
+<p>MapReduce任务过程分为两个处理阶段：map阶段和reduce阶段。每个阶段都以键值对作为输入和输出，其类型由程序员选择。</p>
+<blockquote>
+<ul>
+<li><strong>map阶段</strong> – 输入是原始数据。键是某一行起始位置相对于文件起始位置的偏移量。map函数是一个数据准备阶段。</li>
+<li><strong>reduce阶段</strong> – 对map阶段的输出值进行处理。reduce函数进行数据进一步的筛选及其他操作。</li>
+</ul>
+</blockquote>
+<p><img src="/pictures/tools/Hadoop/img4.png" alt="MapReduce计算逻辑"></p>
+<blockquote>
+<p>map: (K1, V1) → list(K2, V2)<br>combine: (K2, list(V2)) → list(K2, V2)<br>reduce: (K2, list(V2)) → list(K3, V3)</p>
+</blockquote>
+<p>MapReduce主要是先读取文件数据，然后进行Map处理，接着Reduce处理，最后把处理结果写到文件中<br><img src="/pictures/tools/Hadoop/img5.png" alt="MapReduce基本流程"></p>
+<h3 id="Hadoop数据倾斜"><a href="#Hadoop数据倾斜" class="headerlink" title="Hadoop数据倾斜"></a>Hadoop数据倾斜</h3>]]></content>
+      <categories>
+        <category>工具</category>
+        <category>大数据</category>
+      </categories>
+      <tags>
+        <tag>tools</tag>
+        <tag>Big Data</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>DIN</title>
+    <url>/2022/09/13/RecomSys/DIN/</url>
+    <content><![CDATA[<h3 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h3><p>针对电子商务领域的CTR预估，重点在与充分利用&#x2F;挖掘用户历史行为数据中的信息。</p>
+<blockquote>
+<p>按照传统方式，模型在预估针对用户推荐的广告时，对于 <em><strong>所有用户的特征选取总是使用固定长度</strong></em>。这样带来的问题就是，<em><strong>推荐系统并不能准确的把握用户的兴趣所在</strong></em>。</p>
+</blockquote>
+<h4 id="Attention机制引入"><a href="#Attention机制引入" class="headerlink" title="Attention机制引入"></a>Attention机制引入</h4><p>并不是所有的用户历史行为数据，对每一次的点击有贡献，而 <em><strong>仅仅有一部分在起作用</strong></em>。这个性质有些像attention，对于当前状态的预估，需要告知模型，哪些点与当前的预估最相关；</p>
+<p>在对用户历史行为数据进行处理时，每个用户的历史点击个数是不相等的，我们需要把它们编码成一个固定长的向量。以往的做法是，对每次历史点击做相同的embedding操作之后，将它们做一个 <em><strong>求和或者求最大值</strong></em> 的操作，类似经过了一个pooling层操作，简单粗暴，但是容易丢失很多信息。</p>
+<h4 id="模型改进"><a href="#模型改进" class="headerlink" title="模型改进"></a>模型改进</h4><blockquote>
+<ul>
+<li>使用 <strong>用户兴趣分布</strong> 来表示用户多种多样的兴趣爱好；</li>
+<li>使用 <strong>attention机制</strong> 来实现Local Activation；</li>
+<li>针对模型训练，提出了 <strong>Dice激活函数，自适应正则</strong>，显著提升了模型性能与收敛速度。</li>
+</ul>
+</blockquote>
+<h4 id="名词解释"><a href="#名词解释" class="headerlink" title="名词解释"></a>名词解释</h4><h5 id="Diversity-多样性"><a href="#Diversity-多样性" class="headerlink" title="Diversity 多样性"></a>Diversity 多样性</h5><p>用户在访问电商网站时会对多种商品感兴趣，也就是用户的兴趣非常广泛。<br>针对用户广泛的兴趣，DIN用 an interest distribution 去表示。</p>
+<h5 id="Local-Activation-局部激活"><a href="#Local-Activation-局部激活" class="headerlink" title="Local Activation 局部激活"></a>Local Activation 局部激活</h5><p>用户是否会点击推荐给他的商品 ，仅仅取决与历史行为数据的一小部分，而不是全部。</p>
+<p>DIN借鉴机器翻译中的Attention机制，设计了一种 <strong>attention-like network structure</strong>， 针对当前候选Ad，去局部的激活(Local Activate)相关的历史兴趣信息。<strong>和当前候选Ad相关性越高的历史行为，会获得更高的attention score，从而会主导这一次预测</strong>。</p>
+<h4 id="应用场景"><a href="#应用场景" class="headerlink" title="应用场景"></a>应用场景</h4><p>DIN方法也可以应用于其他有丰富用户行为数据的场景，比如：</p>
+<blockquote>
+<ul>
+<li>电子商务中的个性化推荐；</li>
+<li>社交网络中的信息推流排序(feeds ranking)</li>
+</ul>
+</blockquote>
+<h3 id="系统构建"><a href="#系统构建" class="headerlink" title="系统构建"></a>系统构建</h3><p>阿里推荐系统工作流程：</p>
+<blockquote>
+<ol>
+<li>检查用户历史行为数据；</li>
+<li>使用 matching module 产生 候选ads；</li>
+<li>通过 ranking module 得到 候选ads 的点击概率，并根据概率排序得到推荐列表；</li>
+<li>记录下用户对当前展示广告的反应（点击与否）</li>
+</ol>
+</blockquote>
+<p>这是一个闭环系统，对于用户行为数据（User Behavior Data），系统自己生产并自己消费。</p>
+<h3 id="训练数据"><a href="#训练数据" class="headerlink" title="训练数据"></a>训练数据</h3><p>数据有以下特点：</p>
+<blockquote>
+<ul>
+<li>Diversity – 兴趣爱好非常广泛；</li>
+<li>Local Activation – 历史行为中部分数据主导是否会点击候选广告；</li>
+<li>高纬度；</li>
+<li>非常稀疏；</li>
+<li>特征往往都是 multi-hot 的稀疏ids。</li>
+</ul>
+</blockquote>
+<p><img src="/pictures/RecomSys/DIN/img1.png" alt="特征数据"></p>
+<h4 id="特征处理"><a href="#特征处理" class="headerlink" title="特征处理"></a>特征处理</h4><p>论文中作者把特征分为四大类，并 <strong>没有进行特征组合&#x2F;交叉特征</strong>。而是 <strong>通过 DNN 去学习特征间的交互信息</strong>。</p>
+<blockquote>
+<ul>
+<li>User Profile Features</li>
+<li>User Behavior Features</li>
+<li>Ad Features</li>
+<li>Context Features</li>
+</ul>
+</blockquote>
+<p>为了得到一个 <strong>固定长度</strong> 的 Embedding Vector 表示，原来的做法是在 Embedding Layer 后面 <strong>增加一个 Pooling Layer</strong>。Pooling可以用 sum 或 average。最终得到一个固定长度的 Embedding Vector，是用户兴趣的一个抽象表示，常被称作 User Representation。缺点是会损失一些信息。<br><img src="/pictures/RecomSys/DIN/img2.png" alt="传统模型"></p>
+<p>DIN使用 Attention机制 来解决这个问题。Attention机制 来源于 Neural Machine Translation(NMT)。DIN使用 Attention机制 去更好的建模 局部激活。在DIN场景中，针对不同的候选广告需要自适应地调整 User Representation。也就是说：在 Embedding Layer -&gt; Pooling Layer 得到用户兴趣表示的时候，赋予不同的历史行为不同的权重，实现局部激活。从最终反向训练的角度来看，就是根据当前的候选广告，来反向的激活用户历史的兴趣爱好，赋予不同历史行为不同的权重。<br><img src="/pictures/RecomSys/DIN/img3.png" alt="DIN模型结构"></p>
+<h3 id="模型训练"><a href="#模型训练" class="headerlink" title="模型训练"></a>模型训练</h3><h4 id="评价指标-GAUC"><a href="#评价指标-GAUC" class="headerlink" title="评价指标 GAUC"></a>评价指标 GAUC</h4><p>不同于以往CTR模型采用AUC作为评价指标，论文采用的评价指标是自己设计的 GAUC 评价指标。</p>
+<p><em><strong>AUC的含义是正样本得分比负样本得分高的概率</strong></em>。在CTR的实际应用场景中，CTR预测常被应用于对每个用户的候选广告进行排序，也即最终想得到的效果是 <em><strong>每个用户的AUC达到最高</strong></em>。同时，<strong>不同用户的AUC之间也确实存在差别，有的用户天生点击率就高，有的用户却不怎么喜欢点击广告</strong>。</p>
+<p>以往的评价指标是对样本不区分用户地进行AUC计算。论文采用的GAUC计算了 <strong>用户级别的AUC</strong>，在单个用户AUC的基础上，按照 <strong>点击次数或展示次数进行加权平均</strong>，消除了用户偏差对模型的影响，更准确地描述了模型对于每个用户的表现效果。<br><img src="/pictures/RecomSys/DIN/img4.png" alt="GAUC计算公式"><br>w 可以是 <strong>clicks（点击次数） 或者 impressions（展示次数）</strong>，n 是用户数量。这中AUC也应该是在 <strong>个性化推荐</strong> 里面更适合的，用户每个个体都有自己的AUC。</p>
+<h4 id="激活函数-Dice"><a href="#激活函数-Dice" class="headerlink" title="激活函数 Dice"></a>激活函数 Dice</h4><p>Dice其实是ReLU的改良版，ReLU可以看作是 x * Max(x, 0)，相当于输出 x  经过了一个在0点的阶跃整流器。由于ReLU在 x&lt;0 的时候，梯度为0，可能导致网络停止更新，PReLU对整流器的左半部分形式进行了修改，使得 x&lt;0 时输出不为0。<br><img src="/pictures/RecomSys/DIN/img5.png" alt="激活函数"></p>
+<p>论文里认为，对于所有输入不应该都选择0点为整流点。于是提出了一种data dependent的方法，并称该激活函数为Dice函数。<br><img src="/pictures/RecomSys/DIN/img6.png" alt="Dice激活函数"><br>概率值 p[i] 决定输出是取 y[i] 或者是 a[i] * y[i]，p[i] 也起到了整流器的作用。<br>获取 p[i] 的两步操作：</p>
+<blockquote>
+<ol>
+<li>对 x 进行均值归一化处理。使得整流点是在数据的均值处，实现data dependent的想法；</li>
+<li>经过一个 sigmoid函数的计算，得到一个0到1的概率值。</li>
+</ol>
+</blockquote>
+<h4 id="自适应正则"><a href="#自适应正则" class="headerlink" title="自适应正则"></a>自适应正则</h4><p>在CTR预估任务中，用户行为数据具有长尾分布的特点，也即数据非常的稀疏。</p>
+<p>稀疏输入，为什么会overfitting呢？这个跟数据分布有关系，互联网时代的数据特点，<em><strong>超长尾头部重，头重（小比例的特征频繁出现）容易过拟合，长尾（大比例的特征低频出现）则容易带来噪声</strong></em>，不好学。当增加细粒度的特征时，也极其容易由于细粒度的样本过于密集而带来负面效果。</p>
+<p>为了防止模型过拟合，论文设计了一个针对 <strong>feature id出现的频率</strong> 进行自适应的正则方法。</p>
+<blockquote>
+<ul>
+<li>针对feature id出现的频率，来自适应的调整他们正则化的强度；</li>
+<li>对于出现频率高的，给与较小的正则化强度；</li>
+<li>对于出现频率低的，给予较大的正则化强度。</li>
+</ul>
+</blockquote>
+<h3 id="模型结构"><a href="#模型结构" class="headerlink" title="模型结构"></a>模型结构</h3><p>传统深度模型<br><img src="/pictures/RecomSys/DIN/img7.png" alt="传统深度模型"></p>
+<p>DIN模型在对用户的表示计算上引入了attention network (也即图中的 Activation Unit ) 。<br><img src="/pictures/RecomSys/DIN/img8.png" alt="DIN模型结构"></p>
+<p>DIN把用户特征、用户历史行为特征进行embedding操作，视为对用户兴趣的表示，之后通过attention network，<em><strong>对每个兴趣表示赋予不同的权值</strong></em>。这个权值是由用户的兴趣和待估算的广告进行匹配计算得到的，如此模型结构符合了之前的两个观察——用户兴趣的多样性以及部分对应。attention network 的计算公式如下， V_u 代表用户表示向量， V_i 代表用户兴趣表示向量， V_a 代表广告表示向量。<br><img src="/pictures/RecomSys/DIN/img9.png" alt="attention机制"></p>
+]]></content>
+      <categories>
+        <category>推荐系统</category>
+      </categories>
+      <tags>
+        <tag>Recom</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>MMoE</title>
+    <url>/2022/09/13/RecomSys/MMoE/</url>
+    <content><![CDATA[<p>在工业界基于神经网络的多任务学习在推荐等场景业务应用广泛，比如在推进啊系统中对用户推荐物品时，不仅要推荐用户感兴趣的物品，还要尽可能地促进转化和购买，因此要对用户评分和购买两种目标同时建模。</p>
+<h3 id="动机"><a href="#动机" class="headerlink" title="动机"></a>动机</h3><p>把多个任务放在一起学习，任务共享同一个模型空间，它们 <strong>共享同一个表示层</strong>。在训练过程中，多个任务会对这个共享模型进行参数更新。</p>
+<h4 id="相关任务"><a href="#相关任务" class="headerlink" title="相关任务"></a>相关任务</h4><p>multi task同时学习多个相关任务，并且具有相当的优势。同时，我们在做多任务学习时，有时关注的点在某个 <strong>主要任务</strong> 上，其他的共同学习的任务可能更多的只是起到帮助作用，这些起到帮助作用的任务叫做 <strong>辅助任务</strong>。</p>
+<p><strong>辅助任务与主任务越相关，那么起到的效果可能会越好</strong>。<br>如下图所示，假如有这样两个相似的任务：狗的分类模型和猫的分类模型。在单任务学习中，他们都拥有比较接近的底层特征，比如皮毛颜色啦、眼睛颜色啦、耳朵形状啦等等。<br><img src="/pictures/RecomSys/MMoE/img1.png" alt="学习任务相近的单任务学习"></p>
+<p>由于 <strong>多任务学习本质上是共享表示层</strong>，任务之间互相影响。那么在多任务学习中，他们就可以很好地进行底层特征共享。<br><img src="/pictures/RecomSys/MMoE/img2.png" alt="相关性较高的多任务学习"></p>
+<p>但是对于不相似的任务来说，如下图，汽车的识别和狗的识别，他们的 <strong>底层表示差异很大</strong>，共享表示层可能就没那么有效果了。进行参数共享时很有可能会互相冲突或噪声太多，对多任务学习而言非常不友好。<br><img src="/pictures/RecomSys/MMoE/img3.png" alt="相关性较低的多任务学习"></p>
+<blockquote>
+<p>由于multi task在不相关的任务上表现不佳，同时，在实际应用中，你很难判断任务在数据层面是否是相似的。<br>所以多任务学习如何在相关性不高的任务上获得好效果是一件很有挑战性也很有实际意义的事。</p>
+</blockquote>
+<h4 id="共享表示"><a href="#共享表示" class="headerlink" title="共享表示"></a>共享表示</h4><p>神经网络中，Multi Task Learning的共享表示有两种方式：<strong>hard参数共享和soft参数共享</strong>。</p>
+<h5 id="Hard参数共享"><a href="#Hard参数共享" class="headerlink" title="Hard参数共享"></a>Hard参数共享</h5><p>在所有任务之间 <strong>共享隐藏层</strong>，同时保留几个特定任务的输出层。这种方式很大程度上 <strong>降低了过拟合的风险</strong>。因为同时学习的工作越多，模型找到一个含有所有任务的表征就越困难，而过拟合某特定原始任务的可能性就越小。<br><img src="/pictures/RecomSys/MMoE/img4.png" alt="Hard参数共享"></p>
+<h5 id="Soft参数共享"><a href="#Soft参数共享" class="headerlink" title="Soft参数共享"></a>Soft参数共享</h5><p>每个任务有自己的参数和模型，最后 <strong>通过对不同任务的参数之间的差异加约束</strong>，表达相似性。比如可以使用L2进行正则, 迹范数（trace norm）等。<br><img src="/pictures/RecomSys/MMoE/img5.png" alt="Soft参数共享"></p>
+<h4 id="多任务学习优势"><a href="#多任务学习优势" class="headerlink" title="多任务学习优势"></a>多任务学习优势</h4><ol>
+<li>多个任务一起学习时，<strong>有相关部分也有不那么相关的地方</strong>，在学习一个任务时，与它不相关的部分就相当于是加入一些噪声，而 <strong>加入噪声可以提升模型的泛化能力</strong>。</li>
+<li>单任务学习时容易陷入局部最优，而多任务学习中 <strong>不同任务的局部最优解处于不同的位置</strong>，通过相互作用，可以逃离局部最优。</li>
+<li>增加任务会影响网络参数的更新，比如增加额外的任务增加了隐层的有效的学习率，具体取决于每个任务输出的错误反馈权重。可能较大的学习速率提升了学习效果</li>
+<li>某些特征可能在主任务不好学习（比如以很复杂的方式与特征进行交互，或被其他因素抑制），但在辅助任务上这个特征好学习到。可以通过辅助任务来学习这些特征，方法比如hints（预测重要特征）</li>
+<li>通过学习足够大的假设空间，在未来某些新任务中可以有较好的表现（解决冷启动），前提是这些任务都是 <strong>同源</strong> 的。</li>
+<li>多个任务在浅层共享表示，引入归纳偏置作为正则化项。因此，它降低了过拟合的风险以及模型的 Rademacher 复杂度（即适合随机噪声的能力）</li>
+</ol>
+<h3 id="MMoE模型结构"><a href="#MMoE模型结构" class="headerlink" title="MMoE模型结构"></a>MMoE模型结构</h3><p>关于共享隐层方面，MMoE和一般多任务学习模型的区别：</p>
+<blockquote>
+<p><strong>一般多任务学习模型</strong>：接近输入层的隐层作为一个整体被共享；<br><strong>MMoE</strong>：将共享的底层表示层分为 <strong>多个expert</strong>，同时设置了gate，使得 <strong>不同的任务可以多样化的使用共享层</strong>。</p>
+</blockquote>
+<p><img src="/pictures/RecomSys/MMoE/img6.png" alt="网络结构变化"></p>
+<blockquote>
+<p>a）是最原始的多任务学习模型，也就是base；<br>b）是加入单门（one gate）的MoE layer的多任务学习模型；<br>c）本质上是将base的shared bottom换成了MoE layer，并对每个任务都加gate</p>
+</blockquote>
+<h4 id="Mixture-of-Expert-Model"><a href="#Mixture-of-Expert-Model" class="headerlink" title="Mixture-of-Expert Model"></a>Mixture-of-Expert Model</h4><p>隐层是三个expert子网组成，各自的输出 f[i]（第 i 个expert的输出）会传入gate，也就是 g(x) 维度与expert个数相同的 <strong>softmax</strong>，g(x)[i] 是它输出的第 i 个logits。<strong>gate对expert的输出进行加权求和，得到不同任务的输入</strong>。<br><img src="/pictures/RecomSys/MMoE/img10.png" alt="MoE模型计算公式"></p>
+<h4 id="Shared-Bootom-Model"><a href="#Shared-Bootom-Model" class="headerlink" title="Shared-Bootom Model"></a>Shared-Bootom Model</h4><p>模型 (a) 最为常见，两个任务直接共享模型的 bottom 部分，只在最后处理时做区分，图 (a) 中使用了 Tower A 和 Tower B，然后分别接损失函数。<br><img src="/pictures/RecomSys/MMoE/img7.png" alt="Base模型"><br>x 表示 input，f 表示 shared-bottom network， h[k] 表示第 k 个tower network，针对第k个任务。</p>
+<p>这种网络非常简单，可以理解为在DNN上接了 k 个不同的tower 网络，不同的tower网络针对不同任务，有着各自的损失函数，但是 <strong>这些损失函数是放在一起进行联合训练</strong>。</p>
+<p>直觉告诉我们，如此进行多任务学习，在某些情况下效果可能并不好，例如当多个任务间是矛盾的，或者完全不相关的。</p>
+<h4 id="One-gate-MoE-Model"><a href="#One-gate-MoE-Model" class="headerlink" title="One-gate MoE Model"></a>One-gate MoE Model</h4><p>模型 (b) 是常见的多任务学习模型。将 input 分别输入给三个 Expert，但 <strong>三个Expert并不共享参数</strong>。同时将 input 输出给 Gate，<strong>Gate输出每个Expert被选择的概率</strong>，然后将三个Expert的输出 <strong>加权求和</strong>，输出给 Tower。有点 attention 的感觉。<br><img src="/pictures/RecomSys/MMoE/img8.png" alt="OMoE模型公式"><br>上式中，n 表示有 n 个 expert networks，f<a href="x">i</a> 表示第 i 个expert network，在论文expert network就是DNN网络。g(x)[i] 是由 输入x 控制的，其中 W[g] ∈ R[n × d]，n 表示expert network数量，d表示输入x 的特征维度，在n维度上进行softmax，因此 g(x)[i] 可理解为 <strong>通过输入x 得到在n个 exper network 上的权重分布</strong>。同样，h[k] 表示第k个 tower network。</p>
+<p>这个网络也很简单，可以理解为 对多个不同 expert network进行不同权重的集成，在集成的结果上接不同的tower network 而已。模型在训练过程中，会学习到不同expert network重要程度。</p>
+<p>那么何为 One-gate 呢？ 从上面的分析可以看出，不同的tower network的输入是相同的，都是经过同一套权重组合（同一个gate network）得到expert networks的输出。这么这样做合理吗？</p>
+<h4 id="Multi-gate-MoE-Model"><a href="#Multi-gate-MoE-Model" class="headerlink" title="Multi-gate MoE Model"></a>Multi-gate MoE Model</h4><p>模型 (c) 是作者新提出的方法，对于不同的任务，模型的权重选择是不同的，所以作者为每个任务都配备一个 Gate 模型。<strong>对于不同的任务，特定的 Gate k 的输出表示不同的 Expert 被选择的概率</strong>，将多个 Expert 加权求和，得到 f<a href="x">k</a> ，并输出给特定的 Tower 模型，用于最终的输出。<br><img src="/pictures/RecomSys/MMoE/img9.png" alt="MMoE模型公式"><br>与OMoE区别仅在 对于不同的tower network，有着不同的gate network，在OMoE上，只会初始化一个W[g] 参数矩阵，而在MMoE上，会初始化 k 个 W[gk]，得到 k 个gate network（multi-gates&#x2F;task-specific gates)，参数增加了一些。</p>
+<p>相对于OMoE，MMoE的做法更加合理一些，不同的任务有着不同的gate network，对expert networks输出有着不同权重组合。</p>
+]]></content>
+      <categories>
+        <category>推荐系统</category>
+      </categories>
+      <tags>
+        <tag>Recom</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>FM</title>
+    <url>/2022/09/12/RecomSys/FM/</url>
+    <content><![CDATA[<h3 id="FM"><a href="#FM" class="headerlink" title="FM"></a>FM</h3><h4 id="提出背景"><a href="#提出背景" class="headerlink" title="提出背景"></a>提出背景</h4><p>传统线性模型忽略了特征之间的交叉联系；特征高维稀疏，并且容易维度爆炸。</p>
+<p>FM就是Factor Machine，因子分解机。<br>FM通过对两两特征组合，引入交叉项特征，提高模型得分；其次是高维灾难，通过引入隐向量（对参数矩阵进行矩阵分解），完成对特征的参数估计。</p>
+<h4 id="模型公式"><a href="#模型公式" class="headerlink" title="模型公式"></a>模型公式</h4><p><strong>一般的线性模型</strong><br><img src="/pictures/RecomSys/FM/img1.png" alt="一般线性模型"></p>
+<p><strong>二阶多项式模型</strong><br><img src="/pictures/RecomSys/FM/img2.png" alt="二阶多项式模型"><br>上式中，n表示样本的特征数量，x[i]表示第i个特征。<br>与线性模型相比，FM模型多了后面特征组合的部分。</p>
+<h4 id="FM求解"><a href="#FM求解" class="headerlink" title="FM求解"></a>FM求解</h4><p>从上面的式子可以看到，组合部分的特征相关参数有 n(n−1)&#x2F;2 个。但是对于稀疏数据来说，同时满足 x i , x[i], x[j] 都不为0的情况十分少，这就会导致 w[i][j] 无法通过训练得到。</p>
+<p>为了求解得到w[i][j]，我们对于每一个特征分量 x[i] 引入 <strong>隐向量</strong> V[i] &#x3D; (v[i][1], …, v[i][k])，利用v[i]，v[j]对w[i][j]进行求解。<br><img src="/pictures/RecomSys/FM/img3.png" alt="权重矩阵W求解"></p>
+<p>求解v[i]和v[j]的具体过程如下：<br><img src="/pictures/RecomSys/FM/img4.png" alt="核心计算公式"></p>
+<h3 id="FFM"><a href="#FFM" class="headerlink" title="FFM"></a>FFM</h3><h4 id="概念"><a href="#概念" class="headerlink" title="概念"></a>概念</h4><p>同一个categorical特征经过One-Hot编码生成的数值特征都可以放到同一个field，包括用户性别、职业、品类偏好等。</p>
+<p>在FFM中，每一维特征 x[i]，针对其它特征的每一种field f[j]，都会学习一个隐向量 v[i][f]。因此，<em><strong>隐向量不仅与特征相关，也与field相关</strong></em>。也就是说，“Day&#x3D;26&#x2F;11&#x2F;15”这个特征与“Country”特征和“Ad_type”特征进行关联的时候使用不同的隐向量，这与“Country”和“Ad_type”的内在差异相符，也是FFM中“field-aware”的由来。</p>
+<p>假设样本的 n 个特征属于 f 个field，那么FFM的二次项有 nf个隐向量。而在FM模型中，每一维特征的隐向量只有一个，即二次项有n个隐向量。FM可以看作FFM的特例，是把所有特征都归属到一个field时的FFM模型。根据FFM的field敏感特性，可以导出其模型方程。<br><img src="/pictures/RecomSys/FM/img5.png" alt="FFM计算公式"><br>其中，fj 是第 j 个特征所属的field。如果隐向量的长度为 k，那么FFM的二次参数有 nfk 个，远多于FM模型的 nk 个。此外，由于隐向量与field相关，FFM二次项并不能够化简，其预测复杂度是 O(kn2)。</p>
+<h4 id="区别"><a href="#区别" class="headerlink" title="区别"></a>区别</h4><blockquote>
+<ol>
+<li>FM和FFM模型的二次项的个数都是 n(n−1)&#x2F;2 个，区别在于FM模型中二次项<strong>存在重复使用的隐向量</strong>，而FFM模型没有，这正是由于FFM的域的概念的存在</li>
+<li>FM模型的参数量为nk，FFM模型的参数量为nfk个</li>
+<li>FM模型的时间复杂度可以优化为线性的，而FFM模型为nfk（最坏时，即当所有特征都是独自一个域时，为n^2k）</li>
+</ol>
+</blockquote>
+<h4 id="应用"><a href="#应用" class="headerlink" title="应用"></a>应用</h4><p>在DSP或者推荐场景中，FFM主要用来评估站内的CTR和CVR，即一个用户对一个商品的潜在点击率和点击后的转化率。<br>CTR和CVR预估模型都是在线下训练，然后线上预测。两个模型采用的特征大同小异，主要分三类：</p>
+<blockquote>
+<ol>
+<li>用户相关的特征: 年龄、性别、职业、兴趣、品类偏好、浏览&#x2F;购买品类等基本信息，以及用户近期点击量&#x2F;购买量&#x2F;消费额等统计信息</li>
+<li>商品相关的特征: 商品所属品类、销量、价格、评分、历史CTR&#x2F;CVR等信息</li>
+<li>用户-商品匹配特征: 浏览&#x2F;购买品类匹配、浏览&#x2F;购买商家匹配、兴趣偏好匹配等</li>
+</ol>
+</blockquote>
+<p>为了使用FFM方法，所有的特征必须转换成“field_id:feat_id:value”格式，field_id代表特征所属field的编号，feat_id是特征编号，value是特征的值。数值型的特征比较容易处理，只需分配单独的field编号，如用户评论得分、商品的历史CTR&#x2F;CVR等。categorical特征需要经过One-Hot编码成数值型，编码产生的所有特征同属于一个field，而特征的值只能是0或1，如用户的性别、年龄段，商品的品类id等。除此之外，还有第三类特征，如用户浏览&#x2F;购买品类，有多个品类id且用一个数值衡量用户浏览或购买每个品类商品的数量。这类特征按照categorical特征处理，不同的只是特征的值不是0或1，而是代表用户浏览或购买数量的数值。按前述方法得到field_id之后，再对转换后特征顺序编号，得到feat_id，特征的值也可以按照之前的方法获得。 </p>
+]]></content>
+      <categories>
+        <category>推荐系统</category>
+      </categories>
+      <tags>
+        <tag>Recom</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>DeepFM</title>
+    <url>/2022/09/12/RecomSys/DeepFM/</url>
+    <content><![CDATA[<h3 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h3><h4 id="特征组合的挑战"><a href="#特征组合的挑战" class="headerlink" title="特征组合的挑战"></a>特征组合的挑战</h4><p>对于基于CTR预估的推荐系统，最重要的是学习到用户点击行为背后隐含的特征组合。在不同的推荐场景中，低阶组合特征或者高阶组合特征可能会对最终的CTR产生影响。</p>
+<p>因子分解机通过对于每一维特征的隐变量的内积来提取特征组合。理论上FM可以对高阶特征组合进行建模，但是实际上因为计算复杂度的原因，一般只用到了二阶特征组合。对于高阶特征组合，使用多层神经网络DNN解决。</p>
+<h4 id="DNN的局限性"><a href="#DNN的局限性" class="headerlink" title="DNN的局限性"></a>DNN的局限性</h4><p>对于离散特征的处理，使用one-hot编码。但是将one-hot编码直接输入到DNN中，会导致网络参数过多。<br><img src="/pictures/RecomSys/DeepFM/img1.png" alt="one-hot编码不可以直接输入DNN"></p>
+<p>采用类似于FFM中的思想，将特征分为不同的field。<br><img src="/pictures/RecomSys/DeepFM/img2.png" alt="Embedding生成"></p>
+<p>再加两层全连接层，便可以组合出高阶特征。<br><img src="/pictures/RecomSys/DeepFM/img3.png" alt="高阶特征组合"></p>
+<p>但是低阶和高阶特征组合隐含地体现在隐藏层中，如果我们希望把低阶特征组合单独建模，然后融合高阶特征组合。<br><img src="/pictures/RecomSys/DeepFM/img4.png" alt="并行结构 DeepFM"></p>
+<p><img src="/pictures/RecomSys/DeepFM/img5.png" alt="串行结构 FNN"></p>
+<p>目前的CTR预估模型，实质上都是在“利用模型”进行特征工程上狠下功夫。传统的LR，简单易解释，但特征之间信息的挖掘需要大量的人工特征工程来完成。由于深度学习的出现，利用神经网络本身对于隐含特征关系的挖掘能力，成为了一个可行的方式。<em><strong>DNN本身主要是针对于高阶的隐含特征</strong></em>，而像FNN（利用FM做预训练实现embedding，再通过DNN进行训练，有时间会写写对该模型的认识）这样的模型则是考虑了高阶特征，而在最后sigmoid输出时 <em><strong>忽略了低阶特征本身</strong></em>。</p>
+<p>鉴于上述理论，目前新出的很多基于深度学习的CTR模型都从wide、deep（即低阶、高阶）两方面同时进行考虑，进一步提高模型的泛化能力，比如DeepFM。</p>
+<h3 id="模型结构"><a href="#模型结构" class="headerlink" title="模型结构"></a>模型结构</h3><p>DeepFM包含两个部分：神经网络部分与因子分解机部分，分别负责低阶特征的提取和高阶特征的提取。这两个部分 <em><strong>共享同样的输入</strong></em>。<br><img src="/pictures/RecomSys/DeepFM/img6.png" alt="DeepFM网络结构"></p>
+<h4 id="FM部分"><a href="#FM部分" class="headerlink" title="FM部分"></a>FM部分</h4><p><img src="/pictures/RecomSys/DeepFM/img7.png" alt="FM模块结构"><br>传统度量特征 i 和 j 权重的方法，<strong>需要两者同时存在于同一条数据记录中</strong>。<br>FM部分是一个因子分解机。因为FM中引入 <strong>隐变量</strong> 的原因，对于几乎不出现或者很少出现的隐变量，FM也可以很好的学习。</p>
+<p>FM通过两个特征的隐向量的内乘积进行表示。不需要同时存在于同一条记录中。<br><img src="/pictures/RecomSys/DeepFM/img8.png" alt="因子分解"></p>
+<p>FM的输出为：<br><img src="/pictures/RecomSys/DeepFM/img9.png" alt="FM模型公式"></p>
+<h4 id="Deep部分"><a href="#Deep部分" class="headerlink" title="Deep部分"></a>Deep部分</h4><p><img src="/pictures/RecomSys/DeepFM/img10.png" alt="DNN模块结构"><br>Deep部分是一个前馈神经网络。与图像或者语音这类输入不同，图像语音的输入一般是连续并且密集的，然而用于CTR的输入一般是及其稀疏的。因此，在第一层隐藏层之前，<strong>引入一个嵌入层来完成将输入向量压缩到低维稠密向量</strong>。</p>
+<h4 id="Embedding层"><a href="#Embedding层" class="headerlink" title="Embedding层"></a>Embedding层</h4><p><img src="/pictures/RecomSys/DeepFM/img11.png" alt="Embedding层网络结构"><br>嵌入层(embedding layer)的结构如上图所示。当前网络结构有两个有趣的特性<br>尽管不同field的输入长度不同，但是embedding之后向量的长度均为K；<br>在FM里得到的隐变量 V_ik 现在作为了嵌入层网络的权重。</p>
+<p>这里的第二点如何理解呢，假设我们的 k&#x3D;5，首先，对于输入的一条记录，<em><strong>同一个field 只有一个位置是1</strong></em>，那么在由输入得到dense vector的过程中，输入层只有一个神经元起作用，得到的dense vector其实就是 <em><strong>输入层到embedding层该神经元相连的五条线的权重</strong></em>，即v_i1，v_i2，v_i3，v_i4，v_i5。这五个值组合起来就是我们在FM中所提到的V_i。</p>
+<p>在FM部分和DNN部分，这一块是 <em><strong>共享权重</strong></em> 的，对同一个特征来说，得到的V_i是相同的。</p>
+<h4 id="输出层"><a href="#输出层" class="headerlink" title="输出层"></a>输出层</h4><p>DeepFM的预测结果为：<br><img src="/pictures/RecomSys/DeepFM/img12.png" alt="输出层计算"></p>
+]]></content>
+      <categories>
+        <category>推荐系统</category>
+      </categories>
+      <tags>
+        <tag>Recom</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Wide&amp;Deep</title>
+    <url>/2022/09/12/RecomSys/Wide-and-Deep/</url>
+    <content><![CDATA[<h3 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h3><p>推荐系统的主要挑战之一，是同时解决 Memorization 和 Generalization。Wide&amp;Deep模型旨在使得训练得到的模型能够同时获得记忆和泛化能力。</p>
+<blockquote>
+<p><strong>Memorization</strong>: 根据历史行为数据，产生的推荐通常和用户已有行为的物品直接相关的物品；<br><strong>Generalization</strong>: 会学习新的特征组合，提高推荐物品的多样性。</p>
+</blockquote>
+<h4 id="记忆能力"><a href="#记忆能力" class="headerlink" title="记忆能力"></a>记忆能力</h4><p>面对拥有大规模离散sparse特征的CTR预估问题，将特征进行非线性转换，然后再使用线性模型是业界非常普遍的做法，最流行的即 <em><strong>LR+特征叉乘</strong></em>。Memorization 通过一系列人工的特征叉乘来构造这些非线性特征，捕捉 sparse 特征之间的高阶相关性，即 <em><strong>“记忆”历史数据中曾经共同出现过的特征对</strong></em>。</p>
+<p>典型代表是LR模型，使用大量的原始sparse特征和叉乘特征作为输入，很多原始的dense特征通常会被分桶离散化为sparse特征。</p>
+<p>这种做法的优点是：</p>
+<blockquote>
+<p>模型可解释性高，实现快速高效，特征重要度易于分析。</p>
+</blockquote>
+<p>缺点是：</p>
+<blockquote>
+<ol>
+<li>需要更多的人工设计；</li>
+<li>可能出现过拟合。可以理解为，如果将所有特征叉乘起来，那么几乎相当于纯粹记住每个训练样本，这个极端情况是最细粒度的叉乘，我们可以通过构建更粗粒度的特征叉乘来增强泛化性；</li>
+<li>无法捕捉训练数据集中未曾出现过的特征对；</li>
+</ol>
+</blockquote>
+<h4 id="泛化能力"><a href="#泛化能力" class="headerlink" title="泛化能力"></a>泛化能力</h4><p>Generalization 为 sparse 特征学习低维的 dense embedding 来捕捉特征相关性，学习到的embeddings 本身带有一定的语义信息。可以联想到 NLP 的词向量，不同词的词向量有相关性，因此文中也称 Generalization 是基于相关性之间的传递。这类模型的代表是 DNN 和 FM。</p>
+<p>Generalization 的优点是更少的人工参与，对历史上没有出现的特征组合有更好的泛化性。但是在推荐系统中，当 user-item matrix 非常稀疏，NN很难为 users 和 items 学习到有效的 embedding。这种情况下，大部分 user-item 应该是没有关联的，但 dense embedding 的方法还是可以得到对所有 user-item pair 的非零预测，因此导致 over-generalize 并推荐不怎么相关的物品。此时 Memorization 就展示了优势，它可以记住这些特殊的特征组合。</p>
+<h3 id="模型结构"><a href="#模型结构" class="headerlink" title="模型结构"></a>模型结构</h3><p>Wide&amp;Deep 模型结合了 LR 和 DNN，其框架图如下所示：<br><img src="/pictures/RecomSys/Wide-and-Deep/img1.png" alt="网络结构"></p>
+<h4 id="Wide部分"><a href="#Wide部分" class="headerlink" title="Wide部分"></a>Wide部分</h4><p>该部分是广义线性模型</p>
+<blockquote>
+<p>y &#x3D; W * [x, f(x)] + b<br>其中，x 和 f(x) 分别表示 <em><strong>原始特征和交叉特征</strong></em>。</p>
+</blockquote>
+<h4 id="Deep部分"><a href="#Deep部分" class="headerlink" title="Deep部分"></a>Deep部分</h4><p>该部分是前馈神经网络，网络会对一些sparse特征学习一个低维的dense embedding（维度量级通常在O(10)到O(100)之间），然后和一些原始 dense 特征一起作为网络的输入。</p>
+<p>每一层隐层计算为：<br><img src="/pictures/RecomSys/Wide-and-Deep/img2.png" alt="隐层计算公式"></p>
+<h4 id="输出层"><a href="#输出层" class="headerlink" title="输出层"></a>输出层</h4><p>模型选取 logistic loss 作为损失函数，此时 Wide&amp;Deep 最后的预测输出为：<br><img src="/pictures/RecomSys/Wide-and-Deep/img3.png" alt="输出层计算"></p>
+<h3 id="联合训练"><a href="#联合训练" class="headerlink" title="联合训练"></a>联合训练</h3><p>联合训练（Joint Training）和集成（Ensemble）是不同的。<br>集成是每个模型单独训练，再将模型的结果汇合。相比于联合训练，集成的每个独立模型都得学的足够好才有利于随后的汇合，因此每个 model size 相对更大。<br>而联合学习的wide部分只需要做一小部分的特征叉乘来弥补deep部分的不足，不需要一个 full-size 的wide模型。</p>
+<p>在论文中，作者通过梯度的反向传播，使用 mini-batch stochastic optimization 训练参数，并对 wide 部分使用带 L1正则的 Follow-the-regularized-leader(FTRL)算法，对 deep 部分使用 AdaGrad 算法。</p>
+<h3 id="场景应用"><a href="#场景应用" class="headerlink" title="场景应用"></a>场景应用</h3><h4 id="应用背景"><a href="#应用背景" class="headerlink" title="应用背景"></a>应用背景</h4><p>Google Play 商店的 app 推荐中，当一个 user 访问 Google Play，会生成一个包含 user 和 contextual 信息的 query，推荐系统的精排模型会对于候选池中召回的一系列 app（即 item，文中也称 impression）进行打分，按打分生成 app 的排列列表返回给用户。Deep&amp;Wide 对应这里的精排模型，输入 x 包括 &lt;user, contextual, impression&gt;的信息，y &#x3D; 1表示用户下载了 impression app，打分即为 p(y|x)。</p>
+<p>实验的Deep &amp; Wide模型结构如下：<br><img src="/pictures/RecomSys/Wide-and-Deep/img4.png" alt="网络结构"></p>
+<h4 id="实验细节"><a href="#实验细节" class="headerlink" title="实验细节"></a>实验细节</h4><blockquote>
+<ul>
+<li>训练样本约5000亿</li>
+<li>Categorical 特征（sparse）会有一个过滤阈值，即至少在训练集中出现m次才会被加入</li>
+<li>Continuous 特征（dense）通过CDF被归一化到 [0,1] 之间</li>
+<li>Categorical 特征映射到32维embeddings，和原始Continuous特征共1200维作为NN输入</li>
+<li>Wide部分只用了一组特征叉乘，即被推荐的app ☓ 用户下载的app</li>
+<li>线上模型更新时，通过“热启动”重训练，即使用上次的embeddings和模型参数初始化</li>
+</ul>
+</blockquote>
+<p>Wide部分设置很有意思，作者为什么这么做呢？<br>结合业务思考，在Google Play商店的app下载中，不断有新的app推出，并且有很多“非常冷门、小众”的app，而现在的智能手机user几乎全部会安装一系列必要的app。</p>
+<p>联想前面对Memorization和Generalization的介绍，此时的Deep部分无法很好的为这些app学到有效的embeddding，而这时Wide可以发挥了它“记忆”的优势，作者在这里选择了 <em><strong>“记忆”user下载的app与被推荐的app之间的相关性</strong></em>，有点类似“装个这个app后还可能会装什么”。</p>
+<p>对于Wide来说，它现在的任务是弥补Deep的缺陷，其他大部分的活就交给Deep了，所以这时的Wide相比单独Wide也显得非常“轻量级”，这也是Join相对于Ensemble的优势。</p>
+]]></content>
+      <categories>
+        <category>推荐系统</category>
+      </categories>
+      <tags>
+        <tag>Recom</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>FastText</title>
+    <url>/2022/09/04/NLP/FastText/</url>
+    <content><![CDATA[<h3 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h3><p>fasttext是facebook开源的一个词向量与文本分类工具，在2016年开源，典型应用场景是“带监督的文本分类问题”。提供简单而高效的 <strong>文本分类</strong> 和 <strong>表征学习</strong> 的方法，性能比肩深度学习而且速度更快。</p>
+<p>FastText结合了自然语言处理和机器学习中的思想：</p>
+<ul>
+<li>使用词袋以及N-gram袋表征语句；</li>
+<li>使用子字信息；</li>
+<li>通过隐藏表征在类别间共享信息</li>
+</ul>
+<h3 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h3><p>核心思想：将整篇文档的词以及N-gram向量 <strong>叠加平均</strong> 得到文档向量，然后使用文档向量做softmax分类。</p>
+<h4 id="模型架构"><a href="#模型架构" class="headerlink" title="模型架构"></a>模型架构</h4><p>FastText架构和CBOW架构类似。不同之处在于，FastText预测标签，CBOW通过上下文预测中间词。<br><img src="/pictures/NLP/FastText/img1.jpg" alt="FastText模型架构"></p>
+<blockquote>
+<p><strong>注意：</strong> 此架构图并没有展示词向量的训练过程。FastText模型也只有三层：输入层，隐含层，输出层。输入是多个向量表示的单词，输出是特定的Target，隐含层是对多个词向量的叠加平均。</p>
+</blockquote>
+<p>与CBOW模型不同的是，</p>
+<ul>
+<li>CBOW的输入是目标单词的上下文，FastText的输入是多个单词以及其N-gram特征，这些特征用来表示单个文档；</li>
+<li>CBOW的输入单词是被one-hot编码过后的，FastText的输入特征是被embedding后的；</li>
+<li>CBOW的输出是目标词汇，FastText的输出是文档对应的类标。</li>
+</ul>
+<h4 id="层序softmax"><a href="#层序softmax" class="headerlink" title="层序softmax"></a>层序softmax</h4><p>对于有大量类别的数据集，FastText使用一个分层分类器，降低计算复杂度。<br>FastText利用了类别不均衡这个事实，通过使用Huffman算法建立用于表征类别的树形结构。因此，出现频次较高的类别更加接近根节点。</p>
+<h4 id="N-gram特征"><a href="#N-gram特征" class="headerlink" title="N-gram特征"></a>N-gram特征</h4><p>Word2Vec把语料库中的每个单词作为一个原子。这忽略了单词内部的形态特征，比如apple和apples。传统的Word2Vec中，这种单词内部形态信息因为它们被转换为不同的id丢失了。</p>
+<p>为了克服这个问题，FastText使用了字符级别的N-gram来表示一个单词。对于单词apple，假设N的取值为3，则它的trigram有：</p>
+<blockquote>
+<p>“&lt;ap”,  “app”,  “ppl”,  “ple”, “le&gt;”</p>
+</blockquote>
+<p>其中，&lt;表示前缀，&gt;表示后缀。于是，我们可以用这些trigram来表示“apple”这个单词，进一步，我们可以用这5个trigram的向量叠加来表示“apple”的词向量。</p>
+<p>这带来两点好处：</p>
+<ul>
+<li>对于低频词生成的词向量效果会更好。因为它们的N-gram可以和其他词共享；</li>
+<li>对于训练词库之外的单词，仍然可以构建它们的词向量。我们可以叠加它们的字符级N-gram向量。</li>
+</ul>
+<h3 id="应用"><a href="#应用" class="headerlink" title="应用"></a>应用</h3><p><strong>模型搭建步骤：</strong></p>
+<ol>
+<li>添加输入层：Embedding层输入是一批文档，每个文档有一个词汇索引序列构成；</li>
+<li>添加隐含层：投影层对一个文档中所有单词的向量进行叠加平均；</li>
+<li>添加输出层：Softmax层</li>
+<li>指定损失函数，优化器类型，评价指标，编译模型。</li>
+</ol>
+<p><strong>训练数据feed模型步骤</strong></p>
+<ol>
+<li>将文档分好词，构建词汇表；</li>
+<li>对类标进行one-hot化；</li>
+<li>对一批文本，将每个文本转化为词索引序列，每个类标转化为one-hot向量</li>
+</ol>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><h4 id="如何获得词向量？"><a href="#如何获得词向量？" class="headerlink" title="如何获得词向量？"></a>如何获得词向量？</h4><p><strong>累加平均</strong> 一个词的N-gram集合包括自身整个词的隐向量表示。</p>
+<h4 id="FastText和Word2Vec区别"><a href="#FastText和Word2Vec区别" class="headerlink" title="FastText和Word2Vec区别"></a>FastText和Word2Vec区别</h4><p>相似处：</p>
+<blockquote>
+<ol>
+<li>图模型结构很想，都是采用embedding向量形式，得到word的隐向量表达；</li>
+<li>采用很多相似的优化，比如使用层级sotmax优化训练和预测中的打分速度</li>
+</ol>
+</blockquote>
+<p>不同之处：</p>
+<blockquote>
+<ol>
+<li>输入层：Word2Vec的输出层，是context window内的term；而FastText对应的整个sentence的内容，包括term和N-gram的内容；</li>
+<li>输出层：Word2Vec的输出层，对应的是每个term，计算某个term的概率最大；而FastText的输出层对应的分类的label</li>
+</ol>
+</blockquote>
+<p>两者本质的不同，体现在H-softmax的使用：</p>
+<blockquote>
+<ul>
+<li>Word2Vec的目标是得到词向量，该词向量最终是在输入层中得到。输出层对应的H-softmax也会生成一系列的向量，但最终都会被抛弃；</li>
+<li>FastText充分利用H-softmax的分类功能，遍历分类树的所有叶节点，找到概率最大的label</li>
+</ul>
+</blockquote>
+<h4 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h4><p>FastText的学习速度比较快，效果不错。fastText适用于分类类别非常大而且数据集足够多的情况。当分类类别比较小或者数据集比较少的话，很容易过拟合。</p>
+<p>可以完成无监督的词向量的学习，可以学习得到词向量；也可以用于有监督学习的分类任务（新闻文本分类，垃圾邮件分类，情感分析，电商中用户评论的褒贬分析）</p>
+]]></content>
+      <categories>
+        <category>自然语言处理</category>
+      </categories>
+      <tags>
+        <tag>NLP</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>TransX</title>
     <url>/2022/09/11/KG/TransX/</url>
     <content><![CDATA[<p>参考信息：<a href="https://zhuanlan.zhihu.com/p/354867179">https://zhuanlan.zhihu.com/p/354867179</a></p>
@@ -178,84 +603,6 @@
 <blockquote>
 <p>总的来说，如果单从网络结构上来看 BERT 并没有太大的创新，这也正如作 者所说“BERT 整体上就是由多层的 Transformer Encoder 堆叠而来”，并且所谓 的“bidirectional”其实指的也就是 Transformer 中的 self-attention 机制。同时， 在掌柜看来真正让 BERT 表现出色的应该是基于 MLM 和 NSP 这两种任务的预 训练过程，使得训练得到的模型具有强大的表征能力。</p>
 </blockquote>
-]]></content>
-      <categories>
-        <category>自然语言处理</category>
-      </categories>
-      <tags>
-        <tag>NLP</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>FastText</title>
-    <url>/2022/09/04/NLP/FastText/</url>
-    <content><![CDATA[<h3 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h3><p>fasttext是facebook开源的一个词向量与文本分类工具，在2016年开源，典型应用场景是“带监督的文本分类问题”。提供简单而高效的 <strong>文本分类</strong> 和 <strong>表征学习</strong> 的方法，性能比肩深度学习而且速度更快。</p>
-<p>FastText结合了自然语言处理和机器学习中的思想：</p>
-<ul>
-<li>使用词袋以及N-gram袋表征语句；</li>
-<li>使用子字信息；</li>
-<li>通过隐藏表征在类别间共享信息</li>
-</ul>
-<h3 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h3><p>核心思想：将整篇文档的词以及N-gram向量 <strong>叠加平均</strong> 得到文档向量，然后使用文档向量做softmax分类。</p>
-<h4 id="模型架构"><a href="#模型架构" class="headerlink" title="模型架构"></a>模型架构</h4><p>FastText架构和CBOW架构类似。不同之处在于，FastText预测标签，CBOW通过上下文预测中间词。<br><img src="/pictures/NLP/FastText/img1.jpg" alt="FastText模型架构"></p>
-<blockquote>
-<p><strong>注意：</strong> 此架构图并没有展示词向量的训练过程。FastText模型也只有三层：输入层，隐含层，输出层。输入是多个向量表示的单词，输出是特定的Target，隐含层是对多个词向量的叠加平均。</p>
-</blockquote>
-<p>与CBOW模型不同的是，</p>
-<ul>
-<li>CBOW的输入是目标单词的上下文，FastText的输入是多个单词以及其N-gram特征，这些特征用来表示单个文档；</li>
-<li>CBOW的输入单词是被one-hot编码过后的，FastText的输入特征是被embedding后的；</li>
-<li>CBOW的输出是目标词汇，FastText的输出是文档对应的类标。</li>
-</ul>
-<h4 id="层序softmax"><a href="#层序softmax" class="headerlink" title="层序softmax"></a>层序softmax</h4><p>对于有大量类别的数据集，FastText使用一个分层分类器，降低计算复杂度。<br>FastText利用了类别不均衡这个事实，通过使用Huffman算法建立用于表征类别的树形结构。因此，出现频次较高的类别更加接近根节点。</p>
-<h4 id="N-gram特征"><a href="#N-gram特征" class="headerlink" title="N-gram特征"></a>N-gram特征</h4><p>Word2Vec把语料库中的每个单词作为一个原子。这忽略了单词内部的形态特征，比如apple和apples。传统的Word2Vec中，这种单词内部形态信息因为它们被转换为不同的id丢失了。</p>
-<p>为了克服这个问题，FastText使用了字符级别的N-gram来表示一个单词。对于单词apple，假设N的取值为3，则它的trigram有：</p>
-<blockquote>
-<p>“&lt;ap”,  “app”,  “ppl”,  “ple”, “le&gt;”</p>
-</blockquote>
-<p>其中，&lt;表示前缀，&gt;表示后缀。于是，我们可以用这些trigram来表示“apple”这个单词，进一步，我们可以用这5个trigram的向量叠加来表示“apple”的词向量。</p>
-<p>这带来两点好处：</p>
-<ul>
-<li>对于低频词生成的词向量效果会更好。因为它们的N-gram可以和其他词共享；</li>
-<li>对于训练词库之外的单词，仍然可以构建它们的词向量。我们可以叠加它们的字符级N-gram向量。</li>
-</ul>
-<h3 id="应用"><a href="#应用" class="headerlink" title="应用"></a>应用</h3><p><strong>模型搭建步骤：</strong></p>
-<ol>
-<li>添加输入层：Embedding层输入是一批文档，每个文档有一个词汇索引序列构成；</li>
-<li>添加隐含层：投影层对一个文档中所有单词的向量进行叠加平均；</li>
-<li>添加输出层：Softmax层</li>
-<li>指定损失函数，优化器类型，评价指标，编译模型。</li>
-</ol>
-<p><strong>训练数据feed模型步骤</strong></p>
-<ol>
-<li>将文档分好词，构建词汇表；</li>
-<li>对类标进行one-hot化；</li>
-<li>对一批文本，将每个文本转化为词索引序列，每个类标转化为one-hot向量</li>
-</ol>
-<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><h4 id="如何获得词向量？"><a href="#如何获得词向量？" class="headerlink" title="如何获得词向量？"></a>如何获得词向量？</h4><p><strong>累加平均</strong> 一个词的N-gram集合包括自身整个词的隐向量表示。</p>
-<h4 id="FastText和Word2Vec区别"><a href="#FastText和Word2Vec区别" class="headerlink" title="FastText和Word2Vec区别"></a>FastText和Word2Vec区别</h4><p>相似处：</p>
-<blockquote>
-<ol>
-<li>图模型结构很想，都是采用embedding向量形式，得到word的隐向量表达；</li>
-<li>采用很多相似的优化，比如使用层级sotmax优化训练和预测中的打分速度</li>
-</ol>
-</blockquote>
-<p>不同之处：</p>
-<blockquote>
-<ol>
-<li>输入层：Word2Vec的输出层，是context window内的term；而FastText对应的整个sentence的内容，包括term和N-gram的内容；</li>
-<li>输出层：Word2Vec的输出层，对应的是每个term，计算某个term的概率最大；而FastText的输出层对应的分类的label</li>
-</ol>
-</blockquote>
-<p>两者本质的不同，体现在H-softmax的使用：</p>
-<blockquote>
-<ul>
-<li>Word2Vec的目标是得到词向量，该词向量最终是在输入层中得到。输出层对应的H-softmax也会生成一系列的向量，但最终都会被抛弃；</li>
-<li>FastText充分利用H-softmax的分类功能，遍历分类树的所有叶节点，找到概率最大的label</li>
-</ul>
-</blockquote>
-<h4 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h4><p>FastText的学习速度比较快，效果不错。fastText适用于分类类别非常大而且数据集足够多的情况。当分类类别比较小或者数据集比较少的话，很容易过拟合。</p>
-<p>可以完成无监督的词向量的学习，可以学习得到词向量；也可以用于有监督学习的分类任务（新闻文本分类，垃圾邮件分类，情感分析，电商中用户评论的褒贬分析）</p>
 ]]></content>
       <categories>
         <category>自然语言处理</category>
@@ -464,576 +811,6 @@
       </categories>
       <tags>
         <tag>NLP</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>DIN</title>
-    <url>/2022/09/13/RecomSys/DIN/</url>
-    <content><![CDATA[<h3 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h3><p>针对电子商务领域的CTR预估，重点在与充分利用&#x2F;挖掘用户历史行为数据中的信息。</p>
-<blockquote>
-<p>按照传统方式，模型在预估针对用户推荐的广告时，对于 <em><strong>所有用户的特征选取总是使用固定长度</strong></em>。这样带来的问题就是，<em><strong>推荐系统并不能准确的把握用户的兴趣所在</strong></em>。</p>
-</blockquote>
-<h4 id="Attention机制引入"><a href="#Attention机制引入" class="headerlink" title="Attention机制引入"></a>Attention机制引入</h4><p>并不是所有的用户历史行为数据，对每一次的点击有贡献，而 <em><strong>仅仅有一部分在起作用</strong></em>。这个性质有些像attention，对于当前状态的预估，需要告知模型，哪些点与当前的预估最相关；</p>
-<p>在对用户历史行为数据进行处理时，每个用户的历史点击个数是不相等的，我们需要把它们编码成一个固定长的向量。以往的做法是，对每次历史点击做相同的embedding操作之后，将它们做一个 <em><strong>求和或者求最大值</strong></em> 的操作，类似经过了一个pooling层操作，简单粗暴，但是容易丢失很多信息。</p>
-<h4 id="模型改进"><a href="#模型改进" class="headerlink" title="模型改进"></a>模型改进</h4><blockquote>
-<ul>
-<li>使用 <strong>用户兴趣分布</strong> 来表示用户多种多样的兴趣爱好；</li>
-<li>使用 <strong>attention机制</strong> 来实现Local Activation；</li>
-<li>针对模型训练，提出了 <strong>Dice激活函数，自适应正则</strong>，显著提升了模型性能与收敛速度。</li>
-</ul>
-</blockquote>
-<h4 id="名词解释"><a href="#名词解释" class="headerlink" title="名词解释"></a>名词解释</h4><h5 id="Diversity-多样性"><a href="#Diversity-多样性" class="headerlink" title="Diversity 多样性"></a>Diversity 多样性</h5><p>用户在访问电商网站时会对多种商品感兴趣，也就是用户的兴趣非常广泛。<br>针对用户广泛的兴趣，DIN用 an interest distribution 去表示。</p>
-<h5 id="Local-Activation-局部激活"><a href="#Local-Activation-局部激活" class="headerlink" title="Local Activation 局部激活"></a>Local Activation 局部激活</h5><p>用户是否会点击推荐给他的商品 ，仅仅取决与历史行为数据的一小部分，而不是全部。</p>
-<p>DIN借鉴机器翻译中的Attention机制，设计了一种 <strong>attention-like network structure</strong>， 针对当前候选Ad，去局部的激活(Local Activate)相关的历史兴趣信息。<strong>和当前候选Ad相关性越高的历史行为，会获得更高的attention score，从而会主导这一次预测</strong>。</p>
-<h4 id="应用场景"><a href="#应用场景" class="headerlink" title="应用场景"></a>应用场景</h4><p>DIN方法也可以应用于其他有丰富用户行为数据的场景，比如：</p>
-<blockquote>
-<ul>
-<li>电子商务中的个性化推荐；</li>
-<li>社交网络中的信息推流排序(feeds ranking)</li>
-</ul>
-</blockquote>
-<h3 id="系统构建"><a href="#系统构建" class="headerlink" title="系统构建"></a>系统构建</h3><p>阿里推荐系统工作流程：</p>
-<blockquote>
-<ol>
-<li>检查用户历史行为数据；</li>
-<li>使用 matching module 产生 候选ads；</li>
-<li>通过 ranking module 得到 候选ads 的点击概率，并根据概率排序得到推荐列表；</li>
-<li>记录下用户对当前展示广告的反应（点击与否）</li>
-</ol>
-</blockquote>
-<p>这是一个闭环系统，对于用户行为数据（User Behavior Data），系统自己生产并自己消费。</p>
-<h3 id="训练数据"><a href="#训练数据" class="headerlink" title="训练数据"></a>训练数据</h3><p>数据有以下特点：</p>
-<blockquote>
-<ul>
-<li>Diversity – 兴趣爱好非常广泛；</li>
-<li>Local Activation – 历史行为中部分数据主导是否会点击候选广告；</li>
-<li>高纬度；</li>
-<li>非常稀疏；</li>
-<li>特征往往都是 multi-hot 的稀疏ids。</li>
-</ul>
-</blockquote>
-<p><img src="/pictures/RecomSys/DIN/img1.png" alt="特征数据"></p>
-<h4 id="特征处理"><a href="#特征处理" class="headerlink" title="特征处理"></a>特征处理</h4><p>论文中作者把特征分为四大类，并 <strong>没有进行特征组合&#x2F;交叉特征</strong>。而是 <strong>通过 DNN 去学习特征间的交互信息</strong>。</p>
-<blockquote>
-<ul>
-<li>User Profile Features</li>
-<li>User Behavior Features</li>
-<li>Ad Features</li>
-<li>Context Features</li>
-</ul>
-</blockquote>
-<p>为了得到一个 <strong>固定长度</strong> 的 Embedding Vector 表示，原来的做法是在 Embedding Layer 后面 <strong>增加一个 Pooling Layer</strong>。Pooling可以用 sum 或 average。最终得到一个固定长度的 Embedding Vector，是用户兴趣的一个抽象表示，常被称作 User Representation。缺点是会损失一些信息。<br><img src="/pictures/RecomSys/DIN/img2.png" alt="传统模型"></p>
-<p>DIN使用 Attention机制 来解决这个问题。Attention机制 来源于 Neural Machine Translation(NMT)。DIN使用 Attention机制 去更好的建模 局部激活。在DIN场景中，针对不同的候选广告需要自适应地调整 User Representation。也就是说：在 Embedding Layer -&gt; Pooling Layer 得到用户兴趣表示的时候，赋予不同的历史行为不同的权重，实现局部激活。从最终反向训练的角度来看，就是根据当前的候选广告，来反向的激活用户历史的兴趣爱好，赋予不同历史行为不同的权重。<br><img src="/pictures/RecomSys/DIN/img3.png" alt="DIN模型结构"></p>
-<h3 id="模型训练"><a href="#模型训练" class="headerlink" title="模型训练"></a>模型训练</h3><h4 id="评价指标-GAUC"><a href="#评价指标-GAUC" class="headerlink" title="评价指标 GAUC"></a>评价指标 GAUC</h4><p>不同于以往CTR模型采用AUC作为评价指标，论文采用的评价指标是自己设计的 GAUC 评价指标。</p>
-<p><em><strong>AUC的含义是正样本得分比负样本得分高的概率</strong></em>。在CTR的实际应用场景中，CTR预测常被应用于对每个用户的候选广告进行排序，也即最终想得到的效果是 <em><strong>每个用户的AUC达到最高</strong></em>。同时，<strong>不同用户的AUC之间也确实存在差别，有的用户天生点击率就高，有的用户却不怎么喜欢点击广告</strong>。</p>
-<p>以往的评价指标是对样本不区分用户地进行AUC计算。论文采用的GAUC计算了 <strong>用户级别的AUC</strong>，在单个用户AUC的基础上，按照 <strong>点击次数或展示次数进行加权平均</strong>，消除了用户偏差对模型的影响，更准确地描述了模型对于每个用户的表现效果。<br><img src="/pictures/RecomSys/DIN/img4.png" alt="GAUC计算公式"><br>w 可以是 <strong>clicks（点击次数） 或者 impressions（展示次数）</strong>，n 是用户数量。这中AUC也应该是在 <strong>个性化推荐</strong> 里面更适合的，用户每个个体都有自己的AUC。</p>
-<h4 id="激活函数-Dice"><a href="#激活函数-Dice" class="headerlink" title="激活函数 Dice"></a>激活函数 Dice</h4><p>Dice其实是ReLU的改良版，ReLU可以看作是 x * Max(x, 0)，相当于输出 x  经过了一个在0点的阶跃整流器。由于ReLU在 x&lt;0 的时候，梯度为0，可能导致网络停止更新，PReLU对整流器的左半部分形式进行了修改，使得 x&lt;0 时输出不为0。<br><img src="/pictures/RecomSys/DIN/img5.png" alt="激活函数"></p>
-<p>论文里认为，对于所有输入不应该都选择0点为整流点。于是提出了一种data dependent的方法，并称该激活函数为Dice函数。<br><img src="/pictures/RecomSys/DIN/img6.png" alt="Dice激活函数"><br>概率值 p[i] 决定输出是取 y[i] 或者是 a[i] * y[i]，p[i] 也起到了整流器的作用。<br>获取 p[i] 的两步操作：</p>
-<blockquote>
-<ol>
-<li>对 x 进行均值归一化处理。使得整流点是在数据的均值处，实现data dependent的想法；</li>
-<li>经过一个 sigmoid函数的计算，得到一个0到1的概率值。</li>
-</ol>
-</blockquote>
-<h4 id="自适应正则"><a href="#自适应正则" class="headerlink" title="自适应正则"></a>自适应正则</h4><p>在CTR预估任务中，用户行为数据具有长尾分布的特点，也即数据非常的稀疏。</p>
-<p>稀疏输入，为什么会overfitting呢？这个跟数据分布有关系，互联网时代的数据特点，<em><strong>超长尾头部重，头重（小比例的特征频繁出现）容易过拟合，长尾（大比例的特征低频出现）则容易带来噪声</strong></em>，不好学。当增加细粒度的特征时，也极其容易由于细粒度的样本过于密集而带来负面效果。</p>
-<p>为了防止模型过拟合，论文设计了一个针对 <strong>feature id出现的频率</strong> 进行自适应的正则方法。</p>
-<blockquote>
-<ul>
-<li>针对feature id出现的频率，来自适应的调整他们正则化的强度；</li>
-<li>对于出现频率高的，给与较小的正则化强度；</li>
-<li>对于出现频率低的，给予较大的正则化强度。</li>
-</ul>
-</blockquote>
-<h3 id="模型结构"><a href="#模型结构" class="headerlink" title="模型结构"></a>模型结构</h3><p>传统深度模型<br><img src="/pictures/RecomSys/DIN/img7.png" alt="传统深度模型"></p>
-<p>DIN模型在对用户的表示计算上引入了attention network (也即图中的 Activation Unit ) 。<br><img src="/pictures/RecomSys/DIN/img8.png" alt="DIN模型结构"></p>
-<p>DIN把用户特征、用户历史行为特征进行embedding操作，视为对用户兴趣的表示，之后通过attention network，<em><strong>对每个兴趣表示赋予不同的权值</strong></em>。这个权值是由用户的兴趣和待估算的广告进行匹配计算得到的，如此模型结构符合了之前的两个观察——用户兴趣的多样性以及部分对应。attention network 的计算公式如下， V_u 代表用户表示向量， V_i 代表用户兴趣表示向量， V_a 代表广告表示向量。<br><img src="/pictures/RecomSys/DIN/img9.png" alt="attention机制"></p>
-]]></content>
-      <categories>
-        <category>推荐系统</category>
-      </categories>
-      <tags>
-        <tag>Recom</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>DeepFM</title>
-    <url>/2022/09/12/RecomSys/DeepFM/</url>
-    <content><![CDATA[<h3 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h3><h4 id="特征组合的挑战"><a href="#特征组合的挑战" class="headerlink" title="特征组合的挑战"></a>特征组合的挑战</h4><p>对于基于CTR预估的推荐系统，最重要的是学习到用户点击行为背后隐含的特征组合。在不同的推荐场景中，低阶组合特征或者高阶组合特征可能会对最终的CTR产生影响。</p>
-<p>因子分解机通过对于每一维特征的隐变量的内积来提取特征组合。理论上FM可以对高阶特征组合进行建模，但是实际上因为计算复杂度的原因，一般只用到了二阶特征组合。对于高阶特征组合，使用多层神经网络DNN解决。</p>
-<h4 id="DNN的局限性"><a href="#DNN的局限性" class="headerlink" title="DNN的局限性"></a>DNN的局限性</h4><p>对于离散特征的处理，使用one-hot编码。但是将one-hot编码直接输入到DNN中，会导致网络参数过多。<br><img src="/pictures/RecomSys/DeepFM/img1.png" alt="one-hot编码不可以直接输入DNN"></p>
-<p>采用类似于FFM中的思想，将特征分为不同的field。<br><img src="/pictures/RecomSys/DeepFM/img2.png" alt="Embedding生成"></p>
-<p>再加两层全连接层，便可以组合出高阶特征。<br><img src="/pictures/RecomSys/DeepFM/img3.png" alt="高阶特征组合"></p>
-<p>但是低阶和高阶特征组合隐含地体现在隐藏层中，如果我们希望把低阶特征组合单独建模，然后融合高阶特征组合。<br><img src="/pictures/RecomSys/DeepFM/img4.png" alt="并行结构 DeepFM"></p>
-<p><img src="/pictures/RecomSys/DeepFM/img5.png" alt="串行结构 FNN"></p>
-<p>目前的CTR预估模型，实质上都是在“利用模型”进行特征工程上狠下功夫。传统的LR，简单易解释，但特征之间信息的挖掘需要大量的人工特征工程来完成。由于深度学习的出现，利用神经网络本身对于隐含特征关系的挖掘能力，成为了一个可行的方式。<em><strong>DNN本身主要是针对于高阶的隐含特征</strong></em>，而像FNN（利用FM做预训练实现embedding，再通过DNN进行训练，有时间会写写对该模型的认识）这样的模型则是考虑了高阶特征，而在最后sigmoid输出时 <em><strong>忽略了低阶特征本身</strong></em>。</p>
-<p>鉴于上述理论，目前新出的很多基于深度学习的CTR模型都从wide、deep（即低阶、高阶）两方面同时进行考虑，进一步提高模型的泛化能力，比如DeepFM。</p>
-<h3 id="模型结构"><a href="#模型结构" class="headerlink" title="模型结构"></a>模型结构</h3><p>DeepFM包含两个部分：神经网络部分与因子分解机部分，分别负责低阶特征的提取和高阶特征的提取。这两个部分 <em><strong>共享同样的输入</strong></em>。<br><img src="/pictures/RecomSys/DeepFM/img6.png" alt="DeepFM网络结构"></p>
-<h4 id="FM部分"><a href="#FM部分" class="headerlink" title="FM部分"></a>FM部分</h4><p><img src="/pictures/RecomSys/DeepFM/img7.png" alt="FM模块结构"><br>传统度量特征 i 和 j 权重的方法，<strong>需要两者同时存在于同一条数据记录中</strong>。<br>FM部分是一个因子分解机。因为FM中引入 <strong>隐变量</strong> 的原因，对于几乎不出现或者很少出现的隐变量，FM也可以很好的学习。</p>
-<p>FM通过两个特征的隐向量的内乘积进行表示。不需要同时存在于同一条记录中。<br><img src="/pictures/RecomSys/DeepFM/img8.png" alt="因子分解"></p>
-<p>FM的输出为：<br><img src="/pictures/RecomSys/DeepFM/img9.png" alt="FM模型公式"></p>
-<h4 id="Deep部分"><a href="#Deep部分" class="headerlink" title="Deep部分"></a>Deep部分</h4><p><img src="/pictures/RecomSys/DeepFM/img10.png" alt="DNN模块结构"><br>Deep部分是一个前馈神经网络。与图像或者语音这类输入不同，图像语音的输入一般是连续并且密集的，然而用于CTR的输入一般是及其稀疏的。因此，在第一层隐藏层之前，<strong>引入一个嵌入层来完成将输入向量压缩到低维稠密向量</strong>。</p>
-<h4 id="Embedding层"><a href="#Embedding层" class="headerlink" title="Embedding层"></a>Embedding层</h4><p><img src="/pictures/RecomSys/DeepFM/img11.png" alt="Embedding层网络结构"><br>嵌入层(embedding layer)的结构如上图所示。当前网络结构有两个有趣的特性<br>尽管不同field的输入长度不同，但是embedding之后向量的长度均为K；<br>在FM里得到的隐变量 V_ik 现在作为了嵌入层网络的权重。</p>
-<p>这里的第二点如何理解呢，假设我们的 k&#x3D;5，首先，对于输入的一条记录，<em><strong>同一个field 只有一个位置是1</strong></em>，那么在由输入得到dense vector的过程中，输入层只有一个神经元起作用，得到的dense vector其实就是 <em><strong>输入层到embedding层该神经元相连的五条线的权重</strong></em>，即v_i1，v_i2，v_i3，v_i4，v_i5。这五个值组合起来就是我们在FM中所提到的V_i。</p>
-<p>在FM部分和DNN部分，这一块是 <em><strong>共享权重</strong></em> 的，对同一个特征来说，得到的V_i是相同的。</p>
-<h4 id="输出层"><a href="#输出层" class="headerlink" title="输出层"></a>输出层</h4><p>DeepFM的预测结果为：<br><img src="/pictures/RecomSys/DeepFM/img12.png" alt="输出层计算"></p>
-]]></content>
-      <categories>
-        <category>推荐系统</category>
-      </categories>
-      <tags>
-        <tag>Recom</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>FM</title>
-    <url>/2022/09/12/RecomSys/FM/</url>
-    <content><![CDATA[<h3 id="FM"><a href="#FM" class="headerlink" title="FM"></a>FM</h3><h4 id="提出背景"><a href="#提出背景" class="headerlink" title="提出背景"></a>提出背景</h4><p>传统线性模型忽略了特征之间的交叉联系；特征高维稀疏，并且容易维度爆炸。</p>
-<p>FM就是Factor Machine，因子分解机。<br>FM通过对两两特征组合，引入交叉项特征，提高模型得分；其次是高维灾难，通过引入隐向量（对参数矩阵进行矩阵分解），完成对特征的参数估计。</p>
-<h4 id="模型公式"><a href="#模型公式" class="headerlink" title="模型公式"></a>模型公式</h4><p><strong>一般的线性模型</strong><br><img src="/pictures/RecomSys/FM/img1.png" alt="一般线性模型"></p>
-<p><strong>二阶多项式模型</strong><br><img src="/pictures/RecomSys/FM/img2.png" alt="二阶多项式模型"><br>上式中，n表示样本的特征数量，x[i]表示第i个特征。<br>与线性模型相比，FM模型多了后面特征组合的部分。</p>
-<h4 id="FM求解"><a href="#FM求解" class="headerlink" title="FM求解"></a>FM求解</h4><p>从上面的式子可以看到，组合部分的特征相关参数有 n(n−1)&#x2F;2 个。但是对于稀疏数据来说，同时满足 x i , x[i], x[j] 都不为0的情况十分少，这就会导致 w[i][j] 无法通过训练得到。</p>
-<p>为了求解得到w[i][j]，我们对于每一个特征分量 x[i] 引入 <strong>隐向量</strong> V[i] &#x3D; (v[i][1], …, v[i][k])，利用v[i]，v[j]对w[i][j]进行求解。<br><img src="/pictures/RecomSys/FM/img3.png" alt="权重矩阵W求解"></p>
-<p>求解v[i]和v[j]的具体过程如下：<br><img src="/pictures/RecomSys/FM/img4.png" alt="核心计算公式"></p>
-<h3 id="FFM"><a href="#FFM" class="headerlink" title="FFM"></a>FFM</h3><h4 id="概念"><a href="#概念" class="headerlink" title="概念"></a>概念</h4><p>同一个categorical特征经过One-Hot编码生成的数值特征都可以放到同一个field，包括用户性别、职业、品类偏好等。</p>
-<p>在FFM中，每一维特征 x[i]，针对其它特征的每一种field f[j]，都会学习一个隐向量 v[i][f]。因此，<em><strong>隐向量不仅与特征相关，也与field相关</strong></em>。也就是说，“Day&#x3D;26&#x2F;11&#x2F;15”这个特征与“Country”特征和“Ad_type”特征进行关联的时候使用不同的隐向量，这与“Country”和“Ad_type”的内在差异相符，也是FFM中“field-aware”的由来。</p>
-<p>假设样本的 n 个特征属于 f 个field，那么FFM的二次项有 nf个隐向量。而在FM模型中，每一维特征的隐向量只有一个，即二次项有n个隐向量。FM可以看作FFM的特例，是把所有特征都归属到一个field时的FFM模型。根据FFM的field敏感特性，可以导出其模型方程。<br><img src="/pictures/RecomSys/FM/img5.png" alt="FFM计算公式"><br>其中，fj 是第 j 个特征所属的field。如果隐向量的长度为 k，那么FFM的二次参数有 nfk 个，远多于FM模型的 nk 个。此外，由于隐向量与field相关，FFM二次项并不能够化简，其预测复杂度是 O(kn2)。</p>
-<h4 id="区别"><a href="#区别" class="headerlink" title="区别"></a>区别</h4><blockquote>
-<ol>
-<li>FM和FFM模型的二次项的个数都是 n(n−1)&#x2F;2 个，区别在于FM模型中二次项<strong>存在重复使用的隐向量</strong>，而FFM模型没有，这正是由于FFM的域的概念的存在</li>
-<li>FM模型的参数量为nk，FFM模型的参数量为nfk个</li>
-<li>FM模型的时间复杂度可以优化为线性的，而FFM模型为nfk（最坏时，即当所有特征都是独自一个域时，为n^2k）</li>
-</ol>
-</blockquote>
-<h4 id="应用"><a href="#应用" class="headerlink" title="应用"></a>应用</h4><p>在DSP或者推荐场景中，FFM主要用来评估站内的CTR和CVR，即一个用户对一个商品的潜在点击率和点击后的转化率。<br>CTR和CVR预估模型都是在线下训练，然后线上预测。两个模型采用的特征大同小异，主要分三类：</p>
-<blockquote>
-<ol>
-<li>用户相关的特征: 年龄、性别、职业、兴趣、品类偏好、浏览&#x2F;购买品类等基本信息，以及用户近期点击量&#x2F;购买量&#x2F;消费额等统计信息</li>
-<li>商品相关的特征: 商品所属品类、销量、价格、评分、历史CTR&#x2F;CVR等信息</li>
-<li>用户-商品匹配特征: 浏览&#x2F;购买品类匹配、浏览&#x2F;购买商家匹配、兴趣偏好匹配等</li>
-</ol>
-</blockquote>
-<p>为了使用FFM方法，所有的特征必须转换成“field_id:feat_id:value”格式，field_id代表特征所属field的编号，feat_id是特征编号，value是特征的值。数值型的特征比较容易处理，只需分配单独的field编号，如用户评论得分、商品的历史CTR&#x2F;CVR等。categorical特征需要经过One-Hot编码成数值型，编码产生的所有特征同属于一个field，而特征的值只能是0或1，如用户的性别、年龄段，商品的品类id等。除此之外，还有第三类特征，如用户浏览&#x2F;购买品类，有多个品类id且用一个数值衡量用户浏览或购买每个品类商品的数量。这类特征按照categorical特征处理，不同的只是特征的值不是0或1，而是代表用户浏览或购买数量的数值。按前述方法得到field_id之后，再对转换后特征顺序编号，得到feat_id，特征的值也可以按照之前的方法获得。 </p>
-]]></content>
-      <categories>
-        <category>推荐系统</category>
-      </categories>
-      <tags>
-        <tag>Recom</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>MMoE</title>
-    <url>/2022/09/13/RecomSys/MMoE/</url>
-    <content><![CDATA[<p>在工业界基于神经网络的多任务学习在推荐等场景业务应用广泛，比如在推进啊系统中对用户推荐物品时，不仅要推荐用户感兴趣的物品，还要尽可能地促进转化和购买，因此要对用户评分和购买两种目标同时建模。</p>
-<h3 id="动机"><a href="#动机" class="headerlink" title="动机"></a>动机</h3><p>把多个任务放在一起学习，任务共享同一个模型空间，它们 <strong>共享同一个表示层</strong>。在训练过程中，多个任务会对这个共享模型进行参数更新。</p>
-<h4 id="相关任务"><a href="#相关任务" class="headerlink" title="相关任务"></a>相关任务</h4><p>multi task同时学习多个相关任务，并且具有相当的优势。同时，我们在做多任务学习时，有时关注的点在某个 <strong>主要任务</strong> 上，其他的共同学习的任务可能更多的只是起到帮助作用，这些起到帮助作用的任务叫做 <strong>辅助任务</strong>。</p>
-<p><strong>辅助任务与主任务越相关，那么起到的效果可能会越好</strong>。<br>如下图所示，假如有这样两个相似的任务：狗的分类模型和猫的分类模型。在单任务学习中，他们都拥有比较接近的底层特征，比如皮毛颜色啦、眼睛颜色啦、耳朵形状啦等等。<br><img src="/pictures/RecomSys/MMoE/img1.png" alt="学习任务相近的单任务学习"></p>
-<p>由于 <strong>多任务学习本质上是共享表示层</strong>，任务之间互相影响。那么在多任务学习中，他们就可以很好地进行底层特征共享。<br><img src="/pictures/RecomSys/MMoE/img2.png" alt="相关性较高的多任务学习"></p>
-<p>但是对于不相似的任务来说，如下图，汽车的识别和狗的识别，他们的 <strong>底层表示差异很大</strong>，共享表示层可能就没那么有效果了。进行参数共享时很有可能会互相冲突或噪声太多，对多任务学习而言非常不友好。<br><img src="/pictures/RecomSys/MMoE/img3.png" alt="相关性较低的多任务学习"></p>
-<blockquote>
-<p>由于multi task在不相关的任务上表现不佳，同时，在实际应用中，你很难判断任务在数据层面是否是相似的。<br>所以多任务学习如何在相关性不高的任务上获得好效果是一件很有挑战性也很有实际意义的事。</p>
-</blockquote>
-<h4 id="共享表示"><a href="#共享表示" class="headerlink" title="共享表示"></a>共享表示</h4><p>神经网络中，Multi Task Learning的共享表示有两种方式：<strong>hard参数共享和soft参数共享</strong>。</p>
-<h5 id="Hard参数共享"><a href="#Hard参数共享" class="headerlink" title="Hard参数共享"></a>Hard参数共享</h5><p>在所有任务之间 <strong>共享隐藏层</strong>，同时保留几个特定任务的输出层。这种方式很大程度上 <strong>降低了过拟合的风险</strong>。因为同时学习的工作越多，模型找到一个含有所有任务的表征就越困难，而过拟合某特定原始任务的可能性就越小。<br><img src="/pictures/RecomSys/MMoE/img4.png" alt="Hard参数共享"></p>
-<h5 id="Soft参数共享"><a href="#Soft参数共享" class="headerlink" title="Soft参数共享"></a>Soft参数共享</h5><p>每个任务有自己的参数和模型，最后 <strong>通过对不同任务的参数之间的差异加约束</strong>，表达相似性。比如可以使用L2进行正则, 迹范数（trace norm）等。<br><img src="/pictures/RecomSys/MMoE/img5.png" alt="Soft参数共享"></p>
-<h4 id="多任务学习优势"><a href="#多任务学习优势" class="headerlink" title="多任务学习优势"></a>多任务学习优势</h4><ol>
-<li>多个任务一起学习时，<strong>有相关部分也有不那么相关的地方</strong>，在学习一个任务时，与它不相关的部分就相当于是加入一些噪声，而 <strong>加入噪声可以提升模型的泛化能力</strong>。</li>
-<li>单任务学习时容易陷入局部最优，而多任务学习中 <strong>不同任务的局部最优解处于不同的位置</strong>，通过相互作用，可以逃离局部最优。</li>
-<li>增加任务会影响网络参数的更新，比如增加额外的任务增加了隐层的有效的学习率，具体取决于每个任务输出的错误反馈权重。可能较大的学习速率提升了学习效果</li>
-<li>某些特征可能在主任务不好学习（比如以很复杂的方式与特征进行交互，或被其他因素抑制），但在辅助任务上这个特征好学习到。可以通过辅助任务来学习这些特征，方法比如hints（预测重要特征）</li>
-<li>通过学习足够大的假设空间，在未来某些新任务中可以有较好的表现（解决冷启动），前提是这些任务都是 <strong>同源</strong> 的。</li>
-<li>多个任务在浅层共享表示，引入归纳偏置作为正则化项。因此，它降低了过拟合的风险以及模型的 Rademacher 复杂度（即适合随机噪声的能力）</li>
-</ol>
-<h3 id="MMoE模型结构"><a href="#MMoE模型结构" class="headerlink" title="MMoE模型结构"></a>MMoE模型结构</h3><p>关于共享隐层方面，MMoE和一般多任务学习模型的区别：</p>
-<blockquote>
-<p><strong>一般多任务学习模型</strong>：接近输入层的隐层作为一个整体被共享；<br><strong>MMoE</strong>：将共享的底层表示层分为 <strong>多个expert</strong>，同时设置了gate，使得 <strong>不同的任务可以多样化的使用共享层</strong>。</p>
-</blockquote>
-<p><img src="/pictures/RecomSys/MMoE/img6.png" alt="网络结构变化"></p>
-<blockquote>
-<p>a）是最原始的多任务学习模型，也就是base；<br>b）是加入单门（one gate）的MoE layer的多任务学习模型；<br>c）本质上是将base的shared bottom换成了MoE layer，并对每个任务都加gate</p>
-</blockquote>
-<h4 id="Mixture-of-Expert-Model"><a href="#Mixture-of-Expert-Model" class="headerlink" title="Mixture-of-Expert Model"></a>Mixture-of-Expert Model</h4><p>隐层是三个expert子网组成，各自的输出 f[i]（第 i 个expert的输出）会传入gate，也就是 g(x) 维度与expert个数相同的 <strong>softmax</strong>，g(x)[i] 是它输出的第 i 个logits。<strong>gate对expert的输出进行加权求和，得到不同任务的输入</strong>。<br><img src="/pictures/RecomSys/MMoE/img10.png" alt="MoE模型计算公式"></p>
-<h4 id="Shared-Bootom-Model"><a href="#Shared-Bootom-Model" class="headerlink" title="Shared-Bootom Model"></a>Shared-Bootom Model</h4><p>模型 (a) 最为常见，两个任务直接共享模型的 bottom 部分，只在最后处理时做区分，图 (a) 中使用了 Tower A 和 Tower B，然后分别接损失函数。<br><img src="/pictures/RecomSys/MMoE/img7.png" alt="Base模型"><br>x 表示 input，f 表示 shared-bottom network， h[k] 表示第 k 个tower network，针对第k个任务。</p>
-<p>这种网络非常简单，可以理解为在DNN上接了 k 个不同的tower 网络，不同的tower网络针对不同任务，有着各自的损失函数，但是 <strong>这些损失函数是放在一起进行联合训练</strong>。</p>
-<p>直觉告诉我们，如此进行多任务学习，在某些情况下效果可能并不好，例如当多个任务间是矛盾的，或者完全不相关的。</p>
-<h4 id="One-gate-MoE-Model"><a href="#One-gate-MoE-Model" class="headerlink" title="One-gate MoE Model"></a>One-gate MoE Model</h4><p>模型 (b) 是常见的多任务学习模型。将 input 分别输入给三个 Expert，但 <strong>三个Expert并不共享参数</strong>。同时将 input 输出给 Gate，<strong>Gate输出每个Expert被选择的概率</strong>，然后将三个Expert的输出 <strong>加权求和</strong>，输出给 Tower。有点 attention 的感觉。<br><img src="/pictures/RecomSys/MMoE/img8.png" alt="OMoE模型公式"><br>上式中，n 表示有 n 个 expert networks，f<a href="x">i</a> 表示第 i 个expert network，在论文expert network就是DNN网络。g(x)[i] 是由 输入x 控制的，其中 W[g] ∈ R[n × d]，n 表示expert network数量，d表示输入x 的特征维度，在n维度上进行softmax，因此 g(x)[i] 可理解为 <strong>通过输入x 得到在n个 exper network 上的权重分布</strong>。同样，h[k] 表示第k个 tower network。</p>
-<p>这个网络也很简单，可以理解为 对多个不同 expert network进行不同权重的集成，在集成的结果上接不同的tower network 而已。模型在训练过程中，会学习到不同expert network重要程度。</p>
-<p>那么何为 One-gate 呢？ 从上面的分析可以看出，不同的tower network的输入是相同的，都是经过同一套权重组合（同一个gate network）得到expert networks的输出。这么这样做合理吗？</p>
-<h4 id="Multi-gate-MoE-Model"><a href="#Multi-gate-MoE-Model" class="headerlink" title="Multi-gate MoE Model"></a>Multi-gate MoE Model</h4><p>模型 (c) 是作者新提出的方法，对于不同的任务，模型的权重选择是不同的，所以作者为每个任务都配备一个 Gate 模型。<strong>对于不同的任务，特定的 Gate k 的输出表示不同的 Expert 被选择的概率</strong>，将多个 Expert 加权求和，得到 f<a href="x">k</a> ，并输出给特定的 Tower 模型，用于最终的输出。<br><img src="/pictures/RecomSys/MMoE/img9.png" alt="MMoE模型公式"><br>与OMoE区别仅在 对于不同的tower network，有着不同的gate network，在OMoE上，只会初始化一个W[g] 参数矩阵，而在MMoE上，会初始化 k 个 W[gk]，得到 k 个gate network（multi-gates&#x2F;task-specific gates)，参数增加了一些。</p>
-<p>相对于OMoE，MMoE的做法更加合理一些，不同的任务有着不同的gate network，对expert networks输出有着不同权重组合。</p>
-]]></content>
-      <categories>
-        <category>推荐系统</category>
-      </categories>
-      <tags>
-        <tag>Recom</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Wide&amp;Deep</title>
-    <url>/2022/09/12/RecomSys/Wide-and-Deep/</url>
-    <content><![CDATA[<h3 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h3><p>推荐系统的主要挑战之一，是同时解决 Memorization 和 Generalization。Wide&amp;Deep模型旨在使得训练得到的模型能够同时获得记忆和泛化能力。</p>
-<blockquote>
-<p><strong>Memorization</strong>: 根据历史行为数据，产生的推荐通常和用户已有行为的物品直接相关的物品；<br><strong>Generalization</strong>: 会学习新的特征组合，提高推荐物品的多样性。</p>
-</blockquote>
-<h4 id="记忆能力"><a href="#记忆能力" class="headerlink" title="记忆能力"></a>记忆能力</h4><p>面对拥有大规模离散sparse特征的CTR预估问题，将特征进行非线性转换，然后再使用线性模型是业界非常普遍的做法，最流行的即 <em><strong>LR+特征叉乘</strong></em>。Memorization 通过一系列人工的特征叉乘来构造这些非线性特征，捕捉 sparse 特征之间的高阶相关性，即 <em><strong>“记忆”历史数据中曾经共同出现过的特征对</strong></em>。</p>
-<p>典型代表是LR模型，使用大量的原始sparse特征和叉乘特征作为输入，很多原始的dense特征通常会被分桶离散化为sparse特征。</p>
-<p>这种做法的优点是：</p>
-<blockquote>
-<p>模型可解释性高，实现快速高效，特征重要度易于分析。</p>
-</blockquote>
-<p>缺点是：</p>
-<blockquote>
-<ol>
-<li>需要更多的人工设计；</li>
-<li>可能出现过拟合。可以理解为，如果将所有特征叉乘起来，那么几乎相当于纯粹记住每个训练样本，这个极端情况是最细粒度的叉乘，我们可以通过构建更粗粒度的特征叉乘来增强泛化性；</li>
-<li>无法捕捉训练数据集中未曾出现过的特征对；</li>
-</ol>
-</blockquote>
-<h4 id="泛化能力"><a href="#泛化能力" class="headerlink" title="泛化能力"></a>泛化能力</h4><p>Generalization 为 sparse 特征学习低维的 dense embedding 来捕捉特征相关性，学习到的embeddings 本身带有一定的语义信息。可以联想到 NLP 的词向量，不同词的词向量有相关性，因此文中也称 Generalization 是基于相关性之间的传递。这类模型的代表是 DNN 和 FM。</p>
-<p>Generalization 的优点是更少的人工参与，对历史上没有出现的特征组合有更好的泛化性。但是在推荐系统中，当 user-item matrix 非常稀疏，NN很难为 users 和 items 学习到有效的 embedding。这种情况下，大部分 user-item 应该是没有关联的，但 dense embedding 的方法还是可以得到对所有 user-item pair 的非零预测，因此导致 over-generalize 并推荐不怎么相关的物品。此时 Memorization 就展示了优势，它可以记住这些特殊的特征组合。</p>
-<h3 id="模型结构"><a href="#模型结构" class="headerlink" title="模型结构"></a>模型结构</h3><p>Wide&amp;Deep 模型结合了 LR 和 DNN，其框架图如下所示：<br><img src="/pictures/RecomSys/Wide-and-Deep/img1.png" alt="网络结构"></p>
-<h4 id="Wide部分"><a href="#Wide部分" class="headerlink" title="Wide部分"></a>Wide部分</h4><p>该部分是广义线性模型</p>
-<blockquote>
-<p>y &#x3D; W * [x, f(x)] + b<br>其中，x 和 f(x) 分别表示 <em><strong>原始特征和交叉特征</strong></em>。</p>
-</blockquote>
-<h4 id="Deep部分"><a href="#Deep部分" class="headerlink" title="Deep部分"></a>Deep部分</h4><p>该部分是前馈神经网络，网络会对一些sparse特征学习一个低维的dense embedding（维度量级通常在O(10)到O(100)之间），然后和一些原始 dense 特征一起作为网络的输入。</p>
-<p>每一层隐层计算为：<br><img src="/pictures/RecomSys/Wide-and-Deep/img2.png" alt="隐层计算公式"></p>
-<h4 id="输出层"><a href="#输出层" class="headerlink" title="输出层"></a>输出层</h4><p>模型选取 logistic loss 作为损失函数，此时 Wide&amp;Deep 最后的预测输出为：<br><img src="/pictures/RecomSys/Wide-and-Deep/img3.png" alt="输出层计算"></p>
-<h3 id="联合训练"><a href="#联合训练" class="headerlink" title="联合训练"></a>联合训练</h3><p>联合训练（Joint Training）和集成（Ensemble）是不同的。<br>集成是每个模型单独训练，再将模型的结果汇合。相比于联合训练，集成的每个独立模型都得学的足够好才有利于随后的汇合，因此每个 model size 相对更大。<br>而联合学习的wide部分只需要做一小部分的特征叉乘来弥补deep部分的不足，不需要一个 full-size 的wide模型。</p>
-<p>在论文中，作者通过梯度的反向传播，使用 mini-batch stochastic optimization 训练参数，并对 wide 部分使用带 L1正则的 Follow-the-regularized-leader(FTRL)算法，对 deep 部分使用 AdaGrad 算法。</p>
-<h3 id="场景应用"><a href="#场景应用" class="headerlink" title="场景应用"></a>场景应用</h3><h4 id="应用背景"><a href="#应用背景" class="headerlink" title="应用背景"></a>应用背景</h4><p>Google Play 商店的 app 推荐中，当一个 user 访问 Google Play，会生成一个包含 user 和 contextual 信息的 query，推荐系统的精排模型会对于候选池中召回的一系列 app（即 item，文中也称 impression）进行打分，按打分生成 app 的排列列表返回给用户。Deep&amp;Wide 对应这里的精排模型，输入 x 包括 &lt;user, contextual, impression&gt;的信息，y &#x3D; 1表示用户下载了 impression app，打分即为 p(y|x)。</p>
-<p>实验的Deep &amp; Wide模型结构如下：<br><img src="/pictures/RecomSys/Wide-and-Deep/img4.png" alt="网络结构"></p>
-<h4 id="实验细节"><a href="#实验细节" class="headerlink" title="实验细节"></a>实验细节</h4><blockquote>
-<ul>
-<li>训练样本约5000亿</li>
-<li>Categorical 特征（sparse）会有一个过滤阈值，即至少在训练集中出现m次才会被加入</li>
-<li>Continuous 特征（dense）通过CDF被归一化到 [0,1] 之间</li>
-<li>Categorical 特征映射到32维embeddings，和原始Continuous特征共1200维作为NN输入</li>
-<li>Wide部分只用了一组特征叉乘，即被推荐的app ☓ 用户下载的app</li>
-<li>线上模型更新时，通过“热启动”重训练，即使用上次的embeddings和模型参数初始化</li>
-</ul>
-</blockquote>
-<p>Wide部分设置很有意思，作者为什么这么做呢？<br>结合业务思考，在Google Play商店的app下载中，不断有新的app推出，并且有很多“非常冷门、小众”的app，而现在的智能手机user几乎全部会安装一系列必要的app。</p>
-<p>联想前面对Memorization和Generalization的介绍，此时的Deep部分无法很好的为这些app学到有效的embeddding，而这时Wide可以发挥了它“记忆”的优势，作者在这里选择了 <em><strong>“记忆”user下载的app与被推荐的app之间的相关性</strong></em>，有点类似“装个这个app后还可能会装什么”。</p>
-<p>对于Wide来说，它现在的任务是弥补Deep的缺陷，其他大部分的活就交给Deep了，所以这时的Wide相比单独Wide也显得非常“轻量级”，这也是Join相对于Ensemble的优势。</p>
-]]></content>
-      <categories>
-        <category>推荐系统</category>
-      </categories>
-      <tags>
-        <tag>Recom</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Hadoop</title>
-    <url>/2022/09/05/tools/Hadoop/</url>
-    <content><![CDATA[<h2 id="Hadoop概念"><a href="#Hadoop概念" class="headerlink" title="Hadoop概念"></a>Hadoop概念</h2><p>Hadoop 框架是用于计算机集群大数据处理的框架，所以它必须是一个可以部署在多台计算机上的软件。部署了 Hadoop 软件的主机之间通过<strong>套接字</strong> (网络) 进行通讯。<br>Hadoop 主要包含 <strong>HDFS</strong> 和 <strong>MapReduce</strong> 两大组件。</p>
-<blockquote>
-<ul>
-<li>HDFS 负责分布储存数据;</li>
-<li>MapReduce 负责对数据进行映射、规约处理，并汇总处理结果。</li>
-</ul>
-</blockquote>
-<p>Hadoop 框架最根本的原理就是利用大量的计算机同时运算来加快大量数据的处理速度。</p>
-<h3 id="HDFS"><a href="#HDFS" class="headerlink" title="HDFS"></a>HDFS</h3><p>Hadoop Distributed File System，Hadoop 分布式文件系统，简称 HDFS。<br>HDFS 用于在集群中储存文件，它所使用的核心思想是 Google 的 GFS 思想，可以存储很大的文件。</p>
-<p>在服务器集群中，文件存储往往被要求高效而稳定，HDFS同时实现了这两个优点。</p>
-<blockquote>
-<ul>
-<li>HDFS 高效的存储是通过 <strong>计算机集群独立处理请求</strong> 实现的。因为用户 (一半是后端程序) 在发出数据存储请求时，往往 <em><strong>响应服务器</strong></em> 正在处理其他请求，这是导致服务效率缓慢的主要原因。但如果响应服务器直接分配一个数据服务器给用户，然后 <em><strong>用户直接与数据服务器交互</strong></em>，效率会快很多。</li>
-<li>数据存储的稳定性往往通过”多存几份”的方式实现，HDFS 也使用了这种方式。<strong>HDFS 的存储单位是块 (Block)</strong> ，一个文件可能会被分为多个块储存在物理存储器中。因此 HDFS 往往会按照设定者的要求把数据块复制 n 份并存储在不同的数据节点 (储存数据的服务器) 上，如果一个数据节点发生故障数据也不会丢失。</li>
-</ul>
-</blockquote>
-<p><img src="/pictures/tools/Hadoop/img1.png" alt="HDFS架构图"></p>
-<h4 id="Block数据块"><a href="#Block数据块" class="headerlink" title="Block数据块"></a>Block数据块</h4><ul>
-<li>基本存储单位，一般大小为 <strong>64M</strong> （配置大的块主要是因为：<ul>
-<li>减少搜寻时间，一般硬盘传输速率比寻道时间要快，大的块可以减少寻道时间；</li>
-<li>减少管理块的数据开销，每个块都需要在NameNode上有对应的记录；</li>
-<li>对数据块进行读写，减少建立网络的连接成本）</li>
-</ul>
-</li>
-<li>一个大文件会被拆分成一个个的块，然后存储于不同的机器。如果一个文件少于Block大小，那么实际占用的空间为其文件的大小</li>
-<li>基本的读写单位，类似于磁盘的页，每次都是读写一个块</li>
-<li>每个块都会被复制到多台机器，默认复制 <strong>3</strong> 份</li>
-</ul>
-<blockquote>
-<p>HDFS 2.x以后的block默认为 <strong>128M</strong></p>
-</blockquote>
-<h4 id="HDFS节点"><a href="#HDFS节点" class="headerlink" title="HDFS节点"></a>HDFS节点</h4><p>HDFS 运行在许多不同的计算机上，有的计算机专门用于存储数据，有的计算机专门用于指挥其它计算机储存数据。这里所提到的”计算机”我们可以称之为集群中的节点。</p>
-<h5 id="命名节点-NameNode"><a href="#命名节点-NameNode" class="headerlink" title="命名节点 NameNode"></a>命名节点 NameNode</h5><p>命名节点 (NameNode) 是用于指挥其它节点存储的节点。任何一个”文件系统”(File System, FS) 都需要具备 <strong>根据文件路径映射到文件</strong> 的功能，命名节点就是用于储存这些映射信息并提供映射服务的计算机，在整个 HDFS 系统中扮演”管理员”的角色，因此 <em><strong>一个 HDFS 集群中只有一个命名节点</strong></em>。</p>
-<h5 id="数据节点-DataNode"><a href="#数据节点-DataNode" class="headerlink" title="数据节点 (DataNode)"></a>数据节点 (DataNode)</h5><p>数据节点 (DataNode) 使用来储存数据块的节点。当一个文件被命名节点承认并分块之后将会被储存到被分配的数据节点中去。数据节点具有储存数据、读写数据的功能，其中 <strong>存储的数据块比较类似于硬盘中的”扇区”概念，是 HDFS 存储的基本单位</strong>。</p>
-<blockquote>
-<ol>
-<li>保存具体的block数据</li>
-<li>负责数据的读写操作和复制操作</li>
-<li>DataNode启动时会向NameNode报告当前存储的数据块信息，后续也会定时报告修改信息</li>
-<li>DataNode之间会进行通信，复制数据块，保证数据的冗余性</li>
-</ol>
-</blockquote>
-<h5 id="副命名节点-Secondary-NameNode"><a href="#副命名节点-Secondary-NameNode" class="headerlink" title="副命名节点 (Secondary NameNode)"></a>副命名节点 (Secondary NameNode)</h5><p>副命名节点 (Secondary NameNode) 别名”次命名节点”，是命名节点的”秘书”。这个形容很贴切，因为它并不能代替命名节点的工作，无论命名节点是否有能力继续工作。它主要负责 <strong>分摊命名节点的压力、备份命名节点的状态并执行一些管理工作</strong>，如果命名节点要求它这样做的话。如果命名节点坏掉了，它也可以提供备份数据以恢复命名节点。副命名节点可以有多个。</p>
-<h4 id="Hadoop写文件"><a href="#Hadoop写文件" class="headerlink" title="Hadoop写文件"></a>Hadoop写文件</h4><blockquote>
-<ol>
-<li>客户端将文件写入本地磁盘的 HDFS Client 文件中</li>
-<li>当临时文件大小达到一个 block 大小时，HDFS client 通知 NameNode，申请写入文件</li>
-<li>NameNode 在 HDFS 的文件系统中创建一个文件，并把该 block id 和要写入的 DataNode 的列表返回给客户端</li>
-<li>客户端收到这些信息后，将临时文件写入 DataNodes<br>4.1. 客户端将文件内容写入第一个 DataNode（一般以 4kb 为单位进行传输）<br>4.2. 第一个 DataNode 接收后，将数据写入本地磁盘，同时也传输给第二个 DataNode<br>4.3. 依此类推到最后一个 DataNode，数据在 DataNode 之间是通过 pipeline 的方式进行复制的<br>4.4. 后面的 DataNode 接收完数据后，都会发送一个确认给前一个 DataNode，最终第一个 DataNode 返回确认给客户端<br>4.5. 当客户端接收到整个 block 的确认后，会向 NameNode 发送一个最终的确认信息<br>4.6. 如果写入某个 DataNode 失败，数据会继续写入其他的 DataNode。然后 NameNode 会找另外一个好的 DataNode 继续复制，以保证冗余性<br>4.7. 每个 block 都会有一个校验码，并存放到独立的文件中，以便读的时候来验证其完整性</li>
-<li>文件写完后（客户端关闭），NameNode 提交文件（这时文件才可见，如果提交前，NameNode 垮掉，那文件也就丢失了。fsync：只保证数据的信息写到 NameNode 上，但并不保证数据已经被写到DataNode 中）</li>
-</ol>
-</blockquote>
-<p><img src="/pictures/tools/Hadoop/img2.png" alt="HDFS写入数据流程"></p>
-<h4 id="Hadoop读文件"><a href="#Hadoop读文件" class="headerlink" title="Hadoop读文件"></a>Hadoop读文件</h4><blockquote>
-<ol>
-<li>客户端向NameNode发送读取请求</li>
-<li>NameNode返回文件的所有block和这些block所在的DataNodes（包括复制节点）</li>
-<li>客户端直接从DataNode中读取数据，如果该DataNode读取失败（DataNode失效或校验码不对），则从复制节点中读取（如果读取的数据就在本机，则直接读取，否则通过网络读取）</li>
-</ol>
-</blockquote>
-<p><img src="/pictures/tools/Hadoop/img3.png" alt="HDFS读取数据流程"></p>
-<h3 id="MapReduce"><a href="#MapReduce" class="headerlink" title="MapReduce"></a>MapReduce</h3><p>MapReduce是一种可用于数据处理的编程模型。Hadoop可以运行各种版本的MapReduce程序。MapReduce程序本质上是并行运行的，它可以将大规模的数据分析任务分发给任何一个拥有足够多机器的数据中心。</p>
-<p>MapReduce任务过程分为两个处理阶段：map阶段和reduce阶段。每个阶段都以键值对作为输入和输出，其类型由程序员选择。</p>
-<blockquote>
-<ul>
-<li><strong>map阶段</strong> – 输入是原始数据。键是某一行起始位置相对于文件起始位置的偏移量。map函数是一个数据准备阶段。</li>
-<li><strong>reduce阶段</strong> – 对map阶段的输出值进行处理。reduce函数进行数据进一步的筛选及其他操作。</li>
-</ul>
-</blockquote>
-<p><img src="/pictures/tools/Hadoop/img4.png" alt="MapReduce计算逻辑"></p>
-<blockquote>
-<p>map: (K1, V1) → list(K2, V2)<br>combine: (K2, list(V2)) → list(K2, V2)<br>reduce: (K2, list(V2)) → list(K3, V3)</p>
-</blockquote>
-<p>MapReduce主要是先读取文件数据，然后进行Map处理，接着Reduce处理，最后把处理结果写到文件中<br><img src="/pictures/tools/Hadoop/img5.png" alt="MapReduce基本流程"></p>
-<h3 id="Hadoop数据倾斜"><a href="#Hadoop数据倾斜" class="headerlink" title="Hadoop数据倾斜"></a>Hadoop数据倾斜</h3>]]></content>
-      <categories>
-        <category>工具</category>
-        <category>大数据</category>
-      </categories>
-      <tags>
-        <tag>tools</tag>
-        <tag>Big Data</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>第1章 对象导言</title>
-    <url>/2022/09/14/Programming/C++/1-%E5%AF%B9%E8%B1%A1%E5%AF%BC%E8%A8%80/</url>
-    <content><![CDATA[<h3 id="抽象的过程"><a href="#抽象的过程" class="headerlink" title="抽象的过程"></a>抽象的过程</h3><p>所有的程序设计语言都是提供抽象。</p>
-<blockquote>
-<ol>
-<li>万物皆对象；</li>
-<li>程序就是一组对象，对象之间通过发送消息互相通知做什么；</li>
-<li>每个对象否有自己的由其他对象构成的存储区；</li>
-<li>每个对象都有一个类型；</li>
-<li>一个特定类型的所有对象都能接收相同的消息。</li>
-</ol>
-</blockquote>
-]]></content>
-      <categories>
-        <category>编程语言</category>
-        <category>C++</category>
-      </categories>
-      <tags>
-        <tag>Programming</tag>
-        <tag>C++</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>第2章 对象的创建与使用</title>
-    <url>/2022/09/14/Programming/C++/2-%E5%AF%B9%E8%B1%A1%E7%9A%84%E5%88%9B%E5%BB%BA%E4%B8%8E%E4%BD%BF%E7%94%A8/</url>
-    <content><![CDATA[<p>用户定义的数据类型或类(class)，是C++区别于传统过程型语言的地方。类是一种 新的数据类型，用来解决特定问题。一旦创建了一个类，任何人都可以使用它而不需知道 它的构造方式和工作原理细节。本章仅把类作为C++内置的另一种数据类型来使用。</p>
-<h3 id="语言翻译过程"><a href="#语言翻译过程" class="headerlink" title="语言翻译过程"></a>语言翻译过程</h3><p>任何一种计算机语言都要从某种人们容易理解的形式(源代码)转化成计算机能执行 的形式(机器指令)。通常，翻译器分为两类:解释器(interpreter)和编译器 (compiler)。</p>
-<h4 id="解释器"><a href="#解释器" class="headerlink" title="解释器"></a>解释器</h4><p>解释器将源代码转化成一些动作(它可由多组机器指令组成)并立即执行这些动作。</p>
-<h4 id="编译器"><a href="#编译器" class="headerlink" title="编译器"></a>编译器</h4><p>编译器直接把源代码转化成汇编语言或机器指令。最终的结果是一个或多个机器代码<br>的文件。这是一个复杂的过程，通常分几步完成。使用编译器时，从写源代码转到执行代<br>码，是一个较长的过程。</p>
-<h4 id="编译过程"><a href="#编译过程" class="headerlink" title="编译过程"></a>编译过程</h4><p>某些语言(特别是 C&#x2F;C++)编译时，首先要对源代码执行 <strong>预处理</strong>。</p>
-<blockquote>
-<p>预处理器(preprocessor)是一个简单的程序，它用程序员(利用预处理器指令)定义好的模式代替源代码中的模式。<br>预处理器指令用来节省输入，增加代码的可读性。</p>
-</blockquote>
-<p>编译一般分两遍进行。</p>
-<blockquote>
-<ol>
-<li>首先，对预处理过的代码进行语法分析。编译器把源代码分解 成小的单元并把它们按树形结构组织起来。表达式“A+B”中的“A”、“+”和“B”就是语法分 析树的叶子节点。</li>
-<li>编译的第二遍，由代码生成器(code generator)遍历语法分析树，把树的每个节点转 化成汇编语言或机器代码。如果代码生成器生成的是汇编语言，那么还必须用汇编器对其 汇编。</li>
-</ol>
-</blockquote>
-<p>两种情况的最后结果都是生成目标模块(通常是，一个以.o或.obj为扩展名的文件)。</p>
-<h5 id="静态类型检查"><a href="#静态类型检查" class="headerlink" title="静态类型检查"></a>静态类型检查</h5><p>类型检查(type checking)是 <strong>编译器在第一遍</strong> 中完成的。类型检查是检查函数参数是 否正确使用，以防止许多程序设计错误。由于类型检查是 <em><strong>在编译阶段而不是程序运行阶段</strong></em> 进行的，所以称之为静态类型检查(static type checking)。</p>
-<h3 id="分段编辑工具"><a href="#分段编辑工具" class="headerlink" title="分段编辑工具"></a>分段编辑工具</h3><p>当创建大的项目时，分段编译尤其重要。在C&#x2F;C++中，可以将一个大程序构造成为许多小程序块，而这些小程序块容易管理，可独立测试。<br>程序分割的最基本的方法是创建命名子程序。在C和C++里，子程序称为函数(function)，函数是一段代码段，可以将这些函数放在不同的文件中，并能分别编译。另一种解释，<strong>函数是程序的基本单位</strong>，因为不能把一个函数分开，让其不同的部分放在不同的文件中;整个函数必须完整地放在一个文件里(尽管文件可拥有不止一个函数)。</p>
-<p>编译一个文件时，C或C++编译器必须知道在另一些文件中的函数和数据，特别是它的名字和基本用法。编译器就是要确保函数和数据被正确地使用。<strong>“告知编译器”外部函数和数据的名称及它们的模样</strong>，这一过程就是声明(declaration)。</p>
-<h4 id="声明与定义"><a href="#声明与定义" class="headerlink" title="声明与定义"></a>声明与定义</h4><blockquote>
-<p>声明是向编译器介绍名字—标识符。它告诉编译器“这个函数或这个变量在某处可找到，它的模样像什么”。<br>而定义是说:“在这里建立变量”或“在这里建立函数”。它为名字分配存储空间。无论定义的是函数还是变量，编译器都要为它们在定义点分配存储空间。</p>
-</blockquote>
-<p>对于变量，<strong>编译器确定变量的大小，然后在内存中开辟空间来保存变量的数据</strong>。对于函<br>数，编译器会生成代码，这些代码最终也要占用一定的内存。</p>
-<h4 id="连接"><a href="#连接" class="headerlink" title="连接"></a>连接</h4><p>连接器把由编译器生成的目标模块(一般是带“.o”或“.obj”扩展名的文件)连接成为操作系统可以加载和执行的程序。它是编译过程的最后阶段。</p>
-<h4 id="使用库文件"><a href="#使用库文件" class="headerlink" title="使用库文件"></a>使用库文件</h4><p>使用库必须:</p>
-<blockquote>
-<ol>
-<li>包含库的头文件。</li>
-<li>使用库中的函数和变量。</li>
-<li>把库连接进可执行程序。</li>
-</ol>
-</blockquote>
-<p>当C或C++要对函数和变量进行外部引用时，根据引用情况，连接器会选择两种处理 方法中的一种。如果还未遇到过这个函数或变量的定义，连接器会把它的标识符加到“未 解析的引用”列表中。如果连接器遇到过函数或变量定义，那么这就是已解决的引用。</p>
-<p>如果连接器在目标模块列表中不能找到函数或变量的定义，它将去查找库。库有某种 索引方式，连接器不必到库里查找所有目标模块—而只需浏览索引。当连接器在库中找到 定义后，就将整个目标模块而不仅仅是函数定义连接到可执行程序。</p>
-<p>因为连接器按指定的顺序查找文件，所以，用户使用与库函数同名的函数，把带有这<br>种函数的文件插到库文件名列表之前，就能用他自己的函数取代库函数。</p>
-]]></content>
-      <categories>
-        <category>编程语言</category>
-        <category>C++</category>
-      </categories>
-      <tags>
-        <tag>Programming</tag>
-        <tag>C++</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>第3章 Cpp中的C</title>
-    <url>/2022/09/14/Programming/C++/3-Cpp%E4%B8%AD%E7%9A%84C/</url>
-    <content><![CDATA[]]></content>
-      <categories>
-        <category>编程语言</category>
-        <category>C++</category>
-      </categories>
-      <tags>
-        <tag>Programming</tag>
-        <tag>C++</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>第4章 数据抽象</title>
-    <url>/2022/09/15/Programming/C++/4-%E6%95%B0%E6%8D%AE%E6%8A%BD%E8%B1%A1/</url>
-    <content><![CDATA[<p>库只是他人已经写好的一些代码，按某种方式包装在一起。通常，最小的包是带有扩 展名(如lib)的文件和向编译器声明库中有什么的一个或多个头文件。连接器知道如何 在库文件中搜索和提取相应的已编译的代码。但是，这只是提供库的一种方法。在跨越多 种体系结构的平台(例如Linux&#x2F;Unix)上，通常，提供库的最明智的方法是使用源代码， 这样它就能在新的目标机上被重新配置和编译。</p>
-<p>所以，库大概是改进生产效率的最重要的方法。C++的主要设计目标之一就是使库使 用起来更加容易。这种说法暗示，在C中使用库有一些难度。理解这个因素将使我们对 C++设计有一个初步的了解，并因而对如何使用它有更深入的认识。</p>
-<h4 id="基本对象"><a href="#基本对象" class="headerlink" title="基本对象"></a>基本对象</h4>]]></content>
-      <categories>
-        <category>编程语言</category>
-        <category>C++</category>
-      </categories>
-      <tags>
-        <tag>Programming</tag>
-        <tag>C++</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>第6章 初始化与清除</title>
-    <url>/2022/09/17/Programming/C++/6-%E5%88%9D%E5%A7%8B%E5%8C%96%E4%B8%8E%E6%B8%85%E9%99%A4/</url>
-    <content><![CDATA[<h3 id="用构造函数确保初始化"><a href="#用构造函数确保初始化" class="headerlink" title="用构造函数确保初始化"></a>用构造函数确保初始化</h3><p>类的设计者可以通过提供一个叫做 <strong>构造函数(constructor)</strong> 的特殊函数来 <strong>保证每个对象都被初始化</strong>。如果一个类有构造函数，<strong>编译器在创建对象时就自动调用这一函数</strong>，这一切在客户程序员使用他们的对象之前就已经完成了。是否调用构造函数不需要客户程序员来考虑，它是由编 译器在对象定义时完成的。</p>
-<p><strong>构造函数的名字与类的名字一样</strong>。这样的函数在初始化时会自动被调用。</p>
-<p>传递到构造函数的第一个(秘密)参数是this指针，也就是调用这一函数的对象的地址，不过，对构造函数来说，this指针指向一个没有被初始化的内存块，构造函数的作用就是 <strong>正确的初始化该内存块</strong>。</p>
-<p>像其他函数一样，也可以通过向构造函数传递参数，指定对象该如何创建或设定对象 初始值。</p>
-<p>构造函数和析构函数是两个非常特殊的函数:它们没有返回值。这与返回值为void的 函数显然不同。如果它们有返回值，要么编译器必须知 道如何处理返回值，要么就只能由客户程序员自己来显式地调用构造函数与析构函数，这 样一来，安全性就被破坏了。</p>
-<h3 id="用析构函数确保清除"><a href="#用析构函数确保清除" class="headerlink" title="用析构函数确保清除"></a>用析构函数确保清除</h3><p>在C++中，清除就像初始化一样重要。它通过析构函数来保证清除的执行。析构函数的语法与构造函数一样，用类的名字作为函数名。然而析构函数前面加上一个 <strong>代字号(~)<strong>，以和构造函数区别。另外，</strong>析构函数不带任何参数，因为析构不需任何选项</strong>。<br>当对象超出它的作用域时，<strong>编译器</strong> 将自动调用析构函数。</p>
-]]></content>
-      <categories>
-        <category>编程语言</category>
-        <category>C++</category>
-      </categories>
-      <tags>
-        <tag>Programming</tag>
-        <tag>C++</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>第7章 函数重载与默认参数</title>
-    <url>/2022/09/17/Programming/C++/7-%E5%87%BD%E6%95%B0%E9%87%8D%E8%BD%BD%E4%B8%8E%E9%BB%98%E8%AE%A4%E5%8F%82%E6%95%B0/</url>
-    <content><![CDATA[<p>函数重载意味着，我们有两个库，它们都有同名的函数，只要它们的参数列表不同就不会发生冲突。</p>
-<h3 id="名字修饰"><a href="#名字修饰" class="headerlink" title="名字修饰"></a>名字修饰</h3><p>我们建议在函数名前加 类名的方法来命名函数，所以编译器使用的内部名字可能就是_f和_X_f。函数名不仅与类 名关系密切，而且还跟其他因素有关。</p>
-<p>可以对不同的函数用同样的名字，只要求函数的参数不同。编译器会修饰这些名字、范围和参数来产生内部名以供它和连接器使用。</p>
-<h3 id="默认参数"><a href="#默认参数" class="headerlink" title="默认参数"></a>默认参数</h3><p>默认参数是在函数声明 时就已给定的一个值，如果在调用函数时没有指定这一参数的值，编译器就会自动地插上这个值。</p>
-<p>在使用默认参数时必须记住两条规则。</p>
-<ol>
-<li>只有参数列表的后部参数才是可默认的，也就是说，不可以在一个默认参数后面又跟一个非默认的参数。</li>
-<li>一旦在一个函数调用中开始使用默认参数，那么这个参数后面的所有参数都必须是默认的(这可以从第一条中导出)。</li>
-</ol>
-<p>默认参数只能放在 <strong>函数声明</strong> 中，通常在一个头文件中。编译器必须在使用该函数之前知道默认值。</p>
-<h4 id="占位符参数"><a href="#占位符参数" class="headerlink" title="占位符参数"></a>占位符参数</h4><p>函数声明时，参数可以没有标识符，当这些不带标识符的参数用做默认参数时，看起<br>来很有意思。</p>
-<p>这种语 法允许把一个参数用做占位符而不去用它。其目的在于以后可以修改函数定义而不需要修 改所有的函数调用。</p>
-<h3 id="选择重载还是默认参数"><a href="#选择重载还是默认参数" class="headerlink" title="选择重载还是默认参数"></a>选择重载还是默认参数</h3><p>不能把默认参数作为一个标志去决定执行函数的哪一块，这是基本原则。在这种情况下，只要能够，就应该把函数分解成两个或多个重载的函数。一个默认的参数应该是一个在一般情况下放在这个位置的值。这个值出现的可能比其他值要大，所以客户程序员可以忽略它或只在需要改变默认值时才去用它。</p>
-<p>默认参数的引用是为了使函数调用更容易，特别是当这些函数的许多参数都有特定值时。它不仅使书写函数调用更容易，而且阅读也更方便，尤其是当类的创建者能够制定参数，以便把那些最不可能调整的默认参数放在参数表的最后面时。</p>
-<p>默认参数的一个重要应用情况是在开始定义函数时用了一组参数，而使用了一段时间后发现要增加一些参数。通过把这些新增参数都作为默认的参数，就可以保证所有使用这一函数的客户代码不会受到影响。</p>
-]]></content>
-      <categories>
-        <category>编程语言</category>
-        <category>C++</category>
-      </categories>
-      <tags>
-        <tag>C++</tag>
-        <tag>Programmming</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>第8章 常量</title>
-    <url>/2022/09/18/Programming/C++/8-%E5%B8%B8%E9%87%8F/</url>
-    <content><![CDATA[<p>常量概念(由关键字const表示)是为了使程序员能够在变和不变之间画一条界线。这在C++程序设计项目中提供了安全性和可控性。</p>
-<p>const的最初动机是取代预处理器#defines来进行值替代。从这以后它曾被用于指针、 函数变量、返回类型、类对象以及成员函数。</p>
-<h3 id="值替代"><a href="#值替代" class="headerlink" title="值替代"></a>值替代</h3><p>当用C语言进行程序设计时，预处理器可以不受限制地建立宏并用它来替代值。因为预处理器只做些文本替代，它既 <strong>没有类型检查概念</strong>，也没有 <strong>类型检查功能</strong>，所以预处理器的值替代会产生一些微小的问题，这些问题在C++中可以通过使用const值而避免。</p>
-<p>C++用const来消除 <strong>宏定义没有类型信息</strong> 问题，具体方法是把值替代移交给编译器。</p>
-<h4 id="头文件里的const"><a href="#头文件里的const" class="headerlink" title="头文件里的const"></a>头文件里的const</h4><p>要使用const而非#define，同样必须把const定义放进 <strong>头文件</strong> 里。这样，通过包含头文件，可把const定义单独放在一个地方并把它分配给一个编译单元。C++中的const默认为 内部连接(internal linkage)，也就是说，const仅在const被定义过的文件里才是可见的， 而在连接时不能被其他编译单元看到。</p>
-<p>当定义一个const时，<strong>必须赋一个值给它，除非用extern作出了清楚的说明</strong>。</p>
-<p>通常C++编译器并 <strong>不为const创建存储空间</strong>，相反它把这个定义保存在它的符号表里。<br>上面的extern强制进行了存储空间分配(另外还有一些情况，如取一个const的地址，也要进行存储空间分配)，由于extern意味着使用 <strong>外部连接</strong> ，因此 <strong>分配存储空间</strong>，这也就是说有几个不同的编译单元应当能够引用它，所以它必须有存储空间。</p>
-<p>由于编译器不能完全避免为const分配内存，所以const的定义必须 <strong>默认内部连接</strong>，即连接仅在特定的编译单元内;否则，由于众多的const在多个cpp文件内分配存储，容易引起连接错误，连接程序在多个对象文件里看到同样的定义就会“抱怨”。然而，因为const默认内部连接，所以连接程序不会跨过编译单元连接那些定义，因此不会有冲突。在大部分场合使用内建数据类型的情况，包括常量表达式，编译都能执行常量折叠。</p>
-<h4 id="const的安全性"><a href="#const的安全性" class="headerlink" title="const的安全性"></a>const的安全性</h4><p>const的作用不仅限于在常数表达式里代替#defines。如果用运行期间产生的值初始化一个变量而且知道在变量生命期内是不变的，则用const限定该变量是程序设计中的一个很好的做法。</p>
-<p>就实际来说，如果想让一个值不变，就应该使之成为const。这不仅为防止意外的更改提供安全措施，也消除了读存储器和读内存操作，使编译器产生的代码更有效。</p>
-<h4 id="与C语言的区别"><a href="#与C语言的区别" class="headerlink" title="与C语言的区别"></a>与C语言的区别</h4><p>C中const的意思是“一个不能被改变的普通变量”，const常量总是占用存储而且它的名字是全局符。</p>
-<p>C默认const是外部连接的；C++默认const是内部连接。<br>在C++中，一个const不必创建内存空间，而在C中，一个const总是需要创建一块内存空间。</p>
-<h3 id="指针"><a href="#指针" class="headerlink" title="指针"></a>指针</h3><p>当使用带有指针的const时，有两种选择:const修饰指针正指向的对象，或者const修饰在指针里存储的地址。</p>
-<h4 id="指向const的指针"><a href="#指向const的指针" class="headerlink" title="指向const的指针"></a>指向const的指针</h4><p>正如任何复杂的定义一样，定义指针的技巧是在标识符的开始处读它并从里向外读。const修饰“最靠近”它的那个。</p>
-<h4 id="const指针"><a href="#const指针" class="headerlink" title="const指针"></a>const指针</h4><p>使指针本身成为一个const指针，必须把const标明的部分放在*的右边。</p>
-<p>因为指针本身现在是const指针，编译器要求给它一个初始值，这个值在指针生命期间内不变。然而要改变它所指向的值是可以的。</p>
-<h4 id="赋值和类型检查"><a href="#赋值和类型检查" class="headerlink" title="赋值和类型检查"></a>赋值和类型检查</h4><p>可以把一个非const对象的地址赋给一个const指针，因为也许有时不想改变某些可以改变的东西。<br>然而，不能把一个const对象的地址赋给一个非const指针，因为这样做可能通过被赋值的指针改变这个对象的值。</p>
-<h3 id="函数参数和返回值"><a href="#函数参数和返回值" class="headerlink" title="函数参数和返回值"></a>函数参数和返回值</h3><p>如果按值传递对象，对客户来讲，用const限定没有意义(它意味着传递的参数在函数里是不能被修改的)。<br>如果按常量返回用户定义类型的一个对象的值，这意味着返回值不能被修改。<br>如果传递并返回地址，const将保证该地址内容不会被改变。</p>
-<h4 id="传递const值"><a href="#传递const值" class="headerlink" title="传递const值"></a>传递const值</h4><p>在函数里，const有这样的意义:参数不能被改变。所以它其实是函数创建者的工具，而不是函数调用者的工具。</p>
-<p>为了不使调用者混淆，在函数内部用const限定参数优于在参数表里用const限定参数。</p>
-<h4 id="返回const值"><a href="#返回const值" class="headerlink" title="返回const值"></a>返回const值</h4><p>对返回值来讲，存在一个类似的道理，即如果一个函数的返回值是一个常量（const）。这就约定了函数框架里的原变量不会被修改。另外。因为这是按值返回的，所以这个变量被制成副本，使得初值不会被返回值所修改。</p>
-<p>当处理用户定义的类型时，按值返回常量是很重要的。如果一个函数按值返回一个类对象为const时，那么这个函数的返回值不能是一个左值(即它不能被赋值，也不能被修改)。</p>
-<h4 id="传递和返回地址"><a href="#传递和返回地址" class="headerlink" title="传递和返回地址"></a>传递和返回地址</h4><p>如果传递或返回一个地址(一个指针或一个引用)，客户程序员去取地址并修改其初值是可能的。<br>如果使这个指针或者引用成为const，就会阻止这类事的发生，这是非常重要的事情。<br>事实上，无论什么时候传递一个地址给一个函数，都应该尽可能用const修饰它。如果不这样做，就不能以const指针参数的方式使用这个函数。</p>
-<h3 id="类"><a href="#类" class="headerlink" title="类"></a>类</h3><p>为了保证一个类对象为常量，引进了const成员函数:const成员函数只能对于const对象调用。</p>
-<h4 id="类里的const"><a href="#类里的const" class="headerlink" title="类里的const"></a>类里的const</h4><p>常数表达式使用常量的地方之一是在类里。典型的例子是在一个类里建立一个数组，并用const代替#define设置数组大小以及用于有关数组的计算。数组大小一直隐藏在类里，这样，如果用size表示数组大小，就可以把size这个名字用在另一个类里而不发生冲突。然而所有的#define从定义的地方起就被预处理器看成是全局的，所以用#define就不会得到预期的效果。</p>
-<p>它在每个类对象里分配存储并代表一个值，这个值一旦被初始化以后就不能改变。在一个类里使用const意味着“在这个对象生命期内，它是一个常量”。然而，对这个常量来讲，每个不同的对象可以含有一个不同的值。</p>
-<p><strong>在一个类里建立一个普通的（非static的）const时，不能给它初值。这个初始化工作必须在构造函数里进行。</strong></p>
-<h4 id="编译期间类里的常量"><a href="#编译期间类里的常量" class="headerlink" title="编译期间类里的常量"></a>编译期间类里的常量</h4><p>如何让一个类有编译期间的常量成员?这就要求使用另外一个关键字static。</p>
-<p>关键字static意味着“不管类的对象被创建多 少次，都只有一个实例”，这正是所需要的:类中的一个常量成员，在该类的所有对象中 它都一样。因此，一个内建类型的static const可以看做一个编译期间的常量。</p>
-<h4 id="const对象和成员函数"><a href="#const对象和成员函数" class="headerlink" title="const对象和成员函数"></a>const对象和成员函数</h4><p>编译器强调对象为const的，因此它必须保证对象的数据成员在其生命期内不被改变。</p>
-<p>仅仅声明一个函数在类定义里是const的，还不能保证成员函 数按声明的方式去做，所以编译器强迫程序员在定义函数时要重申const说明。</p>
-<p>为确保函数定义的 常量性，如果我们改变对象中的任何成员或调用一个非const成员函数，编译器就将发出 一个出错信息。</p>
-<p>要理解声明const成员函数的语法，首先注意前面的带const的函数声明，它表示函数 的返回值是const，但这不会产生想要的结果。相反，必须把修饰符const放在函数参数表 的后面。</p>
-<p>关键字const必须用同样的方式重复出现在定义里，否则编译器把它看成一个不同的 函数。</p>
-<h3 id="volatile"><a href="#volatile" class="headerlink" title="volatile"></a>volatile</h3><p>volatile的语法与const是一样的，但是volatile的意思是“在编译器认识的范围外，这个 数据可以被改变”。可以被其他进程修改，不能被自己修改。</p>
-<p>如果编译器说:“我已经把数据读进寄存器，而且再没有与寄存器接触”。一般情况 下，它不需要再读这个数据。但是，如果数据是volatile修饰的，编译器就不能作出这样的 假定，因为这个数据可能被其他进程改变了，它必须重读这个数据而不是优化这个代码来 消除通常情况下那些冗余的读操作代码。</p>
-<h3 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h3><p>关键字const能将对象、函数参数、返回值和成员函数定义为常量，并能消除预处理 器的值替代而不使预处理器的影响。所有这些都为程序设计提供了又一种非常好的类型检 查形式以及安全性。使用所谓的常量正确性(const correctness)(在任何可能的地方使用 const)已成为项目的救星。</p>
-]]></content>
-      <categories>
-        <category>编程语言</category>
-        <category>C++</category>
-      </categories>
-      <tags>
-        <tag>Programming</tag>
-        <tag>C++</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>第9章 内联函数</title>
-    <url>/2022/09/18/Programming/C++/9-%E5%86%85%E8%81%94%E5%87%BD%E6%95%B0/</url>
-    <content><![CDATA[<p>在C中，保持效率的一个方法是使用宏(macro)。宏可以不要普通的函数调用代价 就可使之看起来像函数调用。宏的实现是用预处理器而不是编译器。预处理器直接用宏代 码代替宏调用，所以就没有了参数压栈、生成汇编语言的CALL、返回参数、执行汇编语 言的RETURN等的开销。所有的工作由预处理器来完成，因此不用花费什么就具有了程序 调用的便利和可读性。</p>
-<p>在C++中，使用预处理器宏存在两个问题。</p>
-<blockquote>
-<ul>
-<li>第一个问题在C中也存在:宏看起来像一个函数调用，但并不总是这样。这样就隐藏了难以发现的错误。</li>
-<li>第二个问题是C++特有的:预处理器不允许访问类的成员数据。这意味着预处理器宏不能用作类的成员函数。</li>
-</ul>
-</blockquote>
-<h3 id="预处理器的缺陷"><a href="#预处理器的缺陷" class="headerlink" title="预处理器的缺陷"></a>预处理器的缺陷</h3><p>第一个问题是表达式在宏内展开，所以它们的优先级不同于所期望的优先级。<br>第二个问题则复杂一些。不像普通函数，每次在宏中使用一个参数，都对这个参数求值。只要使用普通变量调用宏仅，求值就无危险。但假如参数求值有副作用，那么结果可能出乎预料，并肯定不能模仿函数行为。</p>
-<h4 id="宏和访问"><a href="#宏和访问" class="headerlink" title="宏和访问"></a>宏和访问</h4><p>预处理器只是简单地执行字符替代。</p>
-<p>在宏里简直没有办法表示类的范围。由于没 有可以取代预处理器宏的方法，程序设计者出于效率考虑，不得不让一些数据成员成为 public类型，这样就会暴露内部实现并妨碍在这个实现中的改变，从而消除了private提供的保护。</p>
-<h3 id="内联函数"><a href="#内联函数" class="headerlink" title="内联函数"></a>内联函数</h3><p>联函数能够像普通函数一样具有我们所有期望的任何行为。惟一不同之处是内联函数在适当的地方像宏一样展开，所以不需要函数调用的开销。</p>
-<p>任何在类中定义的函数自动地成为内联函数，但也可以在非类的函数前面加上inline 关键字使之成为内联函数。但为了使之有效，必须使函数体和声明结合在一起，否则，编 译器将它作为普通函数对待。</p>
-<p>一般应该把内联定义放在头文件里。当编译器看到这个定义时，它把函数类型(函数 名+返回值)和函数体放到符号表里。当使用函数时，编译器检查以确保调用是正确的且 返回值被正确使用，然后将函数调用替换为函数体，因而消除了开销。内联代码的确占用 空间，但假如函数较小，这实际上比为了一个普通函数调用而产生的代码(参数压栈和执 行CALL)占用的空间还少。</p>
-]]></content>
-      <categories>
-        <category>编程语言</category>
-        <category>C++</category>
-      </categories>
-      <tags>
-        <tag>Programming</tag>
-        <tag>C++</tag>
       </tags>
   </entry>
 </search>
