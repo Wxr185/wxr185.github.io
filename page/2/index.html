@@ -1,0 +1,1524 @@
+<!DOCTYPE html>
+
+
+<html lang="zh-CN">
+  
+
+    <head>
+      <meta charset="utf-8" />
+        
+      <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1"
+      />
+      <title> WXR</title>
+  <meta name="generator" content="hexo-theme-ayer">
+      
+      <link rel="shortcut icon" href="/favicon.ico" />
+       
+<link rel="stylesheet" href="/dist/main.css">
+
+      
+<link rel="stylesheet" href="/css/fonts/remixicon.css">
+
+      
+<link rel="stylesheet" href="/css/custom.css">
+ 
+      <script src="https://cdn.staticfile.org/pace/1.2.4/pace.min.js"></script>
+       
+ 
+
+      <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bulma@5.0.1/bulma.min.css"
+      />
+      <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.min.js"></script>
+
+      <!-- mermaid -->
+      
+      <style>
+        .swal2-styled.swal2-confirm {
+          font-size: 1.6rem;
+        }
+      </style>
+    </head>
+  </html>
+</html>
+
+
+<body>
+  <div id="app">
+    
+      
+    <main class="content on">
+      
+<section class="cover">
+    
+  <div class="cover-frame">
+    <div class="bg-box">
+      <img src="/images/cover3.jpg" alt="image frame" />
+    </div>
+    <div class="cover-inner text-center text-white">
+      <h1><a href="/">WXR</a></h1>
+      <div id="subtitle-box">
+        
+        <span id="subtitle"></span>
+        
+      </div>
+      <div>
+        
+      </div>
+    </div>
+  </div>
+  <div class="cover-learn-more">
+    <a href="javascript:void(0)" class="anchor"><i class="ri-arrow-down-line"></i></a>
+  </div>
+</section>
+
+
+
+<script src="https://cdn.staticfile.org/typed.js/2.0.12/typed.min.js"></script>
+
+
+<!-- Subtitle -->
+
+  <script>
+    try {
+      var typed = new Typed("#subtitle", {
+        strings: ['人生若只如初见，何事秋风悲画扇', '等闲变却故人心，却道故人心易变', '想要的都拥有，得不到的都释怀'],
+        startDelay: 0,
+        typeSpeed: 200,
+        loop: true,
+        backSpeed: 100,
+        showCursor: true
+      });
+    } catch (err) {
+      console.log(err)
+    }
+  </script>
+  
+<div id="main">
+  <section class="outer">
+  
+  
+  
+
+<div class="notice" style="margin-top:50px">
+    <i class="ri-heart-fill"></i>
+    <div class="notice-content" id="broad"></div>
+</div>
+<script type="text/javascript">
+    fetch('https://v1.hitokoto.cn')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById("broad").innerHTML = data.hitokoto;
+        })
+        .catch(console.error)
+</script>
+
+<style>
+    .notice {
+        padding: 20px;
+        border: 1px dashed #e6e6e6;
+        color: #969696;
+        position: relative;
+        display: inline-block;
+        width: 100%;
+        background: #fbfbfb50;
+        border-radius: 10px;
+    }
+
+    .notice i {
+        float: left;
+        color: #999;
+        font-size: 16px;
+        padding-right: 10px;
+        vertical-align: middle;
+        margin-top: -2px;
+    }
+
+    .notice-content {
+        display: initial;
+        vertical-align: middle;
+    }
+</style>
+  
+  <article class="articles">
+    
+    
+    
+    
+    <article
+  id="post-RecomSys/MMoE"
+  class="article article-type-post"
+  itemscope
+  itemprop="blogPost"
+  data-scroll-reveal
+>
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h2 itemprop="name">
+  <a class="article-title" href="/2022/09/13/RecomSys/MMoE/"
+    >MMoE</a> 
+</h2>
+ 
+
+      
+    </header>
+     
+    <div class="article-meta">
+      <a href="/2022/09/13/RecomSys/MMoE/" class="article-date">
+  <time datetime="2022-09-13T09:53:23.838Z" itemprop="datePublished">2022-09-13</time>
+</a> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E6%8E%A8%E8%8D%90%E7%B3%BB%E7%BB%9F/">推荐系统</a>
+  </div>
+   
+    </div>
+      
+    <div class="article-entry" itemprop="articleBody">
+       
+  <p>在工业界基于神经网络的多任务学习在推荐等场景业务应用广泛，比如在推进啊系统中对用户推荐物品时，不仅要推荐用户感兴趣的物品，还要尽可能地促进转化和购买，因此要对用户评分和购买两种目标同时建模。</p>
+<h3 id="动机"><a href="#动机" class="headerlink" title="动机"></a>动机</h3><p>把多个任务放在一起学习，任务共享同一个模型空间，它们 <strong>共享同一个表示层</strong>。在训练过程中，多个任务会对这个共享模型进行参数更新。</p>
+<h4 id="相关任务"><a href="#相关任务" class="headerlink" title="相关任务"></a>相关任务</h4><p>multi task同时学习多个相关任务，并且具有相当的优势。同时，我们在做多任务学习时，有时关注的点在某个 <strong>主要任务</strong> 上，其他的共同学习的任务可能更多的只是起到帮助作用，这些起到帮助作用的任务叫做 <strong>辅助任务</strong>。</p>
+<p><strong>辅助任务与主任务越相关，那么起到的效果可能会越好</strong>。<br>如下图所示，假如有这样两个相似的任务：狗的分类模型和猫的分类模型。在单任务学习中，他们都拥有比较接近的底层特征，比如皮毛颜色啦、眼睛颜色啦、耳朵形状啦等等。<br><img src="/pictures/RecomSys/MMoE/img1.png" alt="学习任务相近的单任务学习"></p>
+<p>由于 <strong>多任务学习本质上是共享表示层</strong>，任务之间互相影响。那么在多任务学习中，他们就可以很好地进行底层特征共享。<br><img src="/pictures/RecomSys/MMoE/img2.png" alt="相关性较高的多任务学习"></p>
+<p>但是对于不相似的任务来说，如下图，汽车的识别和狗的识别，他们的 <strong>底层表示差异很大</strong>，共享表示层可能就没那么有效果了。进行参数共享时很有可能会互相冲突或噪声太多，对多任务学习而言非常不友好。<br><img src="/pictures/RecomSys/MMoE/img3.png" alt="相关性较低的多任务学习"></p>
+<blockquote>
+<p>由于multi task在不相关的任务上表现不佳，同时，在实际应用中，你很难判断任务在数据层面是否是相似的。<br>所以多任务学习如何在相关性不高的任务上获得好效果是一件很有挑战性也很有实际意义的事。</p>
+</blockquote>
+<h4 id="共享表示"><a href="#共享表示" class="headerlink" title="共享表示"></a>共享表示</h4><p>神经网络中，Multi Task Learning的共享表示有两种方式：<strong>hard参数共享和soft参数共享</strong>。</p>
+<h5 id="Hard参数共享"><a href="#Hard参数共享" class="headerlink" title="Hard参数共享"></a>Hard参数共享</h5><p>在所有任务之间 <strong>共享隐藏层</strong>，同时保留几个特定任务的输出层。这种方式很大程度上 <strong>降低了过拟合的风险</strong>。因为同时学习的工作越多，模型找到一个含有所有任务的表征就越困难，而过拟合某特定原始任务的可能性就越小。<br><img src="/pictures/RecomSys/MMoE/img4.png" alt="Hard参数共享"></p>
+<h5 id="Soft参数共享"><a href="#Soft参数共享" class="headerlink" title="Soft参数共享"></a>Soft参数共享</h5><p>每个任务有自己的参数和模型，最后 <strong>通过对不同任务的参数之间的差异加约束</strong>，表达相似性。比如可以使用L2进行正则, 迹范数（trace norm）等。<br><img src="/pictures/RecomSys/MMoE/img5.png" alt="Soft参数共享"></p>
+<h4 id="多任务学习优势"><a href="#多任务学习优势" class="headerlink" title="多任务学习优势"></a>多任务学习优势</h4><ol>
+<li>多个任务一起学习时，<strong>有相关部分也有不那么相关的地方</strong>，在学习一个任务时，与它不相关的部分就相当于是加入一些噪声，而 <strong>加入噪声可以提升模型的泛化能力</strong>。</li>
+<li>单任务学习时容易陷入局部最优，而多任务学习中 <strong>不同任务的局部最优解处于不同的位置</strong>，通过相互作用，可以逃离局部最优。</li>
+<li>增加任务会影响网络参数的更新，比如增加额外的任务增加了隐层的有效的学习率，具体取决于每个任务输出的错误反馈权重。可能较大的学习速率提升了学习效果</li>
+<li>某些特征可能在主任务不好学习（比如以很复杂的方式与特征进行交互，或被其他因素抑制），但在辅助任务上这个特征好学习到。可以通过辅助任务来学习这些特征，方法比如hints（预测重要特征）</li>
+<li>通过学习足够大的假设空间，在未来某些新任务中可以有较好的表现（解决冷启动），前提是这些任务都是 <strong>同源</strong> 的。</li>
+<li>多个任务在浅层共享表示，引入归纳偏置作为正则化项。因此，它降低了过拟合的风险以及模型的 Rademacher 复杂度（即适合随机噪声的能力）</li>
+</ol>
+<h3 id="MMoE模型结构"><a href="#MMoE模型结构" class="headerlink" title="MMoE模型结构"></a>MMoE模型结构</h3><p>关于共享隐层方面，MMoE和一般多任务学习模型的区别：</p>
+<blockquote>
+<p><strong>一般多任务学习模型</strong>：接近输入层的隐层作为一个整体被共享；<br><strong>MMoE</strong>：将共享的底层表示层分为 <strong>多个expert</strong>，同时设置了gate，使得 <strong>不同的任务可以多样化的使用共享层</strong>。</p>
+</blockquote>
+<p><img src="/pictures/RecomSys/MMoE/img6.png" alt="网络结构变化"></p>
+<blockquote>
+<p>a）是最原始的多任务学习模型，也就是base；<br>b）是加入单门（one gate）的MoE layer的多任务学习模型；<br>c）本质上是将base的shared bottom换成了MoE layer，并对每个任务都加gate</p>
+</blockquote>
+<h4 id="Mixture-of-Expert-Model"><a href="#Mixture-of-Expert-Model" class="headerlink" title="Mixture-of-Expert Model"></a>Mixture-of-Expert Model</h4><p>隐层是三个expert子网组成，各自的输出 f[i]（第 i 个expert的输出）会传入gate，也就是 g(x) 维度与expert个数相同的 <strong>softmax</strong>，g(x)[i] 是它输出的第 i 个logits。<strong>gate对expert的输出进行加权求和，得到不同任务的输入</strong>。<br><img src="/pictures/RecomSys/MMoE/img10.png" alt="MoE模型计算公式"></p>
+<h4 id="Shared-Bootom-Model"><a href="#Shared-Bootom-Model" class="headerlink" title="Shared-Bootom Model"></a>Shared-Bootom Model</h4><p>模型 (a) 最为常见，两个任务直接共享模型的 bottom 部分，只在最后处理时做区分，图 (a) 中使用了 Tower A 和 Tower B，然后分别接损失函数。<br><img src="/pictures/RecomSys/MMoE/img7.png" alt="Base模型"><br>x 表示 input，f 表示 shared-bottom network， h[k] 表示第 k 个tower network，针对第k个任务。</p>
+<p>这种网络非常简单，可以理解为在DNN上接了 k 个不同的tower 网络，不同的tower网络针对不同任务，有着各自的损失函数，但是 <strong>这些损失函数是放在一起进行联合训练</strong>。</p>
+<p>直觉告诉我们，如此进行多任务学习，在某些情况下效果可能并不好，例如当多个任务间是矛盾的，或者完全不相关的。</p>
+<h4 id="One-gate-MoE-Model"><a href="#One-gate-MoE-Model" class="headerlink" title="One-gate MoE Model"></a>One-gate MoE Model</h4><p>模型 (b) 是常见的多任务学习模型。将 input 分别输入给三个 Expert，但 <strong>三个Expert并不共享参数</strong>。同时将 input 输出给 Gate，<strong>Gate输出每个Expert被选择的概率</strong>，然后将三个Expert的输出 <strong>加权求和</strong>，输出给 Tower。有点 attention 的感觉。<br><img src="/pictures/RecomSys/MMoE/img8.png" alt="OMoE模型公式"><br>上式中，n 表示有 n 个 expert networks，f<a href="x">i</a> 表示第 i 个expert network，在论文expert network就是DNN网络。g(x)[i] 是由 输入x 控制的，其中 W[g] ∈ R[n × d]，n 表示expert network数量，d表示输入x 的特征维度，在n维度上进行softmax，因此 g(x)[i] 可理解为 <strong>通过输入x 得到在n个 exper network 上的权重分布</strong>。同样，h[k] 表示第k个 tower network。</p>
+<p>这个网络也很简单，可以理解为 对多个不同 expert network进行不同权重的集成，在集成的结果上接不同的tower network 而已。模型在训练过程中，会学习到不同expert network重要程度。</p>
+<p>那么何为 One-gate 呢？ 从上面的分析可以看出，不同的tower network的输入是相同的，都是经过同一套权重组合（同一个gate network）得到expert networks的输出。这么这样做合理吗？</p>
+<h4 id="Multi-gate-MoE-Model"><a href="#Multi-gate-MoE-Model" class="headerlink" title="Multi-gate MoE Model"></a>Multi-gate MoE Model</h4><p>模型 (c) 是作者新提出的方法，对于不同的任务，模型的权重选择是不同的，所以作者为每个任务都配备一个 Gate 模型。<strong>对于不同的任务，特定的 Gate k 的输出表示不同的 Expert 被选择的概率</strong>，将多个 Expert 加权求和，得到 f<a href="x">k</a> ，并输出给特定的 Tower 模型，用于最终的输出。<br><img src="/pictures/RecomSys/MMoE/img9.png" alt="MMoE模型公式"><br>与OMoE区别仅在 对于不同的tower network，有着不同的gate network，在OMoE上，只会初始化一个W[g] 参数矩阵，而在MMoE上，会初始化 k 个 W[gk]，得到 k 个gate network（multi-gates&#x2F;task-specific gates)，参数增加了一些。</p>
+<p>相对于OMoE，MMoE的做法更加合理一些，不同的任务有着不同的gate network，对expert networks输出有着不同权重组合。</p>
+ 
+      <!-- reward -->
+      
+    </div>
+    
+
+    <!-- copyright -->
+    
+    <footer class="article-footer">
+       
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Recom/" rel="tag">Recom</a></li></ul>
+
+    </footer>
+  </div>
+
+   
+    
+</article>
+
+    
+    <article
+  id="post-RecomSys/DIN"
+  class="article article-type-post"
+  itemscope
+  itemprop="blogPost"
+  data-scroll-reveal
+>
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h2 itemprop="name">
+  <a class="article-title" href="/2022/09/13/RecomSys/DIN/"
+    >DIN</a> 
+</h2>
+ 
+
+      
+    </header>
+     
+    <div class="article-meta">
+      <a href="/2022/09/13/RecomSys/DIN/" class="article-date">
+  <time datetime="2022-09-13T02:56:45.257Z" itemprop="datePublished">2022-09-13</time>
+</a> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E6%8E%A8%E8%8D%90%E7%B3%BB%E7%BB%9F/">推荐系统</a>
+  </div>
+   
+    </div>
+      
+    <div class="article-entry" itemprop="articleBody">
+       
+  <h3 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h3><p>针对电子商务领域的CTR预估，重点在与充分利用&#x2F;挖掘用户历史行为数据中的信息。</p>
+<blockquote>
+<p>按照传统方式，模型在预估针对用户推荐的广告时，对于 <em><strong>所有用户的特征选取总是使用固定长度</strong></em>。这样带来的问题就是，<em><strong>推荐系统并不能准确的把握用户的兴趣所在</strong></em>。</p>
+</blockquote>
+<h4 id="Attention机制引入"><a href="#Attention机制引入" class="headerlink" title="Attention机制引入"></a>Attention机制引入</h4><p>并不是所有的用户历史行为数据，对每一次的点击有贡献，而 <em><strong>仅仅有一部分在起作用</strong></em>。这个性质有些像attention，对于当前状态的预估，需要告知模型，哪些点与当前的预估最相关；</p>
+<p>在对用户历史行为数据进行处理时，每个用户的历史点击个数是不相等的，我们需要把它们编码成一个固定长的向量。以往的做法是，对每次历史点击做相同的embedding操作之后，将它们做一个 <em><strong>求和或者求最大值</strong></em> 的操作，类似经过了一个pooling层操作，简单粗暴，但是容易丢失很多信息。</p>
+<h4 id="模型改进"><a href="#模型改进" class="headerlink" title="模型改进"></a>模型改进</h4><blockquote>
+<ul>
+<li>使用 <strong>用户兴趣分布</strong> 来表示用户多种多样的兴趣爱好；</li>
+<li>使用 <strong>attention机制</strong> 来实现Local Activation；</li>
+<li>针对模型训练，提出了 <strong>Dice激活函数，自适应正则</strong>，显著提升了模型性能与收敛速度。</li>
+</ul>
+</blockquote>
+<h4 id="名词解释"><a href="#名词解释" class="headerlink" title="名词解释"></a>名词解释</h4><h5 id="Diversity-多样性"><a href="#Diversity-多样性" class="headerlink" title="Diversity 多样性"></a>Diversity 多样性</h5><p>用户在访问电商网站时会对多种商品感兴趣，也就是用户的兴趣非常广泛。<br>针对用户广泛的兴趣，DIN用 an interest distribution 去表示。</p>
+<h5 id="Local-Activation-局部激活"><a href="#Local-Activation-局部激活" class="headerlink" title="Local Activation 局部激活"></a>Local Activation 局部激活</h5><p>用户是否会点击推荐给他的商品 ，仅仅取决与历史行为数据的一小部分，而不是全部。</p>
+<p>DIN借鉴机器翻译中的Attention机制，设计了一种 <strong>attention-like network structure</strong>， 针对当前候选Ad，去局部的激活(Local Activate)相关的历史兴趣信息。<strong>和当前候选Ad相关性越高的历史行为，会获得更高的attention score，从而会主导这一次预测</strong>。</p>
+<h4 id="应用场景"><a href="#应用场景" class="headerlink" title="应用场景"></a>应用场景</h4><p>DIN方法也可以应用于其他有丰富用户行为数据的场景，比如：</p>
+<blockquote>
+<ul>
+<li>电子商务中的个性化推荐；</li>
+<li>社交网络中的信息推流排序(feeds ranking)</li>
+</ul>
+</blockquote>
+<h3 id="系统构建"><a href="#系统构建" class="headerlink" title="系统构建"></a>系统构建</h3><p>阿里推荐系统工作流程：</p>
+<blockquote>
+<ol>
+<li>检查用户历史行为数据；</li>
+<li>使用 matching module 产生 候选ads；</li>
+<li>通过 ranking module 得到 候选ads 的点击概率，并根据概率排序得到推荐列表；</li>
+<li>记录下用户对当前展示广告的反应（点击与否）</li>
+</ol>
+</blockquote>
+<p>这是一个闭环系统，对于用户行为数据（User Behavior Data），系统自己生产并自己消费。</p>
+<h3 id="训练数据"><a href="#训练数据" class="headerlink" title="训练数据"></a>训练数据</h3><p>数据有以下特点：</p>
+<blockquote>
+<ul>
+<li>Diversity – 兴趣爱好非常广泛；</li>
+<li>Local Activation – 历史行为中部分数据主导是否会点击候选广告；</li>
+<li>高纬度；</li>
+<li>非常稀疏；</li>
+<li>特征往往都是 multi-hot 的稀疏ids。</li>
+</ul>
+</blockquote>
+<p><img src="/pictures/RecomSys/DIN/img1.png" alt="特征数据"></p>
+<h4 id="特征处理"><a href="#特征处理" class="headerlink" title="特征处理"></a>特征处理</h4><p>论文中作者把特征分为四大类，并 <strong>没有进行特征组合&#x2F;交叉特征</strong>。而是 <strong>通过 DNN 去学习特征间的交互信息</strong>。</p>
+<blockquote>
+<ul>
+<li>User Profile Features</li>
+<li>User Behavior Features</li>
+<li>Ad Features</li>
+<li>Context Features</li>
+</ul>
+</blockquote>
+<p>为了得到一个 <strong>固定长度</strong> 的 Embedding Vector 表示，原来的做法是在 Embedding Layer 后面 <strong>增加一个 Pooling Layer</strong>。Pooling可以用 sum 或 average。最终得到一个固定长度的 Embedding Vector，是用户兴趣的一个抽象表示，常被称作 User Representation。缺点是会损失一些信息。<br><img src="/pictures/RecomSys/DIN/img2.png" alt="传统模型"></p>
+<p>DIN使用 Attention机制 来解决这个问题。Attention机制 来源于 Neural Machine Translation(NMT)。DIN使用 Attention机制 去更好的建模 局部激活。在DIN场景中，针对不同的候选广告需要自适应地调整 User Representation。也就是说：在 Embedding Layer -&gt; Pooling Layer 得到用户兴趣表示的时候，赋予不同的历史行为不同的权重，实现局部激活。从最终反向训练的角度来看，就是根据当前的候选广告，来反向的激活用户历史的兴趣爱好，赋予不同历史行为不同的权重。<br><img src="/pictures/RecomSys/DIN/img3.png" alt="DIN模型结构"></p>
+<h3 id="模型训练"><a href="#模型训练" class="headerlink" title="模型训练"></a>模型训练</h3><h4 id="评价指标-GAUC"><a href="#评价指标-GAUC" class="headerlink" title="评价指标 GAUC"></a>评价指标 GAUC</h4><p>不同于以往CTR模型采用AUC作为评价指标，论文采用的评价指标是自己设计的 GAUC 评价指标。</p>
+<p><em><strong>AUC的含义是正样本得分比负样本得分高的概率</strong></em>。在CTR的实际应用场景中，CTR预测常被应用于对每个用户的候选广告进行排序，也即最终想得到的效果是 <em><strong>每个用户的AUC达到最高</strong></em>。同时，<strong>不同用户的AUC之间也确实存在差别，有的用户天生点击率就高，有的用户却不怎么喜欢点击广告</strong>。</p>
+<p>以往的评价指标是对样本不区分用户地进行AUC计算。论文采用的GAUC计算了 <strong>用户级别的AUC</strong>，在单个用户AUC的基础上，按照 <strong>点击次数或展示次数进行加权平均</strong>，消除了用户偏差对模型的影响，更准确地描述了模型对于每个用户的表现效果。<br><img src="/pictures/RecomSys/DIN/img4.png" alt="GAUC计算公式"><br>w 可以是 <strong>clicks（点击次数） 或者 impressions（展示次数）</strong>，n 是用户数量。这中AUC也应该是在 <strong>个性化推荐</strong> 里面更适合的，用户每个个体都有自己的AUC。</p>
+<h4 id="激活函数-Dice"><a href="#激活函数-Dice" class="headerlink" title="激活函数 Dice"></a>激活函数 Dice</h4><p>Dice其实是ReLU的改良版，ReLU可以看作是 x * Max(x, 0)，相当于输出 x  经过了一个在0点的阶跃整流器。由于ReLU在 x&lt;0 的时候，梯度为0，可能导致网络停止更新，PReLU对整流器的左半部分形式进行了修改，使得 x&lt;0 时输出不为0。<br><img src="/pictures/RecomSys/DIN/img5.png" alt="激活函数"></p>
+<p>论文里认为，对于所有输入不应该都选择0点为整流点。于是提出了一种data dependent的方法，并称该激活函数为Dice函数。<br><img src="/pictures/RecomSys/DIN/img6.png" alt="Dice激活函数"><br>概率值 p[i] 决定输出是取 y[i] 或者是 a[i] * y[i]，p[i] 也起到了整流器的作用。<br>获取 p[i] 的两步操作：</p>
+<blockquote>
+<ol>
+<li>对 x 进行均值归一化处理。使得整流点是在数据的均值处，实现data dependent的想法；</li>
+<li>经过一个 sigmoid函数的计算，得到一个0到1的概率值。</li>
+</ol>
+</blockquote>
+<h4 id="自适应正则"><a href="#自适应正则" class="headerlink" title="自适应正则"></a>自适应正则</h4><p>在CTR预估任务中，用户行为数据具有长尾分布的特点，也即数据非常的稀疏。</p>
+<p>稀疏输入，为什么会overfitting呢？这个跟数据分布有关系，互联网时代的数据特点，<em><strong>超长尾头部重，头重（小比例的特征频繁出现）容易过拟合，长尾（大比例的特征低频出现）则容易带来噪声</strong></em>，不好学。当增加细粒度的特征时，也极其容易由于细粒度的样本过于密集而带来负面效果。</p>
+<p>为了防止模型过拟合，论文设计了一个针对 <strong>feature id出现的频率</strong> 进行自适应的正则方法。</p>
+<blockquote>
+<ul>
+<li>针对feature id出现的频率，来自适应的调整他们正则化的强度；</li>
+<li>对于出现频率高的，给与较小的正则化强度；</li>
+<li>对于出现频率低的，给予较大的正则化强度。</li>
+</ul>
+</blockquote>
+<h3 id="模型结构"><a href="#模型结构" class="headerlink" title="模型结构"></a>模型结构</h3><p>传统深度模型<br><img src="/pictures/RecomSys/DIN/img7.png" alt="传统深度模型"></p>
+<p>DIN模型在对用户的表示计算上引入了attention network (也即图中的 Activation Unit ) 。<br><img src="/pictures/RecomSys/DIN/img8.png" alt="DIN模型结构"></p>
+<p>DIN把用户特征、用户历史行为特征进行embedding操作，视为对用户兴趣的表示，之后通过attention network，<em><strong>对每个兴趣表示赋予不同的权值</strong></em>。这个权值是由用户的兴趣和待估算的广告进行匹配计算得到的，如此模型结构符合了之前的两个观察——用户兴趣的多样性以及部分对应。attention network 的计算公式如下， V_u 代表用户表示向量， V_i 代表用户兴趣表示向量， V_a 代表广告表示向量。<br><img src="/pictures/RecomSys/DIN/img9.png" alt="attention机制"></p>
+ 
+      <!-- reward -->
+      
+    </div>
+    
+
+    <!-- copyright -->
+    
+    <footer class="article-footer">
+       
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Recom/" rel="tag">Recom</a></li></ul>
+
+    </footer>
+  </div>
+
+   
+    
+</article>
+
+    
+    <article
+  id="post-RecomSys/DeepFM"
+  class="article article-type-post"
+  itemscope
+  itemprop="blogPost"
+  data-scroll-reveal
+>
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h2 itemprop="name">
+  <a class="article-title" href="/2022/09/12/RecomSys/DeepFM/"
+    >DeepFM</a> 
+</h2>
+ 
+
+      
+    </header>
+     
+    <div class="article-meta">
+      <a href="/2022/09/12/RecomSys/DeepFM/" class="article-date">
+  <time datetime="2022-09-12T08:37:32.994Z" itemprop="datePublished">2022-09-12</time>
+</a> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E6%8E%A8%E8%8D%90%E7%B3%BB%E7%BB%9F/">推荐系统</a>
+  </div>
+   
+    </div>
+      
+    <div class="article-entry" itemprop="articleBody">
+       
+  <h3 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h3><h4 id="特征组合的挑战"><a href="#特征组合的挑战" class="headerlink" title="特征组合的挑战"></a>特征组合的挑战</h4><p>对于基于CTR预估的推荐系统，最重要的是学习到用户点击行为背后隐含的特征组合。在不同的推荐场景中，低阶组合特征或者高阶组合特征可能会对最终的CTR产生影响。</p>
+<p>因子分解机通过对于每一维特征的隐变量的内积来提取特征组合。理论上FM可以对高阶特征组合进行建模，但是实际上因为计算复杂度的原因，一般只用到了二阶特征组合。对于高阶特征组合，使用多层神经网络DNN解决。</p>
+<h4 id="DNN的局限性"><a href="#DNN的局限性" class="headerlink" title="DNN的局限性"></a>DNN的局限性</h4><p>对于离散特征的处理，使用one-hot编码。但是将one-hot编码直接输入到DNN中，会导致网络参数过多。<br><img src="/pictures/RecomSys/DeepFM/img1.png" alt="one-hot编码不可以直接输入DNN"></p>
+<p>采用类似于FFM中的思想，将特征分为不同的field。<br><img src="/pictures/RecomSys/DeepFM/img2.png" alt="Embedding生成"></p>
+<p>再加两层全连接层，便可以组合出高阶特征。<br><img src="/pictures/RecomSys/DeepFM/img3.png" alt="高阶特征组合"></p>
+<p>但是低阶和高阶特征组合隐含地体现在隐藏层中，如果我们希望把低阶特征组合单独建模，然后融合高阶特征组合。<br><img src="/pictures/RecomSys/DeepFM/img4.png" alt="并行结构 DeepFM"></p>
+<p><img src="/pictures/RecomSys/DeepFM/img5.png" alt="串行结构 FNN"></p>
+<p>目前的CTR预估模型，实质上都是在“利用模型”进行特征工程上狠下功夫。传统的LR，简单易解释，但特征之间信息的挖掘需要大量的人工特征工程来完成。由于深度学习的出现，利用神经网络本身对于隐含特征关系的挖掘能力，成为了一个可行的方式。<em><strong>DNN本身主要是针对于高阶的隐含特征</strong></em>，而像FNN（利用FM做预训练实现embedding，再通过DNN进行训练，有时间会写写对该模型的认识）这样的模型则是考虑了高阶特征，而在最后sigmoid输出时 <em><strong>忽略了低阶特征本身</strong></em>。</p>
+<p>鉴于上述理论，目前新出的很多基于深度学习的CTR模型都从wide、deep（即低阶、高阶）两方面同时进行考虑，进一步提高模型的泛化能力，比如DeepFM。</p>
+<h3 id="模型结构"><a href="#模型结构" class="headerlink" title="模型结构"></a>模型结构</h3><p>DeepFM包含两个部分：神经网络部分与因子分解机部分，分别负责低阶特征的提取和高阶特征的提取。这两个部分 <em><strong>共享同样的输入</strong></em>。<br><img src="/pictures/RecomSys/DeepFM/img6.png" alt="DeepFM网络结构"></p>
+<h4 id="FM部分"><a href="#FM部分" class="headerlink" title="FM部分"></a>FM部分</h4><p><img src="/pictures/RecomSys/DeepFM/img7.png" alt="FM模块结构"><br>传统度量特征 i 和 j 权重的方法，<strong>需要两者同时存在于同一条数据记录中</strong>。<br>FM部分是一个因子分解机。因为FM中引入 <strong>隐变量</strong> 的原因，对于几乎不出现或者很少出现的隐变量，FM也可以很好的学习。</p>
+<p>FM通过两个特征的隐向量的内乘积进行表示。不需要同时存在于同一条记录中。<br><img src="/pictures/RecomSys/DeepFM/img8.png" alt="因子分解"></p>
+<p>FM的输出为：<br><img src="/pictures/RecomSys/DeepFM/img9.png" alt="FM模型公式"></p>
+<h4 id="Deep部分"><a href="#Deep部分" class="headerlink" title="Deep部分"></a>Deep部分</h4><p><img src="/pictures/RecomSys/DeepFM/img10.png" alt="DNN模块结构"><br>Deep部分是一个前馈神经网络。与图像或者语音这类输入不同，图像语音的输入一般是连续并且密集的，然而用于CTR的输入一般是及其稀疏的。因此，在第一层隐藏层之前，<strong>引入一个嵌入层来完成将输入向量压缩到低维稠密向量</strong>。</p>
+<h4 id="Embedding层"><a href="#Embedding层" class="headerlink" title="Embedding层"></a>Embedding层</h4><p><img src="/pictures/RecomSys/DeepFM/img11.png" alt="Embedding层网络结构"><br>嵌入层(embedding layer)的结构如上图所示。当前网络结构有两个有趣的特性<br>尽管不同field的输入长度不同，但是embedding之后向量的长度均为K；<br>在FM里得到的隐变量 V_ik 现在作为了嵌入层网络的权重。</p>
+<p>这里的第二点如何理解呢，假设我们的 k&#x3D;5，首先，对于输入的一条记录，<em><strong>同一个field 只有一个位置是1</strong></em>，那么在由输入得到dense vector的过程中，输入层只有一个神经元起作用，得到的dense vector其实就是 <em><strong>输入层到embedding层该神经元相连的五条线的权重</strong></em>，即v_i1，v_i2，v_i3，v_i4，v_i5。这五个值组合起来就是我们在FM中所提到的V_i。</p>
+<p>在FM部分和DNN部分，这一块是 <em><strong>共享权重</strong></em> 的，对同一个特征来说，得到的V_i是相同的。</p>
+<h4 id="输出层"><a href="#输出层" class="headerlink" title="输出层"></a>输出层</h4><p>DeepFM的预测结果为：<br><img src="/pictures/RecomSys/DeepFM/img12.png" alt="输出层计算"></p>
+ 
+      <!-- reward -->
+      
+    </div>
+    
+
+    <!-- copyright -->
+    
+    <footer class="article-footer">
+       
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Recom/" rel="tag">Recom</a></li></ul>
+
+    </footer>
+  </div>
+
+   
+    
+</article>
+
+    
+    <article
+  id="post-RecomSys/Wide-and-Deep"
+  class="article article-type-post"
+  itemscope
+  itemprop="blogPost"
+  data-scroll-reveal
+>
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h2 itemprop="name">
+  <a class="article-title" href="/2022/09/12/RecomSys/Wide-and-Deep/"
+    >Wide&amp;Deep</a> 
+</h2>
+ 
+
+      
+    </header>
+     
+    <div class="article-meta">
+      <a href="/2022/09/12/RecomSys/Wide-and-Deep/" class="article-date">
+  <time datetime="2022-09-12T07:05:58.169Z" itemprop="datePublished">2022-09-12</time>
+</a> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E6%8E%A8%E8%8D%90%E7%B3%BB%E7%BB%9F/">推荐系统</a>
+  </div>
+   
+    </div>
+      
+    <div class="article-entry" itemprop="articleBody">
+       
+  <h3 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h3><p>推荐系统的主要挑战之一，是同时解决 Memorization 和 Generalization。Wide&amp;Deep模型旨在使得训练得到的模型能够同时获得记忆和泛化能力。</p>
+<blockquote>
+<p><strong>Memorization</strong>: 根据历史行为数据，产生的推荐通常和用户已有行为的物品直接相关的物品；<br><strong>Generalization</strong>: 会学习新的特征组合，提高推荐物品的多样性。</p>
+</blockquote>
+<h4 id="记忆能力"><a href="#记忆能力" class="headerlink" title="记忆能力"></a>记忆能力</h4><p>面对拥有大规模离散sparse特征的CTR预估问题，将特征进行非线性转换，然后再使用线性模型是业界非常普遍的做法，最流行的即 <em><strong>LR+特征叉乘</strong></em>。Memorization 通过一系列人工的特征叉乘来构造这些非线性特征，捕捉 sparse 特征之间的高阶相关性，即 <em><strong>“记忆”历史数据中曾经共同出现过的特征对</strong></em>。</p>
+<p>典型代表是LR模型，使用大量的原始sparse特征和叉乘特征作为输入，很多原始的dense特征通常会被分桶离散化为sparse特征。</p>
+<p>这种做法的优点是：</p>
+<blockquote>
+<p>模型可解释性高，实现快速高效，特征重要度易于分析。</p>
+</blockquote>
+<p>缺点是：</p>
+<blockquote>
+<ol>
+<li>需要更多的人工设计；</li>
+<li>可能出现过拟合。可以理解为，如果将所有特征叉乘起来，那么几乎相当于纯粹记住每个训练样本，这个极端情况是最细粒度的叉乘，我们可以通过构建更粗粒度的特征叉乘来增强泛化性；</li>
+<li>无法捕捉训练数据集中未曾出现过的特征对；</li>
+</ol>
+</blockquote>
+<h4 id="泛化能力"><a href="#泛化能力" class="headerlink" title="泛化能力"></a>泛化能力</h4><p>Generalization 为 sparse 特征学习低维的 dense embedding 来捕捉特征相关性，学习到的embeddings 本身带有一定的语义信息。可以联想到 NLP 的词向量，不同词的词向量有相关性，因此文中也称 Generalization 是基于相关性之间的传递。这类模型的代表是 DNN 和 FM。</p>
+<p>Generalization 的优点是更少的人工参与，对历史上没有出现的特征组合有更好的泛化性。但是在推荐系统中，当 user-item matrix 非常稀疏，NN很难为 users 和 items 学习到有效的 embedding。这种情况下，大部分 user-item 应该是没有关联的，但 dense embedding 的方法还是可以得到对所有 user-item pair 的非零预测，因此导致 over-generalize 并推荐不怎么相关的物品。此时 Memorization 就展示了优势，它可以记住这些特殊的特征组合。</p>
+<h3 id="模型结构"><a href="#模型结构" class="headerlink" title="模型结构"></a>模型结构</h3><p>Wide&amp;Deep 模型结合了 LR 和 DNN，其框架图如下所示：<br><img src="/pictures/RecomSys/Wide-and-Deep/img1.png" alt="网络结构"></p>
+<h4 id="Wide部分"><a href="#Wide部分" class="headerlink" title="Wide部分"></a>Wide部分</h4><p>该部分是广义线性模型</p>
+<blockquote>
+<p>y &#x3D; W * [x, f(x)] + b<br>其中，x 和 f(x) 分别表示 <em><strong>原始特征和交叉特征</strong></em>。</p>
+</blockquote>
+<h4 id="Deep部分"><a href="#Deep部分" class="headerlink" title="Deep部分"></a>Deep部分</h4><p>该部分是前馈神经网络，网络会对一些sparse特征学习一个低维的dense embedding（维度量级通常在O(10)到O(100)之间），然后和一些原始 dense 特征一起作为网络的输入。</p>
+<p>每一层隐层计算为：<br><img src="/pictures/RecomSys/Wide-and-Deep/img2.png" alt="隐层计算公式"></p>
+<h4 id="输出层"><a href="#输出层" class="headerlink" title="输出层"></a>输出层</h4><p>模型选取 logistic loss 作为损失函数，此时 Wide&amp;Deep 最后的预测输出为：<br><img src="/pictures/RecomSys/Wide-and-Deep/img3.png" alt="输出层计算"></p>
+<h3 id="联合训练"><a href="#联合训练" class="headerlink" title="联合训练"></a>联合训练</h3><p>联合训练（Joint Training）和集成（Ensemble）是不同的。<br>集成是每个模型单独训练，再将模型的结果汇合。相比于联合训练，集成的每个独立模型都得学的足够好才有利于随后的汇合，因此每个 model size 相对更大。<br>而联合学习的wide部分只需要做一小部分的特征叉乘来弥补deep部分的不足，不需要一个 full-size 的wide模型。</p>
+<p>在论文中，作者通过梯度的反向传播，使用 mini-batch stochastic optimization 训练参数，并对 wide 部分使用带 L1正则的 Follow-the-regularized-leader(FTRL)算法，对 deep 部分使用 AdaGrad 算法。</p>
+<h3 id="场景应用"><a href="#场景应用" class="headerlink" title="场景应用"></a>场景应用</h3><h4 id="应用背景"><a href="#应用背景" class="headerlink" title="应用背景"></a>应用背景</h4><p>Google Play 商店的 app 推荐中，当一个 user 访问 Google Play，会生成一个包含 user 和 contextual 信息的 query，推荐系统的精排模型会对于候选池中召回的一系列 app（即 item，文中也称 impression）进行打分，按打分生成 app 的排列列表返回给用户。Deep&amp;Wide 对应这里的精排模型，输入 x 包括 &lt;user, contextual, impression&gt;的信息，y &#x3D; 1表示用户下载了 impression app，打分即为 p(y|x)。</p>
+<p>实验的Deep &amp; Wide模型结构如下：<br><img src="/pictures/RecomSys/Wide-and-Deep/img4.png" alt="网络结构"></p>
+<h4 id="实验细节"><a href="#实验细节" class="headerlink" title="实验细节"></a>实验细节</h4><blockquote>
+<ul>
+<li>训练样本约5000亿</li>
+<li>Categorical 特征（sparse）会有一个过滤阈值，即至少在训练集中出现m次才会被加入</li>
+<li>Continuous 特征（dense）通过CDF被归一化到 [0,1] 之间</li>
+<li>Categorical 特征映射到32维embeddings，和原始Continuous特征共1200维作为NN输入</li>
+<li>Wide部分只用了一组特征叉乘，即被推荐的app ☓ 用户下载的app</li>
+<li>线上模型更新时，通过“热启动”重训练，即使用上次的embeddings和模型参数初始化</li>
+</ul>
+</blockquote>
+<p>Wide部分设置很有意思，作者为什么这么做呢？<br>结合业务思考，在Google Play商店的app下载中，不断有新的app推出，并且有很多“非常冷门、小众”的app，而现在的智能手机user几乎全部会安装一系列必要的app。</p>
+<p>联想前面对Memorization和Generalization的介绍，此时的Deep部分无法很好的为这些app学到有效的embeddding，而这时Wide可以发挥了它“记忆”的优势，作者在这里选择了 <em><strong>“记忆”user下载的app与被推荐的app之间的相关性</strong></em>，有点类似“装个这个app后还可能会装什么”。</p>
+<p>对于Wide来说，它现在的任务是弥补Deep的缺陷，其他大部分的活就交给Deep了，所以这时的Wide相比单独Wide也显得非常“轻量级”，这也是Join相对于Ensemble的优势。</p>
+ 
+      <!-- reward -->
+      
+    </div>
+    
+
+    <!-- copyright -->
+    
+    <footer class="article-footer">
+       
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Recom/" rel="tag">Recom</a></li></ul>
+
+    </footer>
+  </div>
+
+   
+    
+</article>
+
+    
+    <article
+  id="post-RecomSys/FM"
+  class="article article-type-post"
+  itemscope
+  itemprop="blogPost"
+  data-scroll-reveal
+>
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h2 itemprop="name">
+  <a class="article-title" href="/2022/09/12/RecomSys/FM/"
+    >FM</a> 
+</h2>
+ 
+
+      
+    </header>
+     
+    <div class="article-meta">
+      <a href="/2022/09/12/RecomSys/FM/" class="article-date">
+  <time datetime="2022-09-12T03:45:34.425Z" itemprop="datePublished">2022-09-12</time>
+</a> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E6%8E%A8%E8%8D%90%E7%B3%BB%E7%BB%9F/">推荐系统</a>
+  </div>
+   
+    </div>
+      
+    <div class="article-entry" itemprop="articleBody">
+       
+  <h3 id="FM"><a href="#FM" class="headerlink" title="FM"></a>FM</h3><h4 id="提出背景"><a href="#提出背景" class="headerlink" title="提出背景"></a>提出背景</h4><p>传统线性模型忽略了特征之间的交叉联系；特征高维稀疏，并且容易维度爆炸。</p>
+<p>FM就是Factor Machine，因子分解机。<br>FM通过对两两特征组合，引入交叉项特征，提高模型得分；其次是高维灾难，通过引入隐向量（对参数矩阵进行矩阵分解），完成对特征的参数估计。</p>
+<h4 id="模型公式"><a href="#模型公式" class="headerlink" title="模型公式"></a>模型公式</h4><p><strong>一般的线性模型</strong><br><img src="/pictures/RecomSys/FM/img1.png" alt="一般线性模型"></p>
+<p><strong>二阶多项式模型</strong><br><img src="/pictures/RecomSys/FM/img2.png" alt="二阶多项式模型"><br>上式中，n表示样本的特征数量，x[i]表示第i个特征。<br>与线性模型相比，FM模型多了后面特征组合的部分。</p>
+<h4 id="FM求解"><a href="#FM求解" class="headerlink" title="FM求解"></a>FM求解</h4><p>从上面的式子可以看到，组合部分的特征相关参数有 n(n−1)&#x2F;2 个。但是对于稀疏数据来说，同时满足 x i , x[i], x[j] 都不为0的情况十分少，这就会导致 w[i][j] 无法通过训练得到。</p>
+<p>为了求解得到w[i][j]，我们对于每一个特征分量 x[i] 引入 <strong>隐向量</strong> V[i] &#x3D; (v[i][1], …, v[i][k])，利用v[i]，v[j]对w[i][j]进行求解。<br><img src="/pictures/RecomSys/FM/img3.png" alt="权重矩阵W求解"></p>
+<p>求解v[i]和v[j]的具体过程如下：<br><img src="/pictures/RecomSys/FM/img4.png" alt="核心计算公式"></p>
+<h3 id="FFM"><a href="#FFM" class="headerlink" title="FFM"></a>FFM</h3><h4 id="概念"><a href="#概念" class="headerlink" title="概念"></a>概念</h4><p>同一个categorical特征经过One-Hot编码生成的数值特征都可以放到同一个field，包括用户性别、职业、品类偏好等。</p>
+<p>在FFM中，每一维特征 x[i]，针对其它特征的每一种field f[j]，都会学习一个隐向量 v[i][f]。因此，<em><strong>隐向量不仅与特征相关，也与field相关</strong></em>。也就是说，“Day&#x3D;26&#x2F;11&#x2F;15”这个特征与“Country”特征和“Ad_type”特征进行关联的时候使用不同的隐向量，这与“Country”和“Ad_type”的内在差异相符，也是FFM中“field-aware”的由来。</p>
+<p>假设样本的 n 个特征属于 f 个field，那么FFM的二次项有 nf个隐向量。而在FM模型中，每一维特征的隐向量只有一个，即二次项有n个隐向量。FM可以看作FFM的特例，是把所有特征都归属到一个field时的FFM模型。根据FFM的field敏感特性，可以导出其模型方程。<br><img src="/pictures/RecomSys/FM/img5.png" alt="FFM计算公式"><br>其中，fj 是第 j 个特征所属的field。如果隐向量的长度为 k，那么FFM的二次参数有 nfk 个，远多于FM模型的 nk 个。此外，由于隐向量与field相关，FFM二次项并不能够化简，其预测复杂度是 O(kn2)。</p>
+<h4 id="区别"><a href="#区别" class="headerlink" title="区别"></a>区别</h4><blockquote>
+<ol>
+<li>FM和FFM模型的二次项的个数都是 n(n−1)&#x2F;2 个，区别在于FM模型中二次项<strong>存在重复使用的隐向量</strong>，而FFM模型没有，这正是由于FFM的域的概念的存在</li>
+<li>FM模型的参数量为nk，FFM模型的参数量为nfk个</li>
+<li>FM模型的时间复杂度可以优化为线性的，而FFM模型为nfk（最坏时，即当所有特征都是独自一个域时，为n^2k）</li>
+</ol>
+</blockquote>
+<h4 id="应用"><a href="#应用" class="headerlink" title="应用"></a>应用</h4><p>在DSP或者推荐场景中，FFM主要用来评估站内的CTR和CVR，即一个用户对一个商品的潜在点击率和点击后的转化率。<br>CTR和CVR预估模型都是在线下训练，然后线上预测。两个模型采用的特征大同小异，主要分三类：</p>
+<blockquote>
+<ol>
+<li>用户相关的特征: 年龄、性别、职业、兴趣、品类偏好、浏览&#x2F;购买品类等基本信息，以及用户近期点击量&#x2F;购买量&#x2F;消费额等统计信息</li>
+<li>商品相关的特征: 商品所属品类、销量、价格、评分、历史CTR&#x2F;CVR等信息</li>
+<li>用户-商品匹配特征: 浏览&#x2F;购买品类匹配、浏览&#x2F;购买商家匹配、兴趣偏好匹配等</li>
+</ol>
+</blockquote>
+<p>为了使用FFM方法，所有的特征必须转换成“field_id:feat_id:value”格式，field_id代表特征所属field的编号，feat_id是特征编号，value是特征的值。数值型的特征比较容易处理，只需分配单独的field编号，如用户评论得分、商品的历史CTR&#x2F;CVR等。categorical特征需要经过One-Hot编码成数值型，编码产生的所有特征同属于一个field，而特征的值只能是0或1，如用户的性别、年龄段，商品的品类id等。除此之外，还有第三类特征，如用户浏览&#x2F;购买品类，有多个品类id且用一个数值衡量用户浏览或购买每个品类商品的数量。这类特征按照categorical特征处理，不同的只是特征的值不是0或1，而是代表用户浏览或购买数量的数值。按前述方法得到field_id之后，再对转换后特征顺序编号，得到feat_id，特征的值也可以按照之前的方法获得。 </p>
+ 
+      <!-- reward -->
+      
+    </div>
+    
+
+    <!-- copyright -->
+    
+    <footer class="article-footer">
+       
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Recom/" rel="tag">Recom</a></li></ul>
+
+    </footer>
+  </div>
+
+   
+    
+</article>
+
+    
+    <article
+  id="post-KG/TransX"
+  class="article article-type-post"
+  itemscope
+  itemprop="blogPost"
+  data-scroll-reveal
+>
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h2 itemprop="name">
+  <a class="article-title" href="/2022/09/11/KG/TransX/"
+    >TransX</a> 
+</h2>
+ 
+
+      
+    </header>
+     
+    <div class="article-meta">
+      <a href="/2022/09/11/KG/TransX/" class="article-date">
+  <time datetime="2022-09-11T03:43:36.915Z" itemprop="datePublished">2022-09-11</time>
+</a> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E7%9F%A5%E8%AF%86%E8%A1%A8%E7%A4%BA%E5%AD%A6%E4%B9%A0/">知识表示学习</a>
+  </div>
+   
+    </div>
+      
+    <div class="article-entry" itemprop="articleBody">
+       
+  <p>参考信息：<a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/354867179">https://zhuanlan.zhihu.com/p/354867179</a></p>
+<h3 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h3><p>知识图谱&#x2F;知识库通常以网络的形式组织知识，网络中每个节点代表实体，边代表实体间关系，因此大部分知识往往可以用三元组（实体1，关系，实体2）来表示。</p>
+<p>知识表示学习(Knowledge Representation Learning)，又称知识图谱嵌入(Knowledge Graph Embedding)，是指将由组成知识的实体和关系在低维连续向量空间中表征的过程。</p>
+<p>我们以h,r,t分别表示头实体、关系、尾实体，对于一个三元组&lt;h[i],r[i],t[i]&gt;，如果其符合事实，我们称其为置信度(plausibility)为1，如果其不成立，则其置信度为0。</p>
+<p>知识表示学习的一般流程为：</p>
+<blockquote>
+<ol>
+<li>随机初始化实体和关系向量；</li>
+<li>定义打分函数(Scoring Function)来计算一个三元组的 <strong>置信度</strong>；</li>
+<li>最大化置信度来训练实体、关系向量。</li>
+</ol>
+</blockquote>
+<p>从工作流程上而言，可以将KRL分解为四部分：</p>
+<blockquote>
+<ol>
+<li>表征空间，关系和实体表征在一个什么样的空间；</li>
+<li>打分函数，如何计算给定三元组的置信度；</li>
+<li>补充信息，采用了哪些补充信息（实体类别、实体描述、关系路径等）来参与表示学习；</li>
+<li>训练方式，如何生成正负样本，使用何种loss函数等。</li>
+</ol>
+</blockquote>
+<h3 id="表征空间"><a href="#表征空间" class="headerlink" title="表征空间"></a>表征空间</h3><p>表征空间需要满足三个条件：<strong>可微分，可计算概率，可定义打分函数</strong>。</p>
+<h4 id="实内积空间模型"><a href="#实内积空间模型" class="headerlink" title="实内积空间模型"></a>实内积空间模型</h4><p>将实体和关系表征在实内积空间中。</p>
+<h4 id="复空间模型"><a href="#复空间模型" class="headerlink" title="复空间模型"></a>复空间模型</h4><p>将实体和关系表征在复空间中。复空间主要是能表征平移信息之外的旋转信息。</p>
+<h4 id="高斯分布模型"><a href="#高斯分布模型" class="headerlink" title="高斯分布模型"></a>高斯分布模型</h4><p>使用高斯分布去表征实体和关系中的不确定性信息。</p>
+<h4 id="流行和群"><a href="#流行和群" class="headerlink" title="流行和群"></a>流行和群</h4><p>这一类模型将知识表征在流形空间(manifold space)，李群(Lie group)或二面体群(dihedral group)。典型代表是ManifoldE，TorusE和DihEdra。</p>
+<h3 id="打分函数"><a href="#打分函数" class="headerlink" title="打分函数"></a>打分函数</h3><p>打分函数用于衡量一个三元组的置信度。</p>
+<h4 id="基于距离的打分函数"><a href="#基于距离的打分函数" class="headerlink" title="基于距离的打分函数"></a>基于距离的打分函数</h4><p>通过计算实体间的距离来衡量三元组的置信度。其中，基于加性平移的关系模型应用最广。</p>
+<blockquote>
+<p>h + r &#x3D; t</p>
+</blockquote>
+<p><img src="/pictures/KG/TransX/img1.jpg" alt="传统基于距离变换模型"></p>
+<p>基于平移表征的关系模型，即将 <strong>关系表示为头实体向尾实体的平移向量</strong>。</p>
+<ul>
+<li>TransE：基于平移表征；</li>
+<li>TransH: 将实体和关系映射到超平面；</li>
+<li>TransR：将实体和关系映射到不同的空间；</li>
+<li>TransD：构建动态映射矩阵完成实体空间的映射；</li>
+<li>TransA：将欧式距离替换成马氏距离；</li>
+<li>TransF：松弛了严格平移条件，使用内积作为度量函数</li>
+</ul>
+<p><img src="/pictures/KG/TransX/img2.jpg" alt="距离变换模型总结"></p>
+<h4 id="基于语义匹配度的打分函数"><a href="#基于语义匹配度的打分函数" class="headerlink" title="基于语义匹配度的打分函数"></a>基于语义匹配度的打分函数</h4><p>基于语义匹配度衡量三元组置信度，通常使用关系矩阵将头实体映射至尾实体。</p>
+<blockquote>
+<p>h * M &#x3D; t</p>
+</blockquote>
+<h5 id="线性-x2F-双线性模型"><a href="#线性-x2F-双线性模型" class="headerlink" title="线性 &#x2F; 双线性模型"></a>线性 &#x2F; 双线性模型</h5><p>RESCAL将语义相似度定义为实体关系对的匹配程度，使用双线性函数对其进行表征。但是由于双线性函数满足交换律，所以RESCAL不能表达非对称关系，即(h,r,t)成立而(t,r,h)不成立的情况。同时其计算复杂度较高。</p>
+<p>DistMult将双线性映射加以简化为对角阵。但由于DistMult仍然满足交换律，也不能表达非对称关系。</p>
+<p>HolE提出使用头尾实体的循环相关操作来表示实体对，定义循环相关运算符，使用循环相关操作表示语义匹配程度。HolE的循环相关操作不满足交换律，所以可以表达非对称关系。</p>
+<p><img src="/pictures/KG/TransX/img3.jpg" alt="语义匹配模型"></p>
+<h5 id="张量分解模型"><a href="#张量分解模型" class="headerlink" title="张量分解模型"></a>张量分解模型</h5><p>TuckerER使用Tucker张量分解(Tucker Decomposition)方法对原始矩阵进行分解，并使用分解的核心矩阵来参与打分函数计算。</p>
+<p>LowFER提出多模态张量分解双线性池化机制来更好地表达实体和关系之间的语义联系，并通过低秩估计相较于TuckerER降低了计算复杂度。</p>
+<h5 id="神经网络模型"><a href="#神经网络模型" class="headerlink" title="神经网络模型"></a>神经网络模型</h5><p><img src="/pictures/KG/TransX/img7.jpg" alt="神经网络模型"></p>
+<h6 id="MLP"><a href="#MLP" class="headerlink" title="MLP"></a>MLP</h6><p>SME（Semantic Matching Model）、NTN（Neural Tensor Network）、NAM（Neural Association Model）等都使用MLP对实体和关系进行编码。<br><img src="/pictures/KG/TransX/img4.png" alt="MLP模型公式"></p>
+<h6 id="CNN"><a href="#CNN" class="headerlink" title="CNN"></a>CNN</h6><p>ConvE使用二维卷积来表征实体和关系：<br><img src="/pictures/KG/TransX/img5.png" alt="ConvE模型公式"><br>其中的ω是卷积层的卷积核，vec(·)是对张量的flatten操作，在卷积层抽取空域特征后，使用多个非线性函数得到语义信息。</p>
+<p>ConvKB则直接将实体和关系concat起来加以卷积：<br><img src="/pictures/KG/TransX/img6.png" alt="ConvKB模型公式"></p>
+<h6 id="RNN"><a href="#RNN" class="headerlink" title="RNN"></a>RNN</h6><p>RSN在RNN基础上加入skip connection来捕捉路径上的长程依赖。先使用Random Walk的方法生成随机路径(x[1], x[2], …, x[T])，使用RNN计算隐状态h[t] &#x3D; tanh(W_h<em>h[t-1] + W_x</em>x[t] + b)，skip connection对于实体和关系的计算不同。</p>
+<h6 id="Transformer"><a href="#Transformer" class="headerlink" title="Transformer"></a>Transformer</h6><p>CoKE使用Transformer的结构对边和路径进行编码，KG-BERT则利用预训练语言模型BERT作为编码器对实体和关系进行编码。</p>
+<h6 id="GNN"><a href="#GNN" class="headerlink" title="GNN"></a>GNN</h6><p>图神经网络对于图结构信息的挖掘具有一定优势。SACN使用Encoder-Decoder结构，将带权GCN作为Encoder，将Conv-TransE作为Decoder。</p>
+<p><img src="/pictures/KG/TransX/img8.jpg" alt="语义匹配模型计算公式"></p>
+<h3 id="训练"><a href="#训练" class="headerlink" title="训练"></a>训练</h3><h4 id="基于开放世界假设"><a href="#基于开放世界假设" class="headerlink" title="基于开放世界假设"></a>基于开放世界假设</h4><p>KGS只包含真实的事实，D+只存储正例。</p>
+<p>可以定义logistic loss:<br><img src="/pictures/KG/TransX/img9.png" alt="logistic loss定义"></p>
+<p>可以定义pairwise ranking loss:<br><img src="/pictures/KG/TransX/img10.png" alt="pairwise ranking loss定义"></p>
+<h4 id="基于闭合世界假设"><a href="#基于闭合世界假设" class="headerlink" title="基于闭合世界假设"></a>基于闭合世界假设</h4><p>没有包含在D+中的样例都是错误的。不存在负样本。</p>
+<p>定义squared loss:<br><img src="/pictures/KG/TransX/img11.png" alt="squared loss定义"></p>
+ 
+      <!-- reward -->
+      
+    </div>
+    
+
+    <!-- copyright -->
+    
+    <footer class="article-footer">
+       
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/KGE/" rel="tag">KGE</a></li></ul>
+
+    </footer>
+  </div>
+
+   
+    
+</article>
+
+    
+    <article
+  id="post-NLP/K-BERT"
+  class="article article-type-post"
+  itemscope
+  itemprop="blogPost"
+  data-scroll-reveal
+>
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h2 itemprop="name">
+  <a class="article-title" href="/2022/09/09/NLP/K-BERT/"
+    >K-BERT</a> 
+</h2>
+ 
+
+      
+    </header>
+     
+    <div class="article-meta">
+      <a href="/2022/09/09/NLP/K-BERT/" class="article-date">
+  <time datetime="2022-09-09T02:02:49.987Z" itemprop="datePublished">2022-09-09</time>
+</a> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E8%87%AA%E7%84%B6%E8%AF%AD%E8%A8%80%E5%A4%84%E7%90%86/">自然语言处理</a>
+  </div>
+   
+    </div>
+      
+    <div class="article-entry" itemprop="articleBody">
+       
+  <h3 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h3><p>预训练的语言表示模型从大型语料库中捕获一般语言的表示，但是 <strong>缺乏领域特定的知识</strong>。</p>
+<p>过多的知识加入会使得 <strong>句子偏离正确的含义</strong>，这就是知识噪声问题。</p>
+<blockquote>
+<p>如何将外部知识整合到模型中成了一个关键点，这一步通常存在两个难点：</p>
+<ul>
+<li>异构嵌入空间（Heterogeneous Embedding Space）： 即文本的单词embedding和知识库的实体embedding通常是通过不同方式获取的，使得向量空间不一致。</li>
+<li>知识噪声（Knowledge Noise）： 即过多的知识融合可能会使原始句子偏离正确的本意。</li>
+</ul>
+</blockquote>
+<p>为了克服上述问题，K-Bert引入了<strong>软定位</strong> 和 <strong>可见矩阵</strong> 来限制插入知识的影响。</p>
+<p>K-BERT能够从预先训练好的BERT中加载模型参数，因此不需要单独的预训练，只需要一个KG数据，K-BERT就很容易将领域知识注入到模型中。</p>
+<h3 id="模型架构"><a href="#模型架构" class="headerlink" title="模型架构"></a>模型架构</h3><p>K-BERT模型主要包括四部分：知识层（Knowledge layer）、嵌入层（Embedding layer）、可见层（Seeing layer）和 Mask-Transformer编码层（Mask-Transformer Encoder）<br><img src="/pictures/NLP/K-BERT/img1.jpg" alt="K-BERT模型架构"></p>
+<p>如上图所示，K-BERT主要由4个层组成，分别是：</p>
+<ul>
+<li>knowledge layer：知识层，顾名思义是将知识图谱的事实融入到输入中，构建 <strong>sentence tree</strong> 作为新的输入。</li>
+<li>embedding layer：将sentence tree 进行embedding，转换成向量表达。</li>
+<li>seeing layer：该层的作用是为了避免知识噪声（Knowledge Noise）而引入的，主要是通过构建 visible matrix，<strong>限定每个字只能够看到跟自己相关的上下文以及知识</strong>，从而避免了知识噪声的引入。</li>
+<li>mask-transformer：mask-transformer 是在对transformer的一个改进，对于其中的self-attention，根据 <strong>visible matrix 限制了每个字的attention的范围</strong>，避免了字对于其他无相关的信息的关注。</li>
+</ul>
+<p>对于一个输入的句子，</p>
+<ol>
+<li>knowledge layer 首先是从知识图谱KG中找到相关的三元组，</li>
+<li>然后将这些三元组插入到输入的 input sentence 中，形成知识丰富（knowledge-rich）的句子树（sentence tree）。</li>
+<li>句子树然后同时输入给 embedding layer 以及 seeing layer，从而获得一个 token 级别的 embedding 表示以及一个 visible matrix。</li>
+<li>这个visible matrix 是用来控制每个token的可见域（visible scope），以防止输入的句子因为太多的知识嵌入而发生意思的改变。</li>
+</ol>
+<h4 id="Knowledge-Layer"><a href="#Knowledge-Layer" class="headerlink" title="Knowledge Layer"></a>Knowledge Layer</h4><p>知识层主要用于句子知识嵌入（knowledge injection）以及句子树（sentence tree）的转换。<br><img src="/pictures/NLP/K-BERT/img2.jpg" alt="句子树结构"></p>
+<p>举例说明句子树的构建：<br><img src="/pictures/NLP/K-BERT/img3.jpg" alt="句子树构建的例子"></p>
+<h4 id="Embedding-Layer"><a href="#Embedding-Layer" class="headerlink" title="Embedding Layer"></a>Embedding Layer</h4><p>和 BERT 类似，输入的句子需要经过embedding，作为模型的输入。具体 embedding 由三个部分组成，分别是 token embedding，soft position embedding 以及 segment embedding。<br><img src="/pictures/NLP/K-BERT/img4.jpg" alt="Embedding表示"></p>
+<h5 id="token-embedding"><a href="#token-embedding" class="headerlink" title="token embedding"></a>token embedding</h5><p>token embbeding 是将句子中的每个 token 通过look up table 映射成为一个维度为 H 的向量表示。此外，每个句子的开头有一个 [CLS] 这个特殊token，主要是为了句子分类的作用，同时 [MAKS] 是作为mask任务使用的。</p>
+<h5 id="soft-position-embedding"><a href="#soft-position-embedding" class="headerlink" title="soft-position embedding"></a>soft-position embedding</h5><p>我们可以发现，BERT 使用的时position embedding，并且使用的是绝对的position 表示。<br><img src="/pictures/NLP/K-BERT/img5.jpg" alt="Sentence Tree"></p>
+<p>如果使用BERT的position embedding方式，即hard-position index。这就导致<strong>原本的句子顺序发生了变化，失去了句子主干的信息位置</strong>。<br>解决方案就是：使用soft-position index。</p>
+<p>这就引发了另一个问题：知识噪音。一般字会给周围其他的字很大的attention score。<br>解决方案：引入seeing layer，控制self-attention的可见域。</p>
+<h4 id="seeing-layer"><a href="#seeing-layer" class="headerlink" title="seeing layer"></a>seeing layer</h4><p>Seeing layer是BERT和K-BERT之间最大的不同。</p>
+<blockquote>
+<p>我们插入的知识，只作用于它自身的三元组中的元素，对于其他的token，不产生任何影响。</p>
+</blockquote>
+<p>根据上述规则，我们可以得到一个visible matrix：<br><img src="/pictures/NLP/K-BERT/img6.jpg" alt="Visible Matrix"></p>
+<p>具体可见下图，红色表示可见区域，白色表示不可见区域。<br><img src="/pictures/NLP/K-BERT/img7.jpg" alt="Visible Matrix应用"></p>
+<h4 id="mask-attention"><a href="#mask-attention" class="headerlink" title="mask-attention"></a>mask-attention</h4><p>我们可以认为 visible matrix 获得了它的 sentence tree 的结构信息，我们根据这个矩阵构造 mask-self-attention, 实现了在嵌入知识的情况下，不增加噪音的目的。具体公式如下：<br><img src="/pictures/NLP/K-BERT/img8.png" alt="mask-self-attention计算公式"></p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>K-BERT 主要的创新点是将知识图谱的事实三元组融入到了预训练的语言模型中，并且不要我们自己进行预训练的操作，只需要在 fine-tuning 以及 inference 阶段进行知识嵌入即可，大大地方便了使用，并且在知识驱动的任务，例如QA，NER，推理任务中取得了很好的效果。</p>
+<blockquote>
+<p>文章主要解决了两个问题，包括了</p>
+<ul>
+<li>如何将异质向量空间（heterogeneous embedding space）的知识和预训练的语言空间进行结合，主要就是采用了knowledge layer 结合知识构建 sentence tree。</li>
+<li>另外就是在引入了 knowledge 之后，如何避免 knowledge noise，这边就是采用 soft position embedding 以及 seeing layer 中产生的 visible matrix，通过改造 transformer 的self-attetion 为 mask self-attention，控制每个 token 的可见域，从而解决KN问题。</li>
+</ul>
+</blockquote>
+ 
+      <!-- reward -->
+      
+    </div>
+    
+
+    <!-- copyright -->
+    
+    <footer class="article-footer">
+       
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/NLP/" rel="tag">NLP</a></li></ul>
+
+    </footer>
+  </div>
+
+   
+    
+</article>
+
+    
+    <article
+  id="post-tools/Hadoop"
+  class="article article-type-post"
+  itemscope
+  itemprop="blogPost"
+  data-scroll-reveal
+>
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h2 itemprop="name">
+  <a class="article-title" href="/2022/09/05/tools/Hadoop/"
+    >Hadoop</a> 
+</h2>
+ 
+
+      
+    </header>
+     
+    <div class="article-meta">
+      <a href="/2022/09/05/tools/Hadoop/" class="article-date">
+  <time datetime="2022-09-05T13:25:03.893Z" itemprop="datePublished">2022-09-05</time>
+</a> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E5%B7%A5%E5%85%B7/">工具</a> / <a class="article-category-link" href="/categories/%E5%B7%A5%E5%85%B7/%E5%A4%A7%E6%95%B0%E6%8D%AE/">大数据</a>
+  </div>
+   
+    </div>
+      
+    <div class="article-entry" itemprop="articleBody">
+       
+  <h2 id="Hadoop概念"><a href="#Hadoop概念" class="headerlink" title="Hadoop概念"></a>Hadoop概念</h2><p>Hadoop 框架是用于计算机集群大数据处理的框架，所以它必须是一个可以部署在多台计算机上的软件。部署了 Hadoop 软件的主机之间通过<strong>套接字</strong> (网络) 进行通讯。<br>Hadoop 主要包含 <strong>HDFS</strong> 和 <strong>MapReduce</strong> 两大组件。</p>
+<blockquote>
+<ul>
+<li>HDFS 负责分布储存数据;</li>
+<li>MapReduce 负责对数据进行映射、规约处理，并汇总处理结果。</li>
+</ul>
+</blockquote>
+<p>Hadoop 框架最根本的原理就是利用大量的计算机同时运算来加快大量数据的处理速度。</p>
+<h3 id="HDFS"><a href="#HDFS" class="headerlink" title="HDFS"></a>HDFS</h3><p>Hadoop Distributed File System，Hadoop 分布式文件系统，简称 HDFS。<br>HDFS 用于在集群中储存文件，它所使用的核心思想是 Google 的 GFS 思想，可以存储很大的文件。</p>
+<p>在服务器集群中，文件存储往往被要求高效而稳定，HDFS同时实现了这两个优点。</p>
+<blockquote>
+<ul>
+<li>HDFS 高效的存储是通过 <strong>计算机集群独立处理请求</strong> 实现的。因为用户 (一半是后端程序) 在发出数据存储请求时，往往 <em><strong>响应服务器</strong></em> 正在处理其他请求，这是导致服务效率缓慢的主要原因。但如果响应服务器直接分配一个数据服务器给用户，然后 <em><strong>用户直接与数据服务器交互</strong></em>，效率会快很多。</li>
+<li>数据存储的稳定性往往通过”多存几份”的方式实现，HDFS 也使用了这种方式。<strong>HDFS 的存储单位是块 (Block)</strong> ，一个文件可能会被分为多个块储存在物理存储器中。因此 HDFS 往往会按照设定者的要求把数据块复制 n 份并存储在不同的数据节点 (储存数据的服务器) 上，如果一个数据节点发生故障数据也不会丢失。</li>
+</ul>
+</blockquote>
+<p><img src="/pictures/tools/Hadoop/img1.png" alt="HDFS架构图"></p>
+<h4 id="Block数据块"><a href="#Block数据块" class="headerlink" title="Block数据块"></a>Block数据块</h4><ul>
+<li>基本存储单位，一般大小为 <strong>64M</strong> （配置大的块主要是因为：<ul>
+<li>减少搜寻时间，一般硬盘传输速率比寻道时间要快，大的块可以减少寻道时间；</li>
+<li>减少管理块的数据开销，每个块都需要在NameNode上有对应的记录；</li>
+<li>对数据块进行读写，减少建立网络的连接成本）</li>
+</ul>
+</li>
+<li>一个大文件会被拆分成一个个的块，然后存储于不同的机器。如果一个文件少于Block大小，那么实际占用的空间为其文件的大小</li>
+<li>基本的读写单位，类似于磁盘的页，每次都是读写一个块</li>
+<li>每个块都会被复制到多台机器，默认复制 <strong>3</strong> 份</li>
+</ul>
+<blockquote>
+<p>HDFS 2.x以后的block默认为 <strong>128M</strong></p>
+</blockquote>
+<h4 id="HDFS节点"><a href="#HDFS节点" class="headerlink" title="HDFS节点"></a>HDFS节点</h4><p>HDFS 运行在许多不同的计算机上，有的计算机专门用于存储数据，有的计算机专门用于指挥其它计算机储存数据。这里所提到的”计算机”我们可以称之为集群中的节点。</p>
+<h5 id="命名节点-NameNode"><a href="#命名节点-NameNode" class="headerlink" title="命名节点 NameNode"></a>命名节点 NameNode</h5><p>命名节点 (NameNode) 是用于指挥其它节点存储的节点。任何一个”文件系统”(File System, FS) 都需要具备 <strong>根据文件路径映射到文件</strong> 的功能，命名节点就是用于储存这些映射信息并提供映射服务的计算机，在整个 HDFS 系统中扮演”管理员”的角色，因此 <em><strong>一个 HDFS 集群中只有一个命名节点</strong></em>。</p>
+<h5 id="数据节点-DataNode"><a href="#数据节点-DataNode" class="headerlink" title="数据节点 (DataNode)"></a>数据节点 (DataNode)</h5><p>数据节点 (DataNode) 使用来储存数据块的节点。当一个文件被命名节点承认并分块之后将会被储存到被分配的数据节点中去。数据节点具有储存数据、读写数据的功能，其中 <strong>存储的数据块比较类似于硬盘中的”扇区”概念，是 HDFS 存储的基本单位</strong>。</p>
+<blockquote>
+<ol>
+<li>保存具体的block数据</li>
+<li>负责数据的读写操作和复制操作</li>
+<li>DataNode启动时会向NameNode报告当前存储的数据块信息，后续也会定时报告修改信息</li>
+<li>DataNode之间会进行通信，复制数据块，保证数据的冗余性</li>
+</ol>
+</blockquote>
+<h5 id="副命名节点-Secondary-NameNode"><a href="#副命名节点-Secondary-NameNode" class="headerlink" title="副命名节点 (Secondary NameNode)"></a>副命名节点 (Secondary NameNode)</h5><p>副命名节点 (Secondary NameNode) 别名”次命名节点”，是命名节点的”秘书”。这个形容很贴切，因为它并不能代替命名节点的工作，无论命名节点是否有能力继续工作。它主要负责 <strong>分摊命名节点的压力、备份命名节点的状态并执行一些管理工作</strong>，如果命名节点要求它这样做的话。如果命名节点坏掉了，它也可以提供备份数据以恢复命名节点。副命名节点可以有多个。</p>
+<h4 id="Hadoop写文件"><a href="#Hadoop写文件" class="headerlink" title="Hadoop写文件"></a>Hadoop写文件</h4><blockquote>
+<ol>
+<li>客户端将文件写入本地磁盘的 HDFS Client 文件中</li>
+<li>当临时文件大小达到一个 block 大小时，HDFS client 通知 NameNode，申请写入文件</li>
+<li>NameNode 在 HDFS 的文件系统中创建一个文件，并把该 block id 和要写入的 DataNode 的列表返回给客户端</li>
+<li>客户端收到这些信息后，将临时文件写入 DataNodes<br>4.1. 客户端将文件内容写入第一个 DataNode（一般以 4kb 为单位进行传输）<br>4.2. 第一个 DataNode 接收后，将数据写入本地磁盘，同时也传输给第二个 DataNode<br>4.3. 依此类推到最后一个 DataNode，数据在 DataNode 之间是通过 pipeline 的方式进行复制的<br>4.4. 后面的 DataNode 接收完数据后，都会发送一个确认给前一个 DataNode，最终第一个 DataNode 返回确认给客户端<br>4.5. 当客户端接收到整个 block 的确认后，会向 NameNode 发送一个最终的确认信息<br>4.6. 如果写入某个 DataNode 失败，数据会继续写入其他的 DataNode。然后 NameNode 会找另外一个好的 DataNode 继续复制，以保证冗余性<br>4.7. 每个 block 都会有一个校验码，并存放到独立的文件中，以便读的时候来验证其完整性</li>
+<li>文件写完后（客户端关闭），NameNode 提交文件（这时文件才可见，如果提交前，NameNode 垮掉，那文件也就丢失了。fsync：只保证数据的信息写到 NameNode 上，但并不保证数据已经被写到DataNode 中）</li>
+</ol>
+</blockquote>
+<p><img src="/pictures/tools/Hadoop/img2.png" alt="HDFS写入数据流程"></p>
+<h4 id="Hadoop读文件"><a href="#Hadoop读文件" class="headerlink" title="Hadoop读文件"></a>Hadoop读文件</h4><blockquote>
+<ol>
+<li>客户端向NameNode发送读取请求</li>
+<li>NameNode返回文件的所有block和这些block所在的DataNodes（包括复制节点）</li>
+<li>客户端直接从DataNode中读取数据，如果该DataNode读取失败（DataNode失效或校验码不对），则从复制节点中读取（如果读取的数据就在本机，则直接读取，否则通过网络读取）</li>
+</ol>
+</blockquote>
+<p><img src="/pictures/tools/Hadoop/img3.png" alt="HDFS读取数据流程"></p>
+<h3 id="MapReduce"><a href="#MapReduce" class="headerlink" title="MapReduce"></a>MapReduce</h3><p>MapReduce是一种可用于数据处理的编程模型。Hadoop可以运行各种版本的MapReduce程序。MapReduce程序本质上是并行运行的，它可以将大规模的数据分析任务分发给任何一个拥有足够多机器的数据中心。</p>
+<p>MapReduce任务过程分为两个处理阶段：map阶段和reduce阶段。每个阶段都以键值对作为输入和输出，其类型由程序员选择。</p>
+<blockquote>
+<ul>
+<li><strong>map阶段</strong> – 输入是原始数据。键是某一行起始位置相对于文件起始位置的偏移量。map函数是一个数据准备阶段。</li>
+<li><strong>reduce阶段</strong> – 对map阶段的输出值进行处理。reduce函数进行数据进一步的筛选及其他操作。</li>
+</ul>
+</blockquote>
+<p><img src="/pictures/tools/Hadoop/img4.png" alt="MapReduce计算逻辑"></p>
+<blockquote>
+<p>map: (K1, V1) → list(K2, V2)<br>combine: (K2, list(V2)) → list(K2, V2)<br>reduce: (K2, list(V2)) → list(K3, V3)</p>
+</blockquote>
+<p>MapReduce主要是先读取文件数据，然后进行Map处理，接着Reduce处理，最后把处理结果写到文件中<br><img src="/pictures/tools/Hadoop/img5.png" alt="MapReduce基本流程"></p>
+<h3 id="Hadoop数据倾斜"><a href="#Hadoop数据倾斜" class="headerlink" title="Hadoop数据倾斜"></a>Hadoop数据倾斜</h3> 
+      <!-- reward -->
+      
+    </div>
+    
+
+    <!-- copyright -->
+    
+    <footer class="article-footer">
+       
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Big-Data/" rel="tag">Big Data</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/tools/" rel="tag">tools</a></li></ul>
+
+    </footer>
+  </div>
+
+   
+    
+</article>
+
+    
+    <article
+  id="post-NLP/Transformer"
+  class="article article-type-post"
+  itemscope
+  itemprop="blogPost"
+  data-scroll-reveal
+>
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h2 itemprop="name">
+  <a class="article-title" href="/2022/09/04/NLP/Transformer/"
+    >Transformer</a> 
+</h2>
+ 
+
+      
+    </header>
+     
+    <div class="article-meta">
+      <a href="/2022/09/04/NLP/Transformer/" class="article-date">
+  <time datetime="2022-09-04T09:05:38.247Z" itemprop="datePublished">2022-09-04</time>
+</a> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E8%87%AA%E7%84%B6%E8%AF%AD%E8%A8%80%E5%A4%84%E7%90%86/">自然语言处理</a>
+  </div>
+   
+    </div>
+      
+    <div class="article-entry" itemprop="articleBody">
+       
+  <p>参考资料：<a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/420820453">https://zhuanlan.zhihu.com/p/420820453</a></p>
+<h3 id="多头注意力机制"><a href="#多头注意力机制" class="headerlink" title="多头注意力机制"></a>多头注意力机制</h3><h4 id="提出背景"><a href="#提出背景" class="headerlink" title="提出背景"></a>提出背景</h4><p>现在主流的序列模型都是基于复杂的循环神经网络或者卷积神经网络构造而来的Encoder-Decoder模型。传统的Encoder-Decoder架构在建模过程中，下一时刻的计算过程会很依赖于上一时刻的输出，这种固有属性导致很难以 <strong>并行</strong> 的方式进行计算。<br>基于以上原因，提出了一种全新的Transformer架构来解决这一问题。Transformer架构的优点在于它完全摒弃了传统的循环结构，取而代之的是通过 <strong>注意力机制</strong> 来计算模型输入与输出的隐含表示，即自注意力机制。<br><img src="/pictures/NLP/Transformer/img1.png" alt="Transformer的网络结构"></p>
+<blockquote>
+<p>自注意力机制就是通过某种运算直接计算得到句子在编码过程中每个位置上的注意力权重；然后再以权重和的形式来计算得到整个句子的隐含向量表示。</p>
+</blockquote>
+<h4 id="什么是self-attention"><a href="#什么是self-attention" class="headerlink" title="什么是self-attention?"></a>什么是self-attention?</h4><p>注意力机制可以描述为将query和一系列的key-value对映射到某个输出的过程，而这个输出向量就是根据query和key计算得到的权重作用于value上的权重和。<br><img src="/pictures/NLP/Transformer/img2.png" alt="自注意力机制"><br>自注意力机制的核心过程就是通过Q和K计算得到注意力权重；然后再作用于V得到整个权重和的输出。计算公式如下：<br><img src="/pictures/NLP/Transformer/img3.png" alt="自注意力机制计算公式"><br>之所以要对QK进行缩放，是因为对于较大的dk来说，完成QK计算后会得到很大的值。而这将导致在经过 <strong>softmax</strong> 操作后产生非常小的梯度，不利于网络的训练。</p>
+<h4 id="Q-K-V怎么来的？"><a href="#Q-K-V怎么来的？" class="headerlink" title="Q,K,V怎么来的？"></a>Q,K,V怎么来的？</h4><p>假设输入序列“我是谁”，通过embedding映射得到3x4的矩阵进行句子表示。<br>Q、K和V其实就是输入X分别乘以3个不同的矩阵计算而来（但这仅仅局限于Encoder和Decoder在各自输入部分利用自注意力机制进行编码的过程，Encoder和Decoder交互部分的Q、K和V另有指代）。此处对于计算得到的Q、K、V，你可以理解为这是 <em><strong>对于同一个输入进行3次不同的线性变换来表示其不同的3种状态</strong></em>。<br><img src="/pictures/NLP/Transformer/img4.jpg" alt="QKV是怎么来的"><br>在计算得到Q、K、V之后，就可以进一步计算得到权重向量。<br><img src="/pictures/NLP/Transformer/img5.jpg" alt="注意力权重计算图"><br>从上图可以知道，通过权重矩阵模型就可以知道当前位置的向量，应该以何种方式（权重）将注意力集中到不同的位置上。 <em><strong>模型在对当前位置的信息进行编码时，会过度将注意力集中于自身位置</strong></em>，而这会导致其忽略其他位置信息。因此，作者使用的解决方案就是 <strong>多头注意力机制</strong>。<br>计算得到权重矩阵后，便可以将其作用于V，进而得到最终的编码输出。<br><img src="/pictures/NLP/Transformer/img6.jpg" alt="编码输出计算"><br>对于最终的输出的编码向量，每个位置的编码向量其实就是 <strong>所有向量的加权和</strong>。这也就体现了自注意力机制在编码过程中的权重分配过程。</p>
+<blockquote>
+<p>有了自注意力机制后，仅需要对于原始输入进行几次矩阵变换就能够得到最终包含不同注意力信息的编码向量。解决了传统序列逆袭那个在编码过程中需要无法并行的弊端。</p>
+</blockquote>
+<h4 id="Multi-Head-Attention"><a href="#Multi-Head-Attention" class="headerlink" title="Multi-Head-Attention"></a>Multi-Head-Attention</h4><p>自注意力机制的缺陷在于：<em><strong>模型对于当前位置的信息进行整合编码时候，会过多的将注意力集中于自身位置</strong></em>，影响模型的表征能力。<br>多头注意力机制可以解决上述问题（对于周围信息获取受限的问题），并且还能够给予注意力层的输出包含有不同子空间的编码表示信息，增强模型的表达能力。<br>多头注意力机制就是将原始的输入序列进行多组的自注意力处理；然后将每组自注意力机制的结果 <strong>拼接</strong>起来进行一次线性变换得到最终的输出结果。<br><img src="/pictures/NLP/Transformer/img7.png" alt="多头注意力机制网络结构"><br>其计算公式为：<br><img src="/pictures/NLP/Transformer/img8.png" alt="多头注意力机制计算公式"><br>论文中，作者使用 <strong>8</strong> 个并行的自注意力模块来构建一个自注意力层，并且限定每个模块的维度为 <strong>64</strong>。论文中使用的多头注意力机制其实就是将一个大的高维单头拆分成h个多头。<br><img src="/pictures/NLP/Transformer/img9.jpg" alt="多头注意力计算"><br>根据输入序列X和W1可以得到Q1,K1,V1，进一步根据自注意力计算公式得到输出Z1；同理，可以得到另一个自注意力模块得到输出Z2；最后，将Z1,Z2水平堆叠形成Z，乘以W便可以得到最终的多头注意力层的输出。</p>
+<h3 id="位置编码与编码解码过程"><a href="#位置编码与编码解码过程" class="headerlink" title="位置编码与编码解码过程"></a>位置编码与编码解码过程</h3><h4 id="Embedding机制"><a href="#Embedding机制" class="headerlink" title="Embedding机制"></a>Embedding机制</h4><h5 id="Token-Embedding"><a href="#Token-Embedding" class="headerlink" title="Token Embedding"></a>Token Embedding</h5><p>在Transformer模型中，首先要将文本通过Embedding层映射到低维稠密的向量空间，得到向量化表示，即Token Embedding。</p>
+<blockquote>
+<p>如果是换做之前的网络模型，例如CNN或者RNN，那么对于文本向量化的步骤就到此结束了，因为这些网络结构本身已经具备了捕捉时序特征的能力，不管是CNN中的n-gram形式还是RNN中的时序形式。</p>
+</blockquote>
+<p>自注意力机制在实际运算过程中，不过是几个矩阵来回相乘进行线性变换，这就导致即使打乱词序，最终计算得到的结果本质上没有任何变化。 <strong>自注意力机制会丢失文本原有的序列信息！</strong></p>
+<blockquote>
+<p>举个例子：在经过词嵌入表示后，序列“武松 打 虎”和“虎 打 武松”经过相同的权重矩阵后，输出结果并没有任何区别，只是交换了对应的位置。</p>
+</blockquote>
+<p>为了解决自注意力机制丢失序列信息问题，引入了positional Embedding来刻画数据在时序上的特征。</p>
+<h5 id="Positional-Embedding"><a href="#Positional-Embedding" class="headerlink" title="Positional Embedding"></a>Positional Embedding</h5><p>作者采用如下规则生成各个维度的位置信息：<br><img src="/pictures/NLP/Transformer/img10.png" alt="位置信息生成公式"></p>
+<p>在交换位置前与交换位置后，与同一个权重矩阵进行线性变换后的结果截然不同。因此，这就证明通过Positional Embedding可以弥补自注意力机制不能捕捉序列时序信息的缺陷。</p>
+<h4 id="Transformer网络结构"><a href="#Transformer网络结构" class="headerlink" title="Transformer网络结构"></a>Transformer网络结构</h4><p>一个单层Transformer网络结构图。<br><img src="/pictures/NLP/Transformer/img11.png" alt="Transformer网络结构"></p>
+<h5 id="Encoder层"><a href="#Encoder层" class="headerlink" title="Encoder层"></a>Encoder层</h5><p>对于Encoder部分来说其内部主要由两部分网络所构成(6层堆叠)：<em><strong>多头注意力机制</strong></em> 和 <em><strong>两层前馈神经网络</strong></em>。<br>同时，对于这两部分网络来说，都加入了残差连接，并且在残差连接后还进行了层归一化操作。对于每个部分来说其输出均为LayNorm(x + Sub-Layer(x))，并且在都加入了Dropout操作。<br>进一步，为了便于在这些地方使用残差连接，这两部分网络输出向量的维度均为 <strong>512</strong>。<br>对于第2部分的两层全连接网络来说，其具体计算过程为<br><img src="/pictures/NLP/Transformer/img12.png" alt="FFN层计算"><br>其中输入的维度为 <strong>512</strong>，第1层全连接层的输出维度为 <strong>2048</strong>，第2层全连接层的输出为 <strong>512</strong>，且同时 <em><strong>仅对于第1层网络的输出</strong></em> 还运用了Relu激活函数。</p>
+<h5 id="Decoder层"><a href="#Decoder层" class="headerlink" title="Decoder层"></a>Decoder层</h5><p>对于Decoder部分来说，其整体上与Encoder类似（6层堆叠），只是多了一个用于与Encoder输出进行交互的多头注意力机制。<br>不同于Encoder部分，在Decoder中一共包含有3个部分的网络结构。最上面的和最下面的部分（暂时忽略Mask）与Encoder相同，只是多了中间这个与Encoder输出（Memory）进行交互的部分，作者称之为“Encoder-Decoder attention”。<br>对于这部分的输入，<strong>Q来自于下面多头注意力机制的输出，K和V均是Encoder部分的输出（Memory）经过线性变换后得到</strong>。而作者之所以这样设计也是在模仿传统Encoder-Decoder网络模型的解码过程。<br>传统的基于Encoder-Decoder的Seq2Seq翻译模型的解码过程：<br><img src="/pictures/NLP/Transformer/img13.jpg" alt="传统的Seq2Seq翻译模型"><br>左半部分是编码器，右下部分为解码器，右上部分为注意力机制部分。 ~h[i]表示<strong>编码过程</strong>中，各个时刻的隐含状态，称之为每个时刻的Memory；h[t]表示解码当前时刻的隐含状态。此时，注意力机制的思想在于，<strong>希望模型能够在解码时，参考编码阶段每个时刻的记忆</strong>。</p>
+<blockquote>
+<ol>
+<li>解码第一个时刻”s”时，h[t]会首先同每一个记忆状态~h[i]进行相似度计算，得到注意力权重；</li>
+<li>然后，通过对隐含状态的加权求和，得到context vector内容</li>
+</ol>
+</blockquote>
+<p>以上是传统的解码交互方案。在Transformer中，K和V均是编码部分的输出Memory经过线性变换后的结果（此时Memory中包含了原始输入序列每个位置的编码信息），而Q是解码部分多头注意力机制输出的隐含向量经过线性变换后的结果。</p>
+<blockquote>
+<ol>
+<li>首先，通过Q和K交互计算得到注意力权重矩阵；</li>
+<li>然后，通过注意力权重与V进行计算，得到权重解码向量。此向量考虑了memory中各个位置编码信息的输出向量。</li>
+<li>最后，得到解码向量后，经过两层全连接层后，将其输入到分类层进行分类得到当前时刻的解码输出值。</li>
+</ol>
+</blockquote>
+<h5 id="QKV的来源"><a href="#QKV的来源" class="headerlink" title="QKV的来源"></a>QKV的来源</h5><p>根据Transformer结构图可知，在整个Transformer中涉及到自注意力机制的一共有3个部分：</p>
+<blockquote>
+<ul>
+<li>Encoder中的Multi-Head Attention；</li>
+<li>Decoder中的Masked Multi-Head Attention；</li>
+<li>Encoder和Decoder交互部分的Multi-Head Attention。</li>
+</ul>
+</blockquote>
+<ol>
+<li>对于Encoder中的Multi-Head Attention来说，其原始q、k、v均是Encoder的Token输入经过Embedding后的结果。q、k、v分别经过一次线性变换（各自乘以一个权重矩阵）后得到了Q、K、V，然后再进行自注意力运算得到Encoder部分的输出结果Memory。</li>
+<li>对于Decoder中的Masked Multi-Head Attention来说，其原始q、k、v均是Decoder的Token输入经过Embedding后的结果。q、k、v分别经过一次线性变换后得到了Q、K、V，然后再进行自注意力运算得到Masked Multi-Head Attention部分的输出结果，即待解码向量。</li>
+<li>对于Encoder和Decoder交互部分的Multi-Head Attention，其原始q、k、v分别是上面的带解码向量、Memory和Memory。q、k、v分别经过一次线性变换后得到了Q、K、V，然后再进行自注意力运算得到Decoder部分的输出结果。之所以这样设计也是在模仿传统Encoder-Decoder网络模型的解码过程。</li>
+</ol>
+ 
+      <!-- reward -->
+      
+    </div>
+    
+
+    <!-- copyright -->
+    
+    <footer class="article-footer">
+       
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/NLP/" rel="tag">NLP</a></li></ul>
+
+    </footer>
+  </div>
+
+   
+    
+</article>
+
+    
+    <article
+  id="post-NLP/FastText"
+  class="article article-type-post"
+  itemscope
+  itemprop="blogPost"
+  data-scroll-reveal
+>
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h2 itemprop="name">
+  <a class="article-title" href="/2022/09/04/NLP/FastText/"
+    >FastText</a> 
+</h2>
+ 
+
+      
+    </header>
+     
+    <div class="article-meta">
+      <a href="/2022/09/04/NLP/FastText/" class="article-date">
+  <time datetime="2022-09-04T09:02:29.407Z" itemprop="datePublished">2022-09-04</time>
+</a> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E8%87%AA%E7%84%B6%E8%AF%AD%E8%A8%80%E5%A4%84%E7%90%86/">自然语言处理</a>
+  </div>
+   
+    </div>
+      
+    <div class="article-entry" itemprop="articleBody">
+       
+  <h3 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h3><p>fasttext是facebook开源的一个词向量与文本分类工具，在2016年开源，典型应用场景是“带监督的文本分类问题”。提供简单而高效的 <strong>文本分类</strong> 和 <strong>表征学习</strong> 的方法，性能比肩深度学习而且速度更快。</p>
+<p>FastText结合了自然语言处理和机器学习中的思想：</p>
+<ul>
+<li>使用词袋以及N-gram袋表征语句；</li>
+<li>使用子字信息；</li>
+<li>通过隐藏表征在类别间共享信息</li>
+</ul>
+<h3 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h3><p>核心思想：将整篇文档的词以及N-gram向量 <strong>叠加平均</strong> 得到文档向量，然后使用文档向量做softmax分类。</p>
+<h4 id="模型架构"><a href="#模型架构" class="headerlink" title="模型架构"></a>模型架构</h4><p>FastText架构和CBOW架构类似。不同之处在于，FastText预测标签，CBOW通过上下文预测中间词。<br><img src="/pictures/NLP/FastText/img1.jpg" alt="FastText模型架构"></p>
+<blockquote>
+<p><strong>注意：</strong> 此架构图并没有展示词向量的训练过程。FastText模型也只有三层：输入层，隐含层，输出层。输入是多个向量表示的单词，输出是特定的Target，隐含层是对多个词向量的叠加平均。</p>
+</blockquote>
+<p>与CBOW模型不同的是，</p>
+<ul>
+<li>CBOW的输入是目标单词的上下文，FastText的输入是多个单词以及其N-gram特征，这些特征用来表示单个文档；</li>
+<li>CBOW的输入单词是被one-hot编码过后的，FastText的输入特征是被embedding后的；</li>
+<li>CBOW的输出是目标词汇，FastText的输出是文档对应的类标。</li>
+</ul>
+<h4 id="层序softmax"><a href="#层序softmax" class="headerlink" title="层序softmax"></a>层序softmax</h4><p>对于有大量类别的数据集，FastText使用一个分层分类器，降低计算复杂度。<br>FastText利用了类别不均衡这个事实，通过使用Huffman算法建立用于表征类别的树形结构。因此，出现频次较高的类别更加接近根节点。</p>
+<h4 id="N-gram特征"><a href="#N-gram特征" class="headerlink" title="N-gram特征"></a>N-gram特征</h4><p>Word2Vec把语料库中的每个单词作为一个原子。这忽略了单词内部的形态特征，比如apple和apples。传统的Word2Vec中，这种单词内部形态信息因为它们被转换为不同的id丢失了。</p>
+<p>为了克服这个问题，FastText使用了字符级别的N-gram来表示一个单词。对于单词apple，假设N的取值为3，则它的trigram有：</p>
+<blockquote>
+<p>“&lt;ap”,  “app”,  “ppl”,  “ple”, “le&gt;”</p>
+</blockquote>
+<p>其中，&lt;表示前缀，&gt;表示后缀。于是，我们可以用这些trigram来表示“apple”这个单词，进一步，我们可以用这5个trigram的向量叠加来表示“apple”的词向量。</p>
+<p>这带来两点好处：</p>
+<ul>
+<li>对于低频词生成的词向量效果会更好。因为它们的N-gram可以和其他词共享；</li>
+<li>对于训练词库之外的单词，仍然可以构建它们的词向量。我们可以叠加它们的字符级N-gram向量。</li>
+</ul>
+<h3 id="应用"><a href="#应用" class="headerlink" title="应用"></a>应用</h3><p><strong>模型搭建步骤：</strong></p>
+<ol>
+<li>添加输入层：Embedding层输入是一批文档，每个文档有一个词汇索引序列构成；</li>
+<li>添加隐含层：投影层对一个文档中所有单词的向量进行叠加平均；</li>
+<li>添加输出层：Softmax层</li>
+<li>指定损失函数，优化器类型，评价指标，编译模型。</li>
+</ol>
+<p><strong>训练数据feed模型步骤</strong></p>
+<ol>
+<li>将文档分好词，构建词汇表；</li>
+<li>对类标进行one-hot化；</li>
+<li>对一批文本，将每个文本转化为词索引序列，每个类标转化为one-hot向量</li>
+</ol>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><h4 id="如何获得词向量？"><a href="#如何获得词向量？" class="headerlink" title="如何获得词向量？"></a>如何获得词向量？</h4><p><strong>累加平均</strong> 一个词的N-gram集合包括自身整个词的隐向量表示。</p>
+<h4 id="FastText和Word2Vec区别"><a href="#FastText和Word2Vec区别" class="headerlink" title="FastText和Word2Vec区别"></a>FastText和Word2Vec区别</h4><p>相似处：</p>
+<blockquote>
+<ol>
+<li>图模型结构很想，都是采用embedding向量形式，得到word的隐向量表达；</li>
+<li>采用很多相似的优化，比如使用层级sotmax优化训练和预测中的打分速度</li>
+</ol>
+</blockquote>
+<p>不同之处：</p>
+<blockquote>
+<ol>
+<li>输入层：Word2Vec的输出层，是context window内的term；而FastText对应的整个sentence的内容，包括term和N-gram的内容；</li>
+<li>输出层：Word2Vec的输出层，对应的是每个term，计算某个term的概率最大；而FastText的输出层对应的分类的label</li>
+</ol>
+</blockquote>
+<p>两者本质的不同，体现在H-softmax的使用：</p>
+<blockquote>
+<ul>
+<li>Word2Vec的目标是得到词向量，该词向量最终是在输入层中得到。输出层对应的H-softmax也会生成一系列的向量，但最终都会被抛弃；</li>
+<li>FastText充分利用H-softmax的分类功能，遍历分类树的所有叶节点，找到概率最大的label</li>
+</ul>
+</blockquote>
+<h4 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h4><p>FastText的学习速度比较快，效果不错。fastText适用于分类类别非常大而且数据集足够多的情况。当分类类别比较小或者数据集比较少的话，很容易过拟合。</p>
+<p>可以完成无监督的词向量的学习，可以学习得到词向量；也可以用于有监督学习的分类任务（新闻文本分类，垃圾邮件分类，情感分析，电商中用户评论的褒贬分析）</p>
+ 
+      <!-- reward -->
+      
+    </div>
+    
+
+    <!-- copyright -->
+    
+    <footer class="article-footer">
+       
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/NLP/" rel="tag">NLP</a></li></ul>
+
+    </footer>
+  </div>
+
+   
+    
+</article>
+
+    
+  </article>
+  
+
+  
+  <nav class="page-nav">
+    
+    <a class="extend prev" rel="prev" href="/">上一页</a><a class="page-number" href="/">1</a><span class="page-number current">2</span><a class="page-number" href="/page/3/">3</a><a class="extend next" rel="next" href="/page/3/">下一页</a>
+  </nav>
+  
+</section>
+</div>
+
+      <footer class="footer">
+  <div class="outer">
+    <ul>
+      <li>
+        Copyrights &copy;
+        2022
+        <i class="ri-heart-fill heart_icon"></i> Xueru Wang
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+      </li>
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      <li>
+        <!-- cnzz统计 -->
+        
+        <script type="text/javascript" src='https://s9.cnzz.com/z_stat.php?id=1278069914&amp;web_id=1278069914'></script>
+        
+      </li>
+    </ul>
+  </div>
+</footer>    
+    </main>
+    <div class="float_btns">
+      <div class="totop" id="totop">
+  <i class="ri-arrow-up-line"></i>
+</div>
+
+<div class="todark" id="todark">
+  <i class="ri-moon-line"></i>
+</div>
+
+    </div>
+    <aside class="sidebar on">
+      <button class="navbar-toggle"></button>
+<nav class="navbar">
+  
+  <div class="logo">
+    <a href="/"><img src="/images/ayer-side.svg" alt="WXR"></a>
+  </div>
+  
+  <ul class="nav nav-main">
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/">主页</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/archives">归档</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/categories">分类</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/tags">标签</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/about">关于我</a>
+    </li>
+    
+  </ul>
+</nav>
+<nav class="navbar navbar-bottom">
+  <ul class="nav">
+    <li class="nav-item">
+      
+      <a class="nav-item-link nav-item-search"  title="搜索">
+        <i class="ri-search-line"></i>
+      </a>
+      
+      
+      <a class="nav-item-link" target="_blank" href="/atom.xml" title="RSS Feed">
+        <i class="ri-rss-line"></i>
+      </a>
+      
+    </li>
+  </ul>
+</nav>
+<div class="search-form-wrap">
+  <div class="local-search local-search-plugin">
+  <input type="search" id="local-search-input" class="local-search-input" placeholder="Search...">
+  <div id="local-search-result" class="local-search-result"></div>
+</div>
+</div>
+    </aside>
+    <div id="mask"></div>
+
+<!-- #reward -->
+<div id="reward">
+  <span class="close"><i class="ri-close-line"></i></span>
+  <p class="reward-p"><i class="ri-cup-line"></i>请我喝杯咖啡吧~</p>
+  <div class="reward-box">
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/alipay.jpg">
+      <span class="reward-type">支付宝</span>
+    </div>
+    
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/wechat.jpg">
+      <span class="reward-type">微信</span>
+    </div>
+    
+  </div>
+</div>
+    
+<script src="/js/jquery-3.6.0.min.js"></script>
+ 
+<script src="/js/lazyload.min.js"></script>
+
+<!-- Tocbot -->
+
+<script src="https://cdn.staticfile.org/jquery-modal/0.9.2/jquery.modal.min.js"></script>
+<link
+  rel="stylesheet"
+  href="https://cdn.staticfile.org/jquery-modal/0.9.2/jquery.modal.min.css"
+/>
+<script src="https://cdn.staticfile.org/justifiedGallery/3.8.1/js/jquery.justifiedGallery.min.js"></script>
+
+<script src="/dist/main.js"></script>
+
+<!-- ImageViewer -->
+ <!-- Root element of PhotoSwipe. Must have class pswp. -->
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    <!-- Background of PhotoSwipe. 
+         It's a separate element as animating opacity is faster than rgba(). -->
+    <div class="pswp__bg"></div>
+
+    <!-- Slides wrapper with overflow:hidden. -->
+    <div class="pswp__scroll-wrap">
+
+        <!-- Container that holds slides. 
+            PhotoSwipe keeps only 3 of them in the DOM to save memory.
+            Don't modify these 3 pswp__item elements, data is added later on. -->
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                <!--  Controls are self-explanatory. Order can be changed. -->
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" style="display:none" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->
+                <!-- element will get class pswp__preloader--active when preloader is running -->
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<link rel="stylesheet" href="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/photoswipe/4.1.3/default-skin/default-skin.min.css">
+<script src="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe.min.js"></script>
+<script src="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe-ui-default.min.js"></script>
+
+<script>
+    function viewer_init() {
+        let pswpElement = document.querySelectorAll('.pswp')[0];
+        let $imgArr = document.querySelectorAll(('.article-entry img:not(.reward-img)'))
+
+        $imgArr.forEach(($em, i) => {
+            $em.onclick = () => {
+                // slider展开状态
+                // todo: 这样不好，后面改成状态
+                if (document.querySelector('.left-col.show')) return
+                let items = []
+                $imgArr.forEach(($em2, i2) => {
+                    let img = $em2.getAttribute('data-idx', i2)
+                    let src = $em2.getAttribute('data-target') || $em2.getAttribute('src')
+                    let title = $em2.getAttribute('alt')
+                    // 获得原图尺寸
+                    const image = new Image()
+                    image.src = src
+                    items.push({
+                        src: src,
+                        w: image.width || $em2.width,
+                        h: image.height || $em2.height,
+                        title: title
+                    })
+                })
+                var gallery = new PhotoSwipe(pswpElement, PhotoSwipeUI_Default, items, {
+                    index: parseInt(i)
+                });
+                gallery.init()
+            }
+        })
+    }
+    viewer_init()
+</script> 
+<!-- MathJax -->
+
+<!-- Katex -->
+
+<!-- busuanzi  -->
+
+<!-- ClickLove -->
+
+<!-- ClickBoom1 -->
+
+<!-- ClickBoom2 -->
+
+<!-- CodeCopy -->
+ 
+<link rel="stylesheet" href="/css/clipboard.css">
+ <script src="https://cdn.staticfile.org/clipboard.js/2.0.10/clipboard.min.js"></script>
+<script>
+  function wait(callback, seconds) {
+    var timelag = null;
+    timelag = window.setTimeout(callback, seconds);
+  }
+  !function (e, t, a) {
+    var initCopyCode = function(){
+      var copyHtml = '';
+      copyHtml += '<button class="btn-copy" data-clipboard-snippet="">';
+      copyHtml += '<i class="ri-file-copy-2-line"></i><span>COPY</span>';
+      copyHtml += '</button>';
+      $(".highlight .code pre").before(copyHtml);
+      $(".article pre code").before(copyHtml);
+      var clipboard = new ClipboardJS('.btn-copy', {
+        target: function(trigger) {
+          return trigger.nextElementSibling;
+        }
+      });
+      clipboard.on('success', function(e) {
+        let $btn = $(e.trigger);
+        $btn.addClass('copied');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-checkbox-circle-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPIED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-checkbox-circle-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+      clipboard.on('error', function(e) {
+        e.clearSelection();
+        let $btn = $(e.trigger);
+        $btn.addClass('copy-failed');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-time-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPY FAILED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-time-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+    }
+    initCopyCode();
+  }(window, document);
+</script>
+ 
+<!-- CanvasBackground -->
+
+<script>
+  if (window.mermaid) {
+    mermaid.initialize({ theme: "forest" });
+  }
+</script>
+
+
+    
+    
+
+  </div>
+</body>
+
+</html>

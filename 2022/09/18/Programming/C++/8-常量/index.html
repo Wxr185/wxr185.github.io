@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+
+
+<html lang="zh-CN">
+  
+
+    <head>
+      <meta charset="utf-8" />
+        
+      <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1"
+      />
+      <title>第8章 常量 |  WXR</title>
+  <meta name="generator" content="hexo-theme-ayer">
+      
+      <link rel="shortcut icon" href="/favicon.ico" />
+       
+<link rel="stylesheet" href="/dist/main.css">
+
+      
+<link rel="stylesheet" href="/css/fonts/remixicon.css">
+
+      
+<link rel="stylesheet" href="/css/custom.css">
+ 
+      <script src="https://cdn.staticfile.org/pace/1.2.4/pace.min.js"></script>
+       
+ 
+
+      <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bulma@5.0.1/bulma.min.css"
+      />
+      <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.min.js"></script>
+
+      <!-- mermaid -->
+      
+      <style>
+        .swal2-styled.swal2-confirm {
+          font-size: 1.6rem;
+        }
+      </style>
+    </head>
+  </html>
+</html>
+
+
+<body>
+  <div id="app">
+    
+      
+    <main class="content on">
+      <section class="outer">
+  <article
+  id="post-Programming/C++/8-常量"
+  class="article article-type-post"
+  itemscope
+  itemprop="blogPost"
+  data-scroll-reveal
+>
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h1 class="article-title sea-center" style="border-left:0" itemprop="name">
+  第8章 常量
+</h1>
+ 
+
+      
+    </header>
+     
+    <div class="article-meta">
+      <a href="/2022/09/18/Programming/C++/8-%E5%B8%B8%E9%87%8F/" class="article-date">
+  <time datetime="2022-09-18T13:38:50.474Z" itemprop="datePublished">2022-09-18</time>
+</a> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80/">编程语言</a> / <a class="article-category-link" href="/categories/%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80/C/">C++</a>
+  </div>
+  
+<div class="word_count">
+    <span class="post-time">
+        <span class="post-meta-item-icon">
+            <i class="ri-quill-pen-line"></i>
+            <span class="post-meta-item-text"> 字数统计:</span>
+            <span class="post-count">2.6k</span>
+        </span>
+    </span>
+
+    <span class="post-time">
+        &nbsp; | &nbsp;
+        <span class="post-meta-item-icon">
+            <i class="ri-book-open-line"></i>
+            <span class="post-meta-item-text"> 阅读时长≈</span>
+            <span class="post-count">8 分钟</span>
+        </span>
+    </span>
+</div>
+ 
+    </div>
+      
+    <div class="tocbot"></div>
+
+
+
+
+  
+    <div class="article-entry" itemprop="articleBody">
+       
+  <p>常量概念(由关键字const表示)是为了使程序员能够在变和不变之间画一条界线。这在C++程序设计项目中提供了安全性和可控性。</p>
+<p>const的最初动机是取代预处理器#defines来进行值替代。从这以后它曾被用于指针、 函数变量、返回类型、类对象以及成员函数。</p>
+<h3 id="值替代"><a href="#值替代" class="headerlink" title="值替代"></a>值替代</h3><p>当用C语言进行程序设计时，预处理器可以不受限制地建立宏并用它来替代值。因为预处理器只做些文本替代，它既 <strong>没有类型检查概念</strong>，也没有 <strong>类型检查功能</strong>，所以预处理器的值替代会产生一些微小的问题，这些问题在C++中可以通过使用const值而避免。</p>
+<p>C++用const来消除 <strong>宏定义没有类型信息</strong> 问题，具体方法是把值替代移交给编译器。</p>
+<h4 id="头文件里的const"><a href="#头文件里的const" class="headerlink" title="头文件里的const"></a>头文件里的const</h4><p>要使用const而非#define，同样必须把const定义放进 <strong>头文件</strong> 里。这样，通过包含头文件，可把const定义单独放在一个地方并把它分配给一个编译单元。C++中的const默认为 内部连接(internal linkage)，也就是说，const仅在const被定义过的文件里才是可见的， 而在连接时不能被其他编译单元看到。</p>
+<p>当定义一个const时，<strong>必须赋一个值给它，除非用extern作出了清楚的说明</strong>。</p>
+<p>通常C++编译器并 <strong>不为const创建存储空间</strong>，相反它把这个定义保存在它的符号表里。<br>上面的extern强制进行了存储空间分配(另外还有一些情况，如取一个const的地址，也要进行存储空间分配)，由于extern意味着使用 <strong>外部连接</strong> ，因此 <strong>分配存储空间</strong>，这也就是说有几个不同的编译单元应当能够引用它，所以它必须有存储空间。</p>
+<p>由于编译器不能完全避免为const分配内存，所以const的定义必须 <strong>默认内部连接</strong>，即连接仅在特定的编译单元内;否则，由于众多的const在多个cpp文件内分配存储，容易引起连接错误，连接程序在多个对象文件里看到同样的定义就会“抱怨”。然而，因为const默认内部连接，所以连接程序不会跨过编译单元连接那些定义，因此不会有冲突。在大部分场合使用内建数据类型的情况，包括常量表达式，编译都能执行常量折叠。</p>
+<h4 id="const的安全性"><a href="#const的安全性" class="headerlink" title="const的安全性"></a>const的安全性</h4><p>const的作用不仅限于在常数表达式里代替#defines。如果用运行期间产生的值初始化一个变量而且知道在变量生命期内是不变的，则用const限定该变量是程序设计中的一个很好的做法。</p>
+<p>就实际来说，如果想让一个值不变，就应该使之成为const。这不仅为防止意外的更改提供安全措施，也消除了读存储器和读内存操作，使编译器产生的代码更有效。</p>
+<h4 id="与C语言的区别"><a href="#与C语言的区别" class="headerlink" title="与C语言的区别"></a>与C语言的区别</h4><p>C中const的意思是“一个不能被改变的普通变量”，const常量总是占用存储而且它的名字是全局符。</p>
+<p>C默认const是外部连接的；C++默认const是内部连接。<br>在C++中，一个const不必创建内存空间，而在C中，一个const总是需要创建一块内存空间。</p>
+<h3 id="指针"><a href="#指针" class="headerlink" title="指针"></a>指针</h3><p>当使用带有指针的const时，有两种选择:const修饰指针正指向的对象，或者const修饰在指针里存储的地址。</p>
+<h4 id="指向const的指针"><a href="#指向const的指针" class="headerlink" title="指向const的指针"></a>指向const的指针</h4><p>正如任何复杂的定义一样，定义指针的技巧是在标识符的开始处读它并从里向外读。const修饰“最靠近”它的那个。</p>
+<h4 id="const指针"><a href="#const指针" class="headerlink" title="const指针"></a>const指针</h4><p>使指针本身成为一个const指针，必须把const标明的部分放在*的右边。</p>
+<p>因为指针本身现在是const指针，编译器要求给它一个初始值，这个值在指针生命期间内不变。然而要改变它所指向的值是可以的。</p>
+<h4 id="赋值和类型检查"><a href="#赋值和类型检查" class="headerlink" title="赋值和类型检查"></a>赋值和类型检查</h4><p>可以把一个非const对象的地址赋给一个const指针，因为也许有时不想改变某些可以改变的东西。<br>然而，不能把一个const对象的地址赋给一个非const指针，因为这样做可能通过被赋值的指针改变这个对象的值。</p>
+<h3 id="函数参数和返回值"><a href="#函数参数和返回值" class="headerlink" title="函数参数和返回值"></a>函数参数和返回值</h3><p>如果按值传递对象，对客户来讲，用const限定没有意义(它意味着传递的参数在函数里是不能被修改的)。<br>如果按常量返回用户定义类型的一个对象的值，这意味着返回值不能被修改。<br>如果传递并返回地址，const将保证该地址内容不会被改变。</p>
+<h4 id="传递const值"><a href="#传递const值" class="headerlink" title="传递const值"></a>传递const值</h4><p>在函数里，const有这样的意义:参数不能被改变。所以它其实是函数创建者的工具，而不是函数调用者的工具。</p>
+<p>为了不使调用者混淆，在函数内部用const限定参数优于在参数表里用const限定参数。</p>
+<h4 id="返回const值"><a href="#返回const值" class="headerlink" title="返回const值"></a>返回const值</h4><p>对返回值来讲，存在一个类似的道理，即如果一个函数的返回值是一个常量（const）。这就约定了函数框架里的原变量不会被修改。另外。因为这是按值返回的，所以这个变量被制成副本，使得初值不会被返回值所修改。</p>
+<p>当处理用户定义的类型时，按值返回常量是很重要的。如果一个函数按值返回一个类对象为const时，那么这个函数的返回值不能是一个左值(即它不能被赋值，也不能被修改)。</p>
+<h4 id="传递和返回地址"><a href="#传递和返回地址" class="headerlink" title="传递和返回地址"></a>传递和返回地址</h4><p>如果传递或返回一个地址(一个指针或一个引用)，客户程序员去取地址并修改其初值是可能的。<br>如果使这个指针或者引用成为const，就会阻止这类事的发生，这是非常重要的事情。<br>事实上，无论什么时候传递一个地址给一个函数，都应该尽可能用const修饰它。如果不这样做，就不能以const指针参数的方式使用这个函数。</p>
+<h3 id="类"><a href="#类" class="headerlink" title="类"></a>类</h3><p>为了保证一个类对象为常量，引进了const成员函数:const成员函数只能对于const对象调用。</p>
+<h4 id="类里的const"><a href="#类里的const" class="headerlink" title="类里的const"></a>类里的const</h4><p>常数表达式使用常量的地方之一是在类里。典型的例子是在一个类里建立一个数组，并用const代替#define设置数组大小以及用于有关数组的计算。数组大小一直隐藏在类里，这样，如果用size表示数组大小，就可以把size这个名字用在另一个类里而不发生冲突。然而所有的#define从定义的地方起就被预处理器看成是全局的，所以用#define就不会得到预期的效果。</p>
+<p>它在每个类对象里分配存储并代表一个值，这个值一旦被初始化以后就不能改变。在一个类里使用const意味着“在这个对象生命期内，它是一个常量”。然而，对这个常量来讲，每个不同的对象可以含有一个不同的值。</p>
+<p><strong>在一个类里建立一个普通的（非static的）const时，不能给它初值。这个初始化工作必须在构造函数里进行。</strong></p>
+<h4 id="编译期间类里的常量"><a href="#编译期间类里的常量" class="headerlink" title="编译期间类里的常量"></a>编译期间类里的常量</h4><p>如何让一个类有编译期间的常量成员?这就要求使用另外一个关键字static。</p>
+<p>关键字static意味着“不管类的对象被创建多 少次，都只有一个实例”，这正是所需要的:类中的一个常量成员，在该类的所有对象中 它都一样。因此，一个内建类型的static const可以看做一个编译期间的常量。</p>
+<h4 id="const对象和成员函数"><a href="#const对象和成员函数" class="headerlink" title="const对象和成员函数"></a>const对象和成员函数</h4><p>编译器强调对象为const的，因此它必须保证对象的数据成员在其生命期内不被改变。</p>
+<p>仅仅声明一个函数在类定义里是const的，还不能保证成员函 数按声明的方式去做，所以编译器强迫程序员在定义函数时要重申const说明。</p>
+<p>为确保函数定义的 常量性，如果我们改变对象中的任何成员或调用一个非const成员函数，编译器就将发出 一个出错信息。</p>
+<p>要理解声明const成员函数的语法，首先注意前面的带const的函数声明，它表示函数 的返回值是const，但这不会产生想要的结果。相反，必须把修饰符const放在函数参数表 的后面。</p>
+<p>关键字const必须用同样的方式重复出现在定义里，否则编译器把它看成一个不同的 函数。</p>
+<h3 id="volatile"><a href="#volatile" class="headerlink" title="volatile"></a>volatile</h3><p>volatile的语法与const是一样的，但是volatile的意思是“在编译器认识的范围外，这个 数据可以被改变”。可以被其他进程修改，不能被自己修改。</p>
+<p>如果编译器说:“我已经把数据读进寄存器，而且再没有与寄存器接触”。一般情况 下，它不需要再读这个数据。但是，如果数据是volatile修饰的，编译器就不能作出这样的 假定，因为这个数据可能被其他进程改变了，它必须重读这个数据而不是优化这个代码来 消除通常情况下那些冗余的读操作代码。</p>
+<h3 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h3><p>关键字const能将对象、函数参数、返回值和成员函数定义为常量，并能消除预处理 器的值替代而不使预处理器的影响。所有这些都为程序设计提供了又一种非常好的类型检 查形式以及安全性。使用所谓的常量正确性(const correctness)(在任何可能的地方使用 const)已成为项目的救星。</p>
+ 
+      <!-- reward -->
+      
+    </div>
+    
+
+    <!-- copyright -->
+    
+    <div class="declare">
+      <ul class="post-copyright">
+        <li>
+          <i class="ri-copyright-line"></i>
+          <strong>版权声明： </strong>
+          
+          本博客所有文章除特别声明外，著作权归作者所有。转载请注明出处！
+          
+        </li>
+      </ul>
+    </div>
+    
+    <footer class="article-footer">
+       
+<div class="share-btn">
+      <span class="share-sns share-outer">
+        <i class="ri-share-forward-line"></i>
+        分享
+      </span>
+      <div class="share-wrap">
+        <i class="arrow"></i>
+        <div class="share-icons">
+          
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="ri-weibo-fill"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="ri-wechat-fill"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="ri-qq-fill"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="ri-douban-line"></i>
+          </a>
+          <!-- <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a> -->
+          
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="ri-facebook-circle-fill"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="ri-twitter-fill"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="ri-google-fill"></i>
+          </a>
+        </div>
+      </div>
+</div>
+
+<div class="wx-share-modal">
+    <a class="modal-close" href="javascript:;"><i class="ri-close-circle-line"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=http://example.com/2022/09/18/Programming/C++/8-%E5%B8%B8%E9%87%8F/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div id="share-mask"></div>  
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/C/" rel="tag">C++</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Programming/" rel="tag">Programming</a></li></ul>
+
+    </footer>
+  </div>
+
+   
+  <nav class="article-nav">
+    
+      <a href="/2022/09/18/Programming/C++/9-%E5%86%85%E8%81%94%E5%87%BD%E6%95%B0/" class="article-nav-link">
+        <strong class="article-nav-caption">上一篇</strong>
+        <div class="article-nav-title">
+          
+            第9章 内联函数
+          
+        </div>
+      </a>
+    
+    
+      <a href="/2022/09/17/Programming/C++/7-%E5%87%BD%E6%95%B0%E9%87%8D%E8%BD%BD%E4%B8%8E%E9%BB%98%E8%AE%A4%E5%8F%82%E6%95%B0/" class="article-nav-link">
+        <strong class="article-nav-caption">下一篇</strong>
+        <div class="article-nav-title">第7章 函数重载与默认参数</div>
+      </a>
+    
+  </nav>
+
+  
+   
+    
+    <script src="https://cdn.staticfile.org/twikoo/1.4.18/twikoo.all.min.js"></script>
+    <div id="twikoo" class="twikoo"></div>
+    <script>
+        twikoo.init({
+            envId: ""
+        })
+    </script>
+ 
+</article>
+
+</section>
+      <footer class="footer">
+  <div class="outer">
+    <ul>
+      <li>
+        Copyrights &copy;
+        2022
+        <i class="ri-heart-fill heart_icon"></i> Xueru Wang
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+      </li>
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      <li>
+        <!-- cnzz统计 -->
+        
+        <script type="text/javascript" src='https://s9.cnzz.com/z_stat.php?id=1278069914&amp;web_id=1278069914'></script>
+        
+      </li>
+    </ul>
+  </div>
+</footer>    
+    </main>
+    <div class="float_btns">
+      <div class="totop" id="totop">
+  <i class="ri-arrow-up-line"></i>
+</div>
+
+<div class="todark" id="todark">
+  <i class="ri-moon-line"></i>
+</div>
+
+    </div>
+    <aside class="sidebar on">
+      <button class="navbar-toggle"></button>
+<nav class="navbar">
+  
+  <div class="logo">
+    <a href="/"><img src="/images/ayer-side.svg" alt="WXR"></a>
+  </div>
+  
+  <ul class="nav nav-main">
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/">主页</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/archives">归档</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/categories">分类</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/tags">标签</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/about">关于我</a>
+    </li>
+    
+  </ul>
+</nav>
+<nav class="navbar navbar-bottom">
+  <ul class="nav">
+    <li class="nav-item">
+      
+      <a class="nav-item-link nav-item-search"  title="搜索">
+        <i class="ri-search-line"></i>
+      </a>
+      
+      
+      <a class="nav-item-link" target="_blank" href="/atom.xml" title="RSS Feed">
+        <i class="ri-rss-line"></i>
+      </a>
+      
+    </li>
+  </ul>
+</nav>
+<div class="search-form-wrap">
+  <div class="local-search local-search-plugin">
+  <input type="search" id="local-search-input" class="local-search-input" placeholder="Search...">
+  <div id="local-search-result" class="local-search-result"></div>
+</div>
+</div>
+    </aside>
+    <div id="mask"></div>
+
+<!-- #reward -->
+<div id="reward">
+  <span class="close"><i class="ri-close-line"></i></span>
+  <p class="reward-p"><i class="ri-cup-line"></i>请我喝杯咖啡吧~</p>
+  <div class="reward-box">
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/alipay.jpg">
+      <span class="reward-type">支付宝</span>
+    </div>
+    
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/wechat.jpg">
+      <span class="reward-type">微信</span>
+    </div>
+    
+  </div>
+</div>
+    
+<script src="/js/jquery-3.6.0.min.js"></script>
+ 
+<script src="/js/lazyload.min.js"></script>
+
+<!-- Tocbot -->
+ 
+<script src="/js/tocbot.min.js"></script>
+
+<script>
+  tocbot.init({
+    tocSelector: ".tocbot",
+    contentSelector: ".article-entry",
+    headingSelector: "h1, h2, h3, h4, h5, h6",
+    hasInnerContainers: true,
+    scrollSmooth: true,
+    scrollContainer: "main",
+    positionFixedSelector: ".tocbot",
+    positionFixedClass: "is-position-fixed",
+    fixedSidebarOffset: "auto",
+  });
+</script>
+
+<script src="https://cdn.staticfile.org/jquery-modal/0.9.2/jquery.modal.min.js"></script>
+<link
+  rel="stylesheet"
+  href="https://cdn.staticfile.org/jquery-modal/0.9.2/jquery.modal.min.css"
+/>
+<script src="https://cdn.staticfile.org/justifiedGallery/3.8.1/js/jquery.justifiedGallery.min.js"></script>
+
+<script src="/dist/main.js"></script>
+
+<!-- ImageViewer -->
+ <!-- Root element of PhotoSwipe. Must have class pswp. -->
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    <!-- Background of PhotoSwipe. 
+         It's a separate element as animating opacity is faster than rgba(). -->
+    <div class="pswp__bg"></div>
+
+    <!-- Slides wrapper with overflow:hidden. -->
+    <div class="pswp__scroll-wrap">
+
+        <!-- Container that holds slides. 
+            PhotoSwipe keeps only 3 of them in the DOM to save memory.
+            Don't modify these 3 pswp__item elements, data is added later on. -->
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                <!--  Controls are self-explanatory. Order can be changed. -->
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" style="display:none" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->
+                <!-- element will get class pswp__preloader--active when preloader is running -->
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<link rel="stylesheet" href="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/photoswipe/4.1.3/default-skin/default-skin.min.css">
+<script src="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe.min.js"></script>
+<script src="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe-ui-default.min.js"></script>
+
+<script>
+    function viewer_init() {
+        let pswpElement = document.querySelectorAll('.pswp')[0];
+        let $imgArr = document.querySelectorAll(('.article-entry img:not(.reward-img)'))
+
+        $imgArr.forEach(($em, i) => {
+            $em.onclick = () => {
+                // slider展开状态
+                // todo: 这样不好，后面改成状态
+                if (document.querySelector('.left-col.show')) return
+                let items = []
+                $imgArr.forEach(($em2, i2) => {
+                    let img = $em2.getAttribute('data-idx', i2)
+                    let src = $em2.getAttribute('data-target') || $em2.getAttribute('src')
+                    let title = $em2.getAttribute('alt')
+                    // 获得原图尺寸
+                    const image = new Image()
+                    image.src = src
+                    items.push({
+                        src: src,
+                        w: image.width || $em2.width,
+                        h: image.height || $em2.height,
+                        title: title
+                    })
+                })
+                var gallery = new PhotoSwipe(pswpElement, PhotoSwipeUI_Default, items, {
+                    index: parseInt(i)
+                });
+                gallery.init()
+            }
+        })
+    }
+    viewer_init()
+</script> 
+<!-- MathJax -->
+
+<!-- Katex -->
+
+<!-- busuanzi  -->
+
+<!-- ClickLove -->
+
+<!-- ClickBoom1 -->
+
+<!-- ClickBoom2 -->
+
+<!-- CodeCopy -->
+ 
+<link rel="stylesheet" href="/css/clipboard.css">
+ <script src="https://cdn.staticfile.org/clipboard.js/2.0.10/clipboard.min.js"></script>
+<script>
+  function wait(callback, seconds) {
+    var timelag = null;
+    timelag = window.setTimeout(callback, seconds);
+  }
+  !function (e, t, a) {
+    var initCopyCode = function(){
+      var copyHtml = '';
+      copyHtml += '<button class="btn-copy" data-clipboard-snippet="">';
+      copyHtml += '<i class="ri-file-copy-2-line"></i><span>COPY</span>';
+      copyHtml += '</button>';
+      $(".highlight .code pre").before(copyHtml);
+      $(".article pre code").before(copyHtml);
+      var clipboard = new ClipboardJS('.btn-copy', {
+        target: function(trigger) {
+          return trigger.nextElementSibling;
+        }
+      });
+      clipboard.on('success', function(e) {
+        let $btn = $(e.trigger);
+        $btn.addClass('copied');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-checkbox-circle-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPIED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-checkbox-circle-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+      clipboard.on('error', function(e) {
+        e.clearSelection();
+        let $btn = $(e.trigger);
+        $btn.addClass('copy-failed');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-time-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPY FAILED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-time-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+    }
+    initCopyCode();
+  }(window, document);
+</script>
+ 
+<!-- CanvasBackground -->
+
+<script>
+  if (window.mermaid) {
+    mermaid.initialize({ theme: "forest" });
+  }
+</script>
+
+
+    
+    
+
+  </div>
+</body>
+
+</html>

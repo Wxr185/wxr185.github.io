@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+
+
+<html lang="zh-CN">
+  
+
+    <head>
+      <meta charset="utf-8" />
+        
+      <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1"
+      />
+      <title>MMoE |  WXR</title>
+  <meta name="generator" content="hexo-theme-ayer">
+      
+      <link rel="shortcut icon" href="/favicon.ico" />
+       
+<link rel="stylesheet" href="/dist/main.css">
+
+      
+<link rel="stylesheet" href="/css/fonts/remixicon.css">
+
+      
+<link rel="stylesheet" href="/css/custom.css">
+ 
+      <script src="https://cdn.staticfile.org/pace/1.2.4/pace.min.js"></script>
+       
+ 
+
+      <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bulma@5.0.1/bulma.min.css"
+      />
+      <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.min.js"></script>
+
+      <!-- mermaid -->
+      
+      <style>
+        .swal2-styled.swal2-confirm {
+          font-size: 1.6rem;
+        }
+      </style>
+    </head>
+  </html>
+</html>
+
+
+<body>
+  <div id="app">
+    
+      
+    <main class="content on">
+      <section class="outer">
+  <article
+  id="post-RecomSys/MMoE"
+  class="article article-type-post"
+  itemscope
+  itemprop="blogPost"
+  data-scroll-reveal
+>
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h1 class="article-title sea-center" style="border-left:0" itemprop="name">
+  MMoE
+</h1>
+ 
+
+      
+    </header>
+     
+    <div class="article-meta">
+      <a href="/2022/09/13/RecomSys/MMoE/" class="article-date">
+  <time datetime="2022-09-13T09:53:23.838Z" itemprop="datePublished">2022-09-13</time>
+</a> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E6%8E%A8%E8%8D%90%E7%B3%BB%E7%BB%9F/">推荐系统</a>
+  </div>
+  
+<div class="word_count">
+    <span class="post-time">
+        <span class="post-meta-item-icon">
+            <i class="ri-quill-pen-line"></i>
+            <span class="post-meta-item-text"> 字数统计:</span>
+            <span class="post-count">2.1k</span>
+        </span>
+    </span>
+
+    <span class="post-time">
+        &nbsp; | &nbsp;
+        <span class="post-meta-item-icon">
+            <i class="ri-book-open-line"></i>
+            <span class="post-meta-item-text"> 阅读时长≈</span>
+            <span class="post-count">7 分钟</span>
+        </span>
+    </span>
+</div>
+ 
+    </div>
+      
+    <div class="tocbot"></div>
+
+
+
+
+  
+    <div class="article-entry" itemprop="articleBody">
+       
+  <p>在工业界基于神经网络的多任务学习在推荐等场景业务应用广泛，比如在推进啊系统中对用户推荐物品时，不仅要推荐用户感兴趣的物品，还要尽可能地促进转化和购买，因此要对用户评分和购买两种目标同时建模。</p>
+<h3 id="动机"><a href="#动机" class="headerlink" title="动机"></a>动机</h3><p>把多个任务放在一起学习，任务共享同一个模型空间，它们 <strong>共享同一个表示层</strong>。在训练过程中，多个任务会对这个共享模型进行参数更新。</p>
+<h4 id="相关任务"><a href="#相关任务" class="headerlink" title="相关任务"></a>相关任务</h4><p>multi task同时学习多个相关任务，并且具有相当的优势。同时，我们在做多任务学习时，有时关注的点在某个 <strong>主要任务</strong> 上，其他的共同学习的任务可能更多的只是起到帮助作用，这些起到帮助作用的任务叫做 <strong>辅助任务</strong>。</p>
+<p><strong>辅助任务与主任务越相关，那么起到的效果可能会越好</strong>。<br>如下图所示，假如有这样两个相似的任务：狗的分类模型和猫的分类模型。在单任务学习中，他们都拥有比较接近的底层特征，比如皮毛颜色啦、眼睛颜色啦、耳朵形状啦等等。<br><img src="/pictures/RecomSys/MMoE/img1.png" alt="学习任务相近的单任务学习"></p>
+<p>由于 <strong>多任务学习本质上是共享表示层</strong>，任务之间互相影响。那么在多任务学习中，他们就可以很好地进行底层特征共享。<br><img src="/pictures/RecomSys/MMoE/img2.png" alt="相关性较高的多任务学习"></p>
+<p>但是对于不相似的任务来说，如下图，汽车的识别和狗的识别，他们的 <strong>底层表示差异很大</strong>，共享表示层可能就没那么有效果了。进行参数共享时很有可能会互相冲突或噪声太多，对多任务学习而言非常不友好。<br><img src="/pictures/RecomSys/MMoE/img3.png" alt="相关性较低的多任务学习"></p>
+<blockquote>
+<p>由于multi task在不相关的任务上表现不佳，同时，在实际应用中，你很难判断任务在数据层面是否是相似的。<br>所以多任务学习如何在相关性不高的任务上获得好效果是一件很有挑战性也很有实际意义的事。</p>
+</blockquote>
+<h4 id="共享表示"><a href="#共享表示" class="headerlink" title="共享表示"></a>共享表示</h4><p>神经网络中，Multi Task Learning的共享表示有两种方式：<strong>hard参数共享和soft参数共享</strong>。</p>
+<h5 id="Hard参数共享"><a href="#Hard参数共享" class="headerlink" title="Hard参数共享"></a>Hard参数共享</h5><p>在所有任务之间 <strong>共享隐藏层</strong>，同时保留几个特定任务的输出层。这种方式很大程度上 <strong>降低了过拟合的风险</strong>。因为同时学习的工作越多，模型找到一个含有所有任务的表征就越困难，而过拟合某特定原始任务的可能性就越小。<br><img src="/pictures/RecomSys/MMoE/img4.png" alt="Hard参数共享"></p>
+<h5 id="Soft参数共享"><a href="#Soft参数共享" class="headerlink" title="Soft参数共享"></a>Soft参数共享</h5><p>每个任务有自己的参数和模型，最后 <strong>通过对不同任务的参数之间的差异加约束</strong>，表达相似性。比如可以使用L2进行正则, 迹范数（trace norm）等。<br><img src="/pictures/RecomSys/MMoE/img5.png" alt="Soft参数共享"></p>
+<h4 id="多任务学习优势"><a href="#多任务学习优势" class="headerlink" title="多任务学习优势"></a>多任务学习优势</h4><ol>
+<li>多个任务一起学习时，<strong>有相关部分也有不那么相关的地方</strong>，在学习一个任务时，与它不相关的部分就相当于是加入一些噪声，而 <strong>加入噪声可以提升模型的泛化能力</strong>。</li>
+<li>单任务学习时容易陷入局部最优，而多任务学习中 <strong>不同任务的局部最优解处于不同的位置</strong>，通过相互作用，可以逃离局部最优。</li>
+<li>增加任务会影响网络参数的更新，比如增加额外的任务增加了隐层的有效的学习率，具体取决于每个任务输出的错误反馈权重。可能较大的学习速率提升了学习效果</li>
+<li>某些特征可能在主任务不好学习（比如以很复杂的方式与特征进行交互，或被其他因素抑制），但在辅助任务上这个特征好学习到。可以通过辅助任务来学习这些特征，方法比如hints（预测重要特征）</li>
+<li>通过学习足够大的假设空间，在未来某些新任务中可以有较好的表现（解决冷启动），前提是这些任务都是 <strong>同源</strong> 的。</li>
+<li>多个任务在浅层共享表示，引入归纳偏置作为正则化项。因此，它降低了过拟合的风险以及模型的 Rademacher 复杂度（即适合随机噪声的能力）</li>
+</ol>
+<h3 id="MMoE模型结构"><a href="#MMoE模型结构" class="headerlink" title="MMoE模型结构"></a>MMoE模型结构</h3><p>关于共享隐层方面，MMoE和一般多任务学习模型的区别：</p>
+<blockquote>
+<p><strong>一般多任务学习模型</strong>：接近输入层的隐层作为一个整体被共享；<br><strong>MMoE</strong>：将共享的底层表示层分为 <strong>多个expert</strong>，同时设置了gate，使得 <strong>不同的任务可以多样化的使用共享层</strong>。</p>
+</blockquote>
+<p><img src="/pictures/RecomSys/MMoE/img6.png" alt="网络结构变化"></p>
+<blockquote>
+<p>a）是最原始的多任务学习模型，也就是base；<br>b）是加入单门（one gate）的MoE layer的多任务学习模型；<br>c）本质上是将base的shared bottom换成了MoE layer，并对每个任务都加gate</p>
+</blockquote>
+<h4 id="Mixture-of-Expert-Model"><a href="#Mixture-of-Expert-Model" class="headerlink" title="Mixture-of-Expert Model"></a>Mixture-of-Expert Model</h4><p>隐层是三个expert子网组成，各自的输出 f[i]（第 i 个expert的输出）会传入gate，也就是 g(x) 维度与expert个数相同的 <strong>softmax</strong>，g(x)[i] 是它输出的第 i 个logits。<strong>gate对expert的输出进行加权求和，得到不同任务的输入</strong>。<br><img src="/pictures/RecomSys/MMoE/img10.png" alt="MoE模型计算公式"></p>
+<h4 id="Shared-Bootom-Model"><a href="#Shared-Bootom-Model" class="headerlink" title="Shared-Bootom Model"></a>Shared-Bootom Model</h4><p>模型 (a) 最为常见，两个任务直接共享模型的 bottom 部分，只在最后处理时做区分，图 (a) 中使用了 Tower A 和 Tower B，然后分别接损失函数。<br><img src="/pictures/RecomSys/MMoE/img7.png" alt="Base模型"><br>x 表示 input，f 表示 shared-bottom network， h[k] 表示第 k 个tower network，针对第k个任务。</p>
+<p>这种网络非常简单，可以理解为在DNN上接了 k 个不同的tower 网络，不同的tower网络针对不同任务，有着各自的损失函数，但是 <strong>这些损失函数是放在一起进行联合训练</strong>。</p>
+<p>直觉告诉我们，如此进行多任务学习，在某些情况下效果可能并不好，例如当多个任务间是矛盾的，或者完全不相关的。</p>
+<h4 id="One-gate-MoE-Model"><a href="#One-gate-MoE-Model" class="headerlink" title="One-gate MoE Model"></a>One-gate MoE Model</h4><p>模型 (b) 是常见的多任务学习模型。将 input 分别输入给三个 Expert，但 <strong>三个Expert并不共享参数</strong>。同时将 input 输出给 Gate，<strong>Gate输出每个Expert被选择的概率</strong>，然后将三个Expert的输出 <strong>加权求和</strong>，输出给 Tower。有点 attention 的感觉。<br><img src="/pictures/RecomSys/MMoE/img8.png" alt="OMoE模型公式"><br>上式中，n 表示有 n 个 expert networks，f<a href="x">i</a> 表示第 i 个expert network，在论文expert network就是DNN网络。g(x)[i] 是由 输入x 控制的，其中 W[g] ∈ R[n × d]，n 表示expert network数量，d表示输入x 的特征维度，在n维度上进行softmax，因此 g(x)[i] 可理解为 <strong>通过输入x 得到在n个 exper network 上的权重分布</strong>。同样，h[k] 表示第k个 tower network。</p>
+<p>这个网络也很简单，可以理解为 对多个不同 expert network进行不同权重的集成，在集成的结果上接不同的tower network 而已。模型在训练过程中，会学习到不同expert network重要程度。</p>
+<p>那么何为 One-gate 呢？ 从上面的分析可以看出，不同的tower network的输入是相同的，都是经过同一套权重组合（同一个gate network）得到expert networks的输出。这么这样做合理吗？</p>
+<h4 id="Multi-gate-MoE-Model"><a href="#Multi-gate-MoE-Model" class="headerlink" title="Multi-gate MoE Model"></a>Multi-gate MoE Model</h4><p>模型 (c) 是作者新提出的方法，对于不同的任务，模型的权重选择是不同的，所以作者为每个任务都配备一个 Gate 模型。<strong>对于不同的任务，特定的 Gate k 的输出表示不同的 Expert 被选择的概率</strong>，将多个 Expert 加权求和，得到 f<a href="x">k</a> ，并输出给特定的 Tower 模型，用于最终的输出。<br><img src="/pictures/RecomSys/MMoE/img9.png" alt="MMoE模型公式"><br>与OMoE区别仅在 对于不同的tower network，有着不同的gate network，在OMoE上，只会初始化一个W[g] 参数矩阵，而在MMoE上，会初始化 k 个 W[gk]，得到 k 个gate network（multi-gates&#x2F;task-specific gates)，参数增加了一些。</p>
+<p>相对于OMoE，MMoE的做法更加合理一些，不同的任务有着不同的gate network，对expert networks输出有着不同权重组合。</p>
+ 
+      <!-- reward -->
+      
+    </div>
+    
+
+    <!-- copyright -->
+    
+    <div class="declare">
+      <ul class="post-copyright">
+        <li>
+          <i class="ri-copyright-line"></i>
+          <strong>版权声明： </strong>
+          
+          本博客所有文章除特别声明外，著作权归作者所有。转载请注明出处！
+          
+        </li>
+      </ul>
+    </div>
+    
+    <footer class="article-footer">
+       
+<div class="share-btn">
+      <span class="share-sns share-outer">
+        <i class="ri-share-forward-line"></i>
+        分享
+      </span>
+      <div class="share-wrap">
+        <i class="arrow"></i>
+        <div class="share-icons">
+          
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="ri-weibo-fill"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="ri-wechat-fill"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="ri-qq-fill"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="ri-douban-line"></i>
+          </a>
+          <!-- <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a> -->
+          
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="ri-facebook-circle-fill"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="ri-twitter-fill"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="ri-google-fill"></i>
+          </a>
+        </div>
+      </div>
+</div>
+
+<div class="wx-share-modal">
+    <a class="modal-close" href="javascript:;"><i class="ri-close-circle-line"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=http://example.com/2022/09/13/RecomSys/MMoE/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div id="share-mask"></div>  
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Recom/" rel="tag">Recom</a></li></ul>
+
+    </footer>
+  </div>
+
+   
+  <nav class="article-nav">
+    
+      <a href="/2022/09/14/Programming/C++/1-%E5%AF%B9%E8%B1%A1%E5%AF%BC%E8%A8%80/" class="article-nav-link">
+        <strong class="article-nav-caption">上一篇</strong>
+        <div class="article-nav-title">
+          
+            第1章 对象导言
+          
+        </div>
+      </a>
+    
+    
+      <a href="/2022/09/13/RecomSys/DIN/" class="article-nav-link">
+        <strong class="article-nav-caption">下一篇</strong>
+        <div class="article-nav-title">DIN</div>
+      </a>
+    
+  </nav>
+
+  
+   
+    
+    <script src="https://cdn.staticfile.org/twikoo/1.4.18/twikoo.all.min.js"></script>
+    <div id="twikoo" class="twikoo"></div>
+    <script>
+        twikoo.init({
+            envId: ""
+        })
+    </script>
+ 
+</article>
+
+</section>
+      <footer class="footer">
+  <div class="outer">
+    <ul>
+      <li>
+        Copyrights &copy;
+        2022
+        <i class="ri-heart-fill heart_icon"></i> Xueru Wang
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+      </li>
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      <li>
+        <!-- cnzz统计 -->
+        
+        <script type="text/javascript" src='https://s9.cnzz.com/z_stat.php?id=1278069914&amp;web_id=1278069914'></script>
+        
+      </li>
+    </ul>
+  </div>
+</footer>    
+    </main>
+    <div class="float_btns">
+      <div class="totop" id="totop">
+  <i class="ri-arrow-up-line"></i>
+</div>
+
+<div class="todark" id="todark">
+  <i class="ri-moon-line"></i>
+</div>
+
+    </div>
+    <aside class="sidebar on">
+      <button class="navbar-toggle"></button>
+<nav class="navbar">
+  
+  <div class="logo">
+    <a href="/"><img src="/images/ayer-side.svg" alt="WXR"></a>
+  </div>
+  
+  <ul class="nav nav-main">
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/">主页</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/archives">归档</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/categories">分类</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/tags">标签</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/about">关于我</a>
+    </li>
+    
+  </ul>
+</nav>
+<nav class="navbar navbar-bottom">
+  <ul class="nav">
+    <li class="nav-item">
+      
+      <a class="nav-item-link nav-item-search"  title="搜索">
+        <i class="ri-search-line"></i>
+      </a>
+      
+      
+      <a class="nav-item-link" target="_blank" href="/atom.xml" title="RSS Feed">
+        <i class="ri-rss-line"></i>
+      </a>
+      
+    </li>
+  </ul>
+</nav>
+<div class="search-form-wrap">
+  <div class="local-search local-search-plugin">
+  <input type="search" id="local-search-input" class="local-search-input" placeholder="Search...">
+  <div id="local-search-result" class="local-search-result"></div>
+</div>
+</div>
+    </aside>
+    <div id="mask"></div>
+
+<!-- #reward -->
+<div id="reward">
+  <span class="close"><i class="ri-close-line"></i></span>
+  <p class="reward-p"><i class="ri-cup-line"></i>请我喝杯咖啡吧~</p>
+  <div class="reward-box">
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/alipay.jpg">
+      <span class="reward-type">支付宝</span>
+    </div>
+    
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/wechat.jpg">
+      <span class="reward-type">微信</span>
+    </div>
+    
+  </div>
+</div>
+    
+<script src="/js/jquery-3.6.0.min.js"></script>
+ 
+<script src="/js/lazyload.min.js"></script>
+
+<!-- Tocbot -->
+ 
+<script src="/js/tocbot.min.js"></script>
+
+<script>
+  tocbot.init({
+    tocSelector: ".tocbot",
+    contentSelector: ".article-entry",
+    headingSelector: "h1, h2, h3, h4, h5, h6",
+    hasInnerContainers: true,
+    scrollSmooth: true,
+    scrollContainer: "main",
+    positionFixedSelector: ".tocbot",
+    positionFixedClass: "is-position-fixed",
+    fixedSidebarOffset: "auto",
+  });
+</script>
+
+<script src="https://cdn.staticfile.org/jquery-modal/0.9.2/jquery.modal.min.js"></script>
+<link
+  rel="stylesheet"
+  href="https://cdn.staticfile.org/jquery-modal/0.9.2/jquery.modal.min.css"
+/>
+<script src="https://cdn.staticfile.org/justifiedGallery/3.8.1/js/jquery.justifiedGallery.min.js"></script>
+
+<script src="/dist/main.js"></script>
+
+<!-- ImageViewer -->
+ <!-- Root element of PhotoSwipe. Must have class pswp. -->
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    <!-- Background of PhotoSwipe. 
+         It's a separate element as animating opacity is faster than rgba(). -->
+    <div class="pswp__bg"></div>
+
+    <!-- Slides wrapper with overflow:hidden. -->
+    <div class="pswp__scroll-wrap">
+
+        <!-- Container that holds slides. 
+            PhotoSwipe keeps only 3 of them in the DOM to save memory.
+            Don't modify these 3 pswp__item elements, data is added later on. -->
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                <!--  Controls are self-explanatory. Order can be changed. -->
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" style="display:none" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->
+                <!-- element will get class pswp__preloader--active when preloader is running -->
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<link rel="stylesheet" href="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/photoswipe/4.1.3/default-skin/default-skin.min.css">
+<script src="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe.min.js"></script>
+<script src="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe-ui-default.min.js"></script>
+
+<script>
+    function viewer_init() {
+        let pswpElement = document.querySelectorAll('.pswp')[0];
+        let $imgArr = document.querySelectorAll(('.article-entry img:not(.reward-img)'))
+
+        $imgArr.forEach(($em, i) => {
+            $em.onclick = () => {
+                // slider展开状态
+                // todo: 这样不好，后面改成状态
+                if (document.querySelector('.left-col.show')) return
+                let items = []
+                $imgArr.forEach(($em2, i2) => {
+                    let img = $em2.getAttribute('data-idx', i2)
+                    let src = $em2.getAttribute('data-target') || $em2.getAttribute('src')
+                    let title = $em2.getAttribute('alt')
+                    // 获得原图尺寸
+                    const image = new Image()
+                    image.src = src
+                    items.push({
+                        src: src,
+                        w: image.width || $em2.width,
+                        h: image.height || $em2.height,
+                        title: title
+                    })
+                })
+                var gallery = new PhotoSwipe(pswpElement, PhotoSwipeUI_Default, items, {
+                    index: parseInt(i)
+                });
+                gallery.init()
+            }
+        })
+    }
+    viewer_init()
+</script> 
+<!-- MathJax -->
+
+<!-- Katex -->
+
+<!-- busuanzi  -->
+
+<!-- ClickLove -->
+
+<!-- ClickBoom1 -->
+
+<!-- ClickBoom2 -->
+
+<!-- CodeCopy -->
+ 
+<link rel="stylesheet" href="/css/clipboard.css">
+ <script src="https://cdn.staticfile.org/clipboard.js/2.0.10/clipboard.min.js"></script>
+<script>
+  function wait(callback, seconds) {
+    var timelag = null;
+    timelag = window.setTimeout(callback, seconds);
+  }
+  !function (e, t, a) {
+    var initCopyCode = function(){
+      var copyHtml = '';
+      copyHtml += '<button class="btn-copy" data-clipboard-snippet="">';
+      copyHtml += '<i class="ri-file-copy-2-line"></i><span>COPY</span>';
+      copyHtml += '</button>';
+      $(".highlight .code pre").before(copyHtml);
+      $(".article pre code").before(copyHtml);
+      var clipboard = new ClipboardJS('.btn-copy', {
+        target: function(trigger) {
+          return trigger.nextElementSibling;
+        }
+      });
+      clipboard.on('success', function(e) {
+        let $btn = $(e.trigger);
+        $btn.addClass('copied');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-checkbox-circle-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPIED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-checkbox-circle-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+      clipboard.on('error', function(e) {
+        e.clearSelection();
+        let $btn = $(e.trigger);
+        $btn.addClass('copy-failed');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-time-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPY FAILED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-time-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+    }
+    initCopyCode();
+  }(window, document);
+</script>
+ 
+<!-- CanvasBackground -->
+
+<script>
+  if (window.mermaid) {
+    mermaid.initialize({ theme: "forest" });
+  }
+</script>
+
+
+    
+    
+
+  </div>
+</body>
+
+</html>

@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+
+
+<html lang="zh-CN">
+  
+
+    <head>
+      <meta charset="utf-8" />
+        
+      <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1"
+      />
+      <title>DIN |  WXR</title>
+  <meta name="generator" content="hexo-theme-ayer">
+      
+      <link rel="shortcut icon" href="/favicon.ico" />
+       
+<link rel="stylesheet" href="/dist/main.css">
+
+      
+<link rel="stylesheet" href="/css/fonts/remixicon.css">
+
+      
+<link rel="stylesheet" href="/css/custom.css">
+ 
+      <script src="https://cdn.staticfile.org/pace/1.2.4/pace.min.js"></script>
+       
+ 
+
+      <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bulma@5.0.1/bulma.min.css"
+      />
+      <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.min.js"></script>
+
+      <!-- mermaid -->
+      
+      <style>
+        .swal2-styled.swal2-confirm {
+          font-size: 1.6rem;
+        }
+      </style>
+    </head>
+  </html>
+</html>
+
+
+<body>
+  <div id="app">
+    
+      
+    <main class="content on">
+      <section class="outer">
+  <article
+  id="post-RecomSys/DIN"
+  class="article article-type-post"
+  itemscope
+  itemprop="blogPost"
+  data-scroll-reveal
+>
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h1 class="article-title sea-center" style="border-left:0" itemprop="name">
+  DIN
+</h1>
+ 
+
+      
+    </header>
+     
+    <div class="article-meta">
+      <a href="/2022/09/13/RecomSys/DIN/" class="article-date">
+  <time datetime="2022-09-13T02:56:45.257Z" itemprop="datePublished">2022-09-13</time>
+</a> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E6%8E%A8%E8%8D%90%E7%B3%BB%E7%BB%9F/">推荐系统</a>
+  </div>
+  
+<div class="word_count">
+    <span class="post-time">
+        <span class="post-meta-item-icon">
+            <i class="ri-quill-pen-line"></i>
+            <span class="post-meta-item-text"> 字数统计:</span>
+            <span class="post-count">2k</span>
+        </span>
+    </span>
+
+    <span class="post-time">
+        &nbsp; | &nbsp;
+        <span class="post-meta-item-icon">
+            <i class="ri-book-open-line"></i>
+            <span class="post-meta-item-text"> 阅读时长≈</span>
+            <span class="post-count">7 分钟</span>
+        </span>
+    </span>
+</div>
+ 
+    </div>
+      
+    <div class="tocbot"></div>
+
+
+
+
+  
+    <div class="article-entry" itemprop="articleBody">
+       
+  <h3 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h3><p>针对电子商务领域的CTR预估，重点在与充分利用&#x2F;挖掘用户历史行为数据中的信息。</p>
+<blockquote>
+<p>按照传统方式，模型在预估针对用户推荐的广告时，对于 <em><strong>所有用户的特征选取总是使用固定长度</strong></em>。这样带来的问题就是，<em><strong>推荐系统并不能准确的把握用户的兴趣所在</strong></em>。</p>
+</blockquote>
+<h4 id="Attention机制引入"><a href="#Attention机制引入" class="headerlink" title="Attention机制引入"></a>Attention机制引入</h4><p>并不是所有的用户历史行为数据，对每一次的点击有贡献，而 <em><strong>仅仅有一部分在起作用</strong></em>。这个性质有些像attention，对于当前状态的预估，需要告知模型，哪些点与当前的预估最相关；</p>
+<p>在对用户历史行为数据进行处理时，每个用户的历史点击个数是不相等的，我们需要把它们编码成一个固定长的向量。以往的做法是，对每次历史点击做相同的embedding操作之后，将它们做一个 <em><strong>求和或者求最大值</strong></em> 的操作，类似经过了一个pooling层操作，简单粗暴，但是容易丢失很多信息。</p>
+<h4 id="模型改进"><a href="#模型改进" class="headerlink" title="模型改进"></a>模型改进</h4><blockquote>
+<ul>
+<li>使用 <strong>用户兴趣分布</strong> 来表示用户多种多样的兴趣爱好；</li>
+<li>使用 <strong>attention机制</strong> 来实现Local Activation；</li>
+<li>针对模型训练，提出了 <strong>Dice激活函数，自适应正则</strong>，显著提升了模型性能与收敛速度。</li>
+</ul>
+</blockquote>
+<h4 id="名词解释"><a href="#名词解释" class="headerlink" title="名词解释"></a>名词解释</h4><h5 id="Diversity-多样性"><a href="#Diversity-多样性" class="headerlink" title="Diversity 多样性"></a>Diversity 多样性</h5><p>用户在访问电商网站时会对多种商品感兴趣，也就是用户的兴趣非常广泛。<br>针对用户广泛的兴趣，DIN用 an interest distribution 去表示。</p>
+<h5 id="Local-Activation-局部激活"><a href="#Local-Activation-局部激活" class="headerlink" title="Local Activation 局部激活"></a>Local Activation 局部激活</h5><p>用户是否会点击推荐给他的商品 ，仅仅取决与历史行为数据的一小部分，而不是全部。</p>
+<p>DIN借鉴机器翻译中的Attention机制，设计了一种 <strong>attention-like network structure</strong>， 针对当前候选Ad，去局部的激活(Local Activate)相关的历史兴趣信息。<strong>和当前候选Ad相关性越高的历史行为，会获得更高的attention score，从而会主导这一次预测</strong>。</p>
+<h4 id="应用场景"><a href="#应用场景" class="headerlink" title="应用场景"></a>应用场景</h4><p>DIN方法也可以应用于其他有丰富用户行为数据的场景，比如：</p>
+<blockquote>
+<ul>
+<li>电子商务中的个性化推荐；</li>
+<li>社交网络中的信息推流排序(feeds ranking)</li>
+</ul>
+</blockquote>
+<h3 id="系统构建"><a href="#系统构建" class="headerlink" title="系统构建"></a>系统构建</h3><p>阿里推荐系统工作流程：</p>
+<blockquote>
+<ol>
+<li>检查用户历史行为数据；</li>
+<li>使用 matching module 产生 候选ads；</li>
+<li>通过 ranking module 得到 候选ads 的点击概率，并根据概率排序得到推荐列表；</li>
+<li>记录下用户对当前展示广告的反应（点击与否）</li>
+</ol>
+</blockquote>
+<p>这是一个闭环系统，对于用户行为数据（User Behavior Data），系统自己生产并自己消费。</p>
+<h3 id="训练数据"><a href="#训练数据" class="headerlink" title="训练数据"></a>训练数据</h3><p>数据有以下特点：</p>
+<blockquote>
+<ul>
+<li>Diversity – 兴趣爱好非常广泛；</li>
+<li>Local Activation – 历史行为中部分数据主导是否会点击候选广告；</li>
+<li>高纬度；</li>
+<li>非常稀疏；</li>
+<li>特征往往都是 multi-hot 的稀疏ids。</li>
+</ul>
+</blockquote>
+<p><img src="/pictures/RecomSys/DIN/img1.png" alt="特征数据"></p>
+<h4 id="特征处理"><a href="#特征处理" class="headerlink" title="特征处理"></a>特征处理</h4><p>论文中作者把特征分为四大类，并 <strong>没有进行特征组合&#x2F;交叉特征</strong>。而是 <strong>通过 DNN 去学习特征间的交互信息</strong>。</p>
+<blockquote>
+<ul>
+<li>User Profile Features</li>
+<li>User Behavior Features</li>
+<li>Ad Features</li>
+<li>Context Features</li>
+</ul>
+</blockquote>
+<p>为了得到一个 <strong>固定长度</strong> 的 Embedding Vector 表示，原来的做法是在 Embedding Layer 后面 <strong>增加一个 Pooling Layer</strong>。Pooling可以用 sum 或 average。最终得到一个固定长度的 Embedding Vector，是用户兴趣的一个抽象表示，常被称作 User Representation。缺点是会损失一些信息。<br><img src="/pictures/RecomSys/DIN/img2.png" alt="传统模型"></p>
+<p>DIN使用 Attention机制 来解决这个问题。Attention机制 来源于 Neural Machine Translation(NMT)。DIN使用 Attention机制 去更好的建模 局部激活。在DIN场景中，针对不同的候选广告需要自适应地调整 User Representation。也就是说：在 Embedding Layer -&gt; Pooling Layer 得到用户兴趣表示的时候，赋予不同的历史行为不同的权重，实现局部激活。从最终反向训练的角度来看，就是根据当前的候选广告，来反向的激活用户历史的兴趣爱好，赋予不同历史行为不同的权重。<br><img src="/pictures/RecomSys/DIN/img3.png" alt="DIN模型结构"></p>
+<h3 id="模型训练"><a href="#模型训练" class="headerlink" title="模型训练"></a>模型训练</h3><h4 id="评价指标-GAUC"><a href="#评价指标-GAUC" class="headerlink" title="评价指标 GAUC"></a>评价指标 GAUC</h4><p>不同于以往CTR模型采用AUC作为评价指标，论文采用的评价指标是自己设计的 GAUC 评价指标。</p>
+<p><em><strong>AUC的含义是正样本得分比负样本得分高的概率</strong></em>。在CTR的实际应用场景中，CTR预测常被应用于对每个用户的候选广告进行排序，也即最终想得到的效果是 <em><strong>每个用户的AUC达到最高</strong></em>。同时，<strong>不同用户的AUC之间也确实存在差别，有的用户天生点击率就高，有的用户却不怎么喜欢点击广告</strong>。</p>
+<p>以往的评价指标是对样本不区分用户地进行AUC计算。论文采用的GAUC计算了 <strong>用户级别的AUC</strong>，在单个用户AUC的基础上，按照 <strong>点击次数或展示次数进行加权平均</strong>，消除了用户偏差对模型的影响，更准确地描述了模型对于每个用户的表现效果。<br><img src="/pictures/RecomSys/DIN/img4.png" alt="GAUC计算公式"><br>w 可以是 <strong>clicks（点击次数） 或者 impressions（展示次数）</strong>，n 是用户数量。这中AUC也应该是在 <strong>个性化推荐</strong> 里面更适合的，用户每个个体都有自己的AUC。</p>
+<h4 id="激活函数-Dice"><a href="#激活函数-Dice" class="headerlink" title="激活函数 Dice"></a>激活函数 Dice</h4><p>Dice其实是ReLU的改良版，ReLU可以看作是 x * Max(x, 0)，相当于输出 x  经过了一个在0点的阶跃整流器。由于ReLU在 x&lt;0 的时候，梯度为0，可能导致网络停止更新，PReLU对整流器的左半部分形式进行了修改，使得 x&lt;0 时输出不为0。<br><img src="/pictures/RecomSys/DIN/img5.png" alt="激活函数"></p>
+<p>论文里认为，对于所有输入不应该都选择0点为整流点。于是提出了一种data dependent的方法，并称该激活函数为Dice函数。<br><img src="/pictures/RecomSys/DIN/img6.png" alt="Dice激活函数"><br>概率值 p[i] 决定输出是取 y[i] 或者是 a[i] * y[i]，p[i] 也起到了整流器的作用。<br>获取 p[i] 的两步操作：</p>
+<blockquote>
+<ol>
+<li>对 x 进行均值归一化处理。使得整流点是在数据的均值处，实现data dependent的想法；</li>
+<li>经过一个 sigmoid函数的计算，得到一个0到1的概率值。</li>
+</ol>
+</blockquote>
+<h4 id="自适应正则"><a href="#自适应正则" class="headerlink" title="自适应正则"></a>自适应正则</h4><p>在CTR预估任务中，用户行为数据具有长尾分布的特点，也即数据非常的稀疏。</p>
+<p>稀疏输入，为什么会overfitting呢？这个跟数据分布有关系，互联网时代的数据特点，<em><strong>超长尾头部重，头重（小比例的特征频繁出现）容易过拟合，长尾（大比例的特征低频出现）则容易带来噪声</strong></em>，不好学。当增加细粒度的特征时，也极其容易由于细粒度的样本过于密集而带来负面效果。</p>
+<p>为了防止模型过拟合，论文设计了一个针对 <strong>feature id出现的频率</strong> 进行自适应的正则方法。</p>
+<blockquote>
+<ul>
+<li>针对feature id出现的频率，来自适应的调整他们正则化的强度；</li>
+<li>对于出现频率高的，给与较小的正则化强度；</li>
+<li>对于出现频率低的，给予较大的正则化强度。</li>
+</ul>
+</blockquote>
+<h3 id="模型结构"><a href="#模型结构" class="headerlink" title="模型结构"></a>模型结构</h3><p>传统深度模型<br><img src="/pictures/RecomSys/DIN/img7.png" alt="传统深度模型"></p>
+<p>DIN模型在对用户的表示计算上引入了attention network (也即图中的 Activation Unit ) 。<br><img src="/pictures/RecomSys/DIN/img8.png" alt="DIN模型结构"></p>
+<p>DIN把用户特征、用户历史行为特征进行embedding操作，视为对用户兴趣的表示，之后通过attention network，<em><strong>对每个兴趣表示赋予不同的权值</strong></em>。这个权值是由用户的兴趣和待估算的广告进行匹配计算得到的，如此模型结构符合了之前的两个观察——用户兴趣的多样性以及部分对应。attention network 的计算公式如下， V_u 代表用户表示向量， V_i 代表用户兴趣表示向量， V_a 代表广告表示向量。<br><img src="/pictures/RecomSys/DIN/img9.png" alt="attention机制"></p>
+ 
+      <!-- reward -->
+      
+    </div>
+    
+
+    <!-- copyright -->
+    
+    <div class="declare">
+      <ul class="post-copyright">
+        <li>
+          <i class="ri-copyright-line"></i>
+          <strong>版权声明： </strong>
+          
+          本博客所有文章除特别声明外，著作权归作者所有。转载请注明出处！
+          
+        </li>
+      </ul>
+    </div>
+    
+    <footer class="article-footer">
+       
+<div class="share-btn">
+      <span class="share-sns share-outer">
+        <i class="ri-share-forward-line"></i>
+        分享
+      </span>
+      <div class="share-wrap">
+        <i class="arrow"></i>
+        <div class="share-icons">
+          
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="ri-weibo-fill"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="ri-wechat-fill"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="ri-qq-fill"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="ri-douban-line"></i>
+          </a>
+          <!-- <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a> -->
+          
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="ri-facebook-circle-fill"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="ri-twitter-fill"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="ri-google-fill"></i>
+          </a>
+        </div>
+      </div>
+</div>
+
+<div class="wx-share-modal">
+    <a class="modal-close" href="javascript:;"><i class="ri-close-circle-line"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=http://example.com/2022/09/13/RecomSys/DIN/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div id="share-mask"></div>  
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Recom/" rel="tag">Recom</a></li></ul>
+
+    </footer>
+  </div>
+
+   
+  <nav class="article-nav">
+    
+      <a href="/2022/09/13/RecomSys/MMoE/" class="article-nav-link">
+        <strong class="article-nav-caption">上一篇</strong>
+        <div class="article-nav-title">
+          
+            MMoE
+          
+        </div>
+      </a>
+    
+    
+      <a href="/2022/09/12/RecomSys/DeepFM/" class="article-nav-link">
+        <strong class="article-nav-caption">下一篇</strong>
+        <div class="article-nav-title">DeepFM</div>
+      </a>
+    
+  </nav>
+
+  
+   
+    
+    <script src="https://cdn.staticfile.org/twikoo/1.4.18/twikoo.all.min.js"></script>
+    <div id="twikoo" class="twikoo"></div>
+    <script>
+        twikoo.init({
+            envId: ""
+        })
+    </script>
+ 
+</article>
+
+</section>
+      <footer class="footer">
+  <div class="outer">
+    <ul>
+      <li>
+        Copyrights &copy;
+        2022
+        <i class="ri-heart-fill heart_icon"></i> Xueru Wang
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+      </li>
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      <li>
+        <!-- cnzz统计 -->
+        
+        <script type="text/javascript" src='https://s9.cnzz.com/z_stat.php?id=1278069914&amp;web_id=1278069914'></script>
+        
+      </li>
+    </ul>
+  </div>
+</footer>    
+    </main>
+    <div class="float_btns">
+      <div class="totop" id="totop">
+  <i class="ri-arrow-up-line"></i>
+</div>
+
+<div class="todark" id="todark">
+  <i class="ri-moon-line"></i>
+</div>
+
+    </div>
+    <aside class="sidebar on">
+      <button class="navbar-toggle"></button>
+<nav class="navbar">
+  
+  <div class="logo">
+    <a href="/"><img src="/images/ayer-side.svg" alt="WXR"></a>
+  </div>
+  
+  <ul class="nav nav-main">
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/">主页</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/archives">归档</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/categories">分类</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/tags">标签</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/about">关于我</a>
+    </li>
+    
+  </ul>
+</nav>
+<nav class="navbar navbar-bottom">
+  <ul class="nav">
+    <li class="nav-item">
+      
+      <a class="nav-item-link nav-item-search"  title="搜索">
+        <i class="ri-search-line"></i>
+      </a>
+      
+      
+      <a class="nav-item-link" target="_blank" href="/atom.xml" title="RSS Feed">
+        <i class="ri-rss-line"></i>
+      </a>
+      
+    </li>
+  </ul>
+</nav>
+<div class="search-form-wrap">
+  <div class="local-search local-search-plugin">
+  <input type="search" id="local-search-input" class="local-search-input" placeholder="Search...">
+  <div id="local-search-result" class="local-search-result"></div>
+</div>
+</div>
+    </aside>
+    <div id="mask"></div>
+
+<!-- #reward -->
+<div id="reward">
+  <span class="close"><i class="ri-close-line"></i></span>
+  <p class="reward-p"><i class="ri-cup-line"></i>请我喝杯咖啡吧~</p>
+  <div class="reward-box">
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/alipay.jpg">
+      <span class="reward-type">支付宝</span>
+    </div>
+    
+    
+    <div class="reward-item">
+      <img class="reward-img" src="/images/wechat.jpg">
+      <span class="reward-type">微信</span>
+    </div>
+    
+  </div>
+</div>
+    
+<script src="/js/jquery-3.6.0.min.js"></script>
+ 
+<script src="/js/lazyload.min.js"></script>
+
+<!-- Tocbot -->
+ 
+<script src="/js/tocbot.min.js"></script>
+
+<script>
+  tocbot.init({
+    tocSelector: ".tocbot",
+    contentSelector: ".article-entry",
+    headingSelector: "h1, h2, h3, h4, h5, h6",
+    hasInnerContainers: true,
+    scrollSmooth: true,
+    scrollContainer: "main",
+    positionFixedSelector: ".tocbot",
+    positionFixedClass: "is-position-fixed",
+    fixedSidebarOffset: "auto",
+  });
+</script>
+
+<script src="https://cdn.staticfile.org/jquery-modal/0.9.2/jquery.modal.min.js"></script>
+<link
+  rel="stylesheet"
+  href="https://cdn.staticfile.org/jquery-modal/0.9.2/jquery.modal.min.css"
+/>
+<script src="https://cdn.staticfile.org/justifiedGallery/3.8.1/js/jquery.justifiedGallery.min.js"></script>
+
+<script src="/dist/main.js"></script>
+
+<!-- ImageViewer -->
+ <!-- Root element of PhotoSwipe. Must have class pswp. -->
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    <!-- Background of PhotoSwipe. 
+         It's a separate element as animating opacity is faster than rgba(). -->
+    <div class="pswp__bg"></div>
+
+    <!-- Slides wrapper with overflow:hidden. -->
+    <div class="pswp__scroll-wrap">
+
+        <!-- Container that holds slides. 
+            PhotoSwipe keeps only 3 of them in the DOM to save memory.
+            Don't modify these 3 pswp__item elements, data is added later on. -->
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                <!--  Controls are self-explanatory. Order can be changed. -->
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" style="display:none" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->
+                <!-- element will get class pswp__preloader--active when preloader is running -->
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<link rel="stylesheet" href="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe.min.css">
+<link rel="stylesheet" href="https://cdn.staticfile.org/photoswipe/4.1.3/default-skin/default-skin.min.css">
+<script src="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe.min.js"></script>
+<script src="https://cdn.staticfile.org/photoswipe/4.1.3/photoswipe-ui-default.min.js"></script>
+
+<script>
+    function viewer_init() {
+        let pswpElement = document.querySelectorAll('.pswp')[0];
+        let $imgArr = document.querySelectorAll(('.article-entry img:not(.reward-img)'))
+
+        $imgArr.forEach(($em, i) => {
+            $em.onclick = () => {
+                // slider展开状态
+                // todo: 这样不好，后面改成状态
+                if (document.querySelector('.left-col.show')) return
+                let items = []
+                $imgArr.forEach(($em2, i2) => {
+                    let img = $em2.getAttribute('data-idx', i2)
+                    let src = $em2.getAttribute('data-target') || $em2.getAttribute('src')
+                    let title = $em2.getAttribute('alt')
+                    // 获得原图尺寸
+                    const image = new Image()
+                    image.src = src
+                    items.push({
+                        src: src,
+                        w: image.width || $em2.width,
+                        h: image.height || $em2.height,
+                        title: title
+                    })
+                })
+                var gallery = new PhotoSwipe(pswpElement, PhotoSwipeUI_Default, items, {
+                    index: parseInt(i)
+                });
+                gallery.init()
+            }
+        })
+    }
+    viewer_init()
+</script> 
+<!-- MathJax -->
+
+<!-- Katex -->
+
+<!-- busuanzi  -->
+
+<!-- ClickLove -->
+
+<!-- ClickBoom1 -->
+
+<!-- ClickBoom2 -->
+
+<!-- CodeCopy -->
+ 
+<link rel="stylesheet" href="/css/clipboard.css">
+ <script src="https://cdn.staticfile.org/clipboard.js/2.0.10/clipboard.min.js"></script>
+<script>
+  function wait(callback, seconds) {
+    var timelag = null;
+    timelag = window.setTimeout(callback, seconds);
+  }
+  !function (e, t, a) {
+    var initCopyCode = function(){
+      var copyHtml = '';
+      copyHtml += '<button class="btn-copy" data-clipboard-snippet="">';
+      copyHtml += '<i class="ri-file-copy-2-line"></i><span>COPY</span>';
+      copyHtml += '</button>';
+      $(".highlight .code pre").before(copyHtml);
+      $(".article pre code").before(copyHtml);
+      var clipboard = new ClipboardJS('.btn-copy', {
+        target: function(trigger) {
+          return trigger.nextElementSibling;
+        }
+      });
+      clipboard.on('success', function(e) {
+        let $btn = $(e.trigger);
+        $btn.addClass('copied');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-checkbox-circle-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPIED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-checkbox-circle-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+      clipboard.on('error', function(e) {
+        e.clearSelection();
+        let $btn = $(e.trigger);
+        $btn.addClass('copy-failed');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-time-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPY FAILED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-time-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+    }
+    initCopyCode();
+  }(window, document);
+</script>
+ 
+<!-- CanvasBackground -->
+
+<script>
+  if (window.mermaid) {
+    mermaid.initialize({ theme: "forest" });
+  }
+</script>
+
+
+    
+    
+
+  </div>
+</body>
+
+</html>

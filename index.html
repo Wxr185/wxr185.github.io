@@ -149,453 +149,6 @@
     
     
     <article
-  id="post-KG/TransX"
-  class="article article-type-post"
-  itemscope
-  itemprop="blogPost"
-  data-scroll-reveal
->
-  <div class="article-inner">
-    
-    <header class="article-header">
-       
-<h2 itemprop="name">
-  <a class="article-title" href="/2022/09/11/KG/TransX/"
-    >TransX</a> 
-</h2>
- 
-
-      
-    </header>
-     
-    <div class="article-meta">
-      <a href="/2022/09/11/KG/TransX/" class="article-date">
-  <time datetime="2022-09-11T03:43:36.915Z" itemprop="datePublished">2022-09-11</time>
-</a> 
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/%E7%9F%A5%E8%AF%86%E8%A1%A8%E7%A4%BA%E5%AD%A6%E4%B9%A0/">知识表示学习</a>
-  </div>
-   
-    </div>
-      
-    <div class="article-entry" itemprop="articleBody">
-       
-  <p>参考信息：<a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/354867179">https://zhuanlan.zhihu.com/p/354867179</a></p>
-<h3 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h3><p>知识图谱&#x2F;知识库通常以网络的形式组织知识，网络中每个节点代表实体，边代表实体间关系，因此大部分知识往往可以用三元组（实体1，关系，实体2）来表示。</p>
-<p>知识表示学习(Knowledge Representation Learning)，又称知识图谱嵌入(Knowledge Graph Embedding)，是指将由组成知识的实体和关系在低维连续向量空间中表征的过程。</p>
-<p>我们以h,r,t分别表示头实体、关系、尾实体，对于一个三元组&lt;h[i],r[i],t[i]&gt;，如果其符合事实，我们称其为置信度(plausibility)为1，如果其不成立，则其置信度为0。</p>
-<p>知识表示学习的一般流程为：</p>
-<blockquote>
-<ol>
-<li>随机初始化实体和关系向量；</li>
-<li>定义打分函数(Scoring Function)来计算一个三元组的 <strong>置信度</strong>；</li>
-<li>最大化置信度来训练实体、关系向量。</li>
-</ol>
-</blockquote>
-<p>从工作流程上而言，可以将KRL分解为四部分：</p>
-<blockquote>
-<ol>
-<li>表征空间，关系和实体表征在一个什么样的空间；</li>
-<li>打分函数，如何计算给定三元组的置信度；</li>
-<li>补充信息，采用了哪些补充信息（实体类别、实体描述、关系路径等）来参与表示学习；</li>
-<li>训练方式，如何生成正负样本，使用何种loss函数等。</li>
-</ol>
-</blockquote>
-<h3 id="表征空间"><a href="#表征空间" class="headerlink" title="表征空间"></a>表征空间</h3><p>表征空间需要满足三个条件：<strong>可微分，可计算概率，可定义打分函数</strong>。</p>
-<h4 id="实内积空间模型"><a href="#实内积空间模型" class="headerlink" title="实内积空间模型"></a>实内积空间模型</h4><p>将实体和关系表征在实内积空间中。</p>
-<h4 id="复空间模型"><a href="#复空间模型" class="headerlink" title="复空间模型"></a>复空间模型</h4><p>将实体和关系表征在复空间中。复空间主要是能表征平移信息之外的旋转信息。</p>
-<h4 id="高斯分布模型"><a href="#高斯分布模型" class="headerlink" title="高斯分布模型"></a>高斯分布模型</h4><p>使用高斯分布去表征实体和关系中的不确定性信息。</p>
-<h4 id="流行和群"><a href="#流行和群" class="headerlink" title="流行和群"></a>流行和群</h4><p>这一类模型将知识表征在流形空间(manifold space)，李群(Lie group)或二面体群(dihedral group)。典型代表是ManifoldE，TorusE和DihEdra。</p>
-<h3 id="打分函数"><a href="#打分函数" class="headerlink" title="打分函数"></a>打分函数</h3><p>打分函数用于衡量一个三元组的置信度。</p>
-<h4 id="基于距离的打分函数"><a href="#基于距离的打分函数" class="headerlink" title="基于距离的打分函数"></a>基于距离的打分函数</h4><p>通过计算实体间的距离来衡量三元组的置信度。其中，基于加性平移的关系模型应用最广。</p>
-<blockquote>
-<p>h + r &#x3D; t</p>
-</blockquote>
-<p><img src="/pictures/KG/TransX/img1.jpg" alt="传统基于距离变换模型"></p>
-<p>基于平移表征的关系模型，即将 <strong>关系表示为头实体向尾实体的平移向量</strong>。</p>
-<ul>
-<li>TransE：基于平移表征；</li>
-<li>TransH: 将实体和关系映射到超平面；</li>
-<li>TransR：将实体和关系映射到不同的空间；</li>
-<li>TransD：构建动态映射矩阵完成实体空间的映射；</li>
-<li>TransA：将欧式距离替换成马氏距离；</li>
-<li>TransF：松弛了严格平移条件，使用内积作为度量函数</li>
-</ul>
-<p><img src="/pictures/KG/TransX/img2.jpg" alt="距离变换模型总结"></p>
-<h4 id="基于语义匹配度的打分函数"><a href="#基于语义匹配度的打分函数" class="headerlink" title="基于语义匹配度的打分函数"></a>基于语义匹配度的打分函数</h4><p>基于语义匹配度衡量三元组置信度，通常使用关系矩阵将头实体映射至尾实体。</p>
-<blockquote>
-<p>h * M &#x3D; t</p>
-</blockquote>
-<h5 id="线性-x2F-双线性模型"><a href="#线性-x2F-双线性模型" class="headerlink" title="线性 &#x2F; 双线性模型"></a>线性 &#x2F; 双线性模型</h5><p>RESCAL将语义相似度定义为实体关系对的匹配程度，使用双线性函数对其进行表征。但是由于双线性函数满足交换律，所以RESCAL不能表达非对称关系，即(h,r,t)成立而(t,r,h)不成立的情况。同时其计算复杂度较高。</p>
-<p>DistMult将双线性映射加以简化为对角阵。但由于DistMult仍然满足交换律，也不能表达非对称关系。</p>
-<p>HolE提出使用头尾实体的循环相关操作来表示实体对，定义循环相关运算符，使用循环相关操作表示语义匹配程度。HolE的循环相关操作不满足交换律，所以可以表达非对称关系。</p>
-<p><img src="/pictures/KG/TransX/img3.jpg" alt="语义匹配模型"></p>
-<h5 id="张量分解模型"><a href="#张量分解模型" class="headerlink" title="张量分解模型"></a>张量分解模型</h5><p>TuckerER使用Tucker张量分解(Tucker Decomposition)方法对原始矩阵进行分解，并使用分解的核心矩阵来参与打分函数计算。</p>
-<p>LowFER提出多模态张量分解双线性池化机制来更好地表达实体和关系之间的语义联系，并通过低秩估计相较于TuckerER降低了计算复杂度。</p>
-<h5 id="神经网络模型"><a href="#神经网络模型" class="headerlink" title="神经网络模型"></a>神经网络模型</h5><p><img src="/pictures/KG/TransX/img7.jpg" alt="神经网络模型"></p>
-<h6 id="MLP"><a href="#MLP" class="headerlink" title="MLP"></a>MLP</h6><p>SME（Semantic Matching Model）、NTN（Neural Tensor Network）、NAM（Neural Association Model）等都使用MLP对实体和关系进行编码。<br><img src="/pictures/KG/TransX/img4.png" alt="MLP模型公式"></p>
-<h6 id="CNN"><a href="#CNN" class="headerlink" title="CNN"></a>CNN</h6><p>ConvE使用二维卷积来表征实体和关系：<br><img src="/pictures/KG/TransX/img5.png" alt="ConvE模型公式"><br>其中的ω是卷积层的卷积核，vec(·)是对张量的flatten操作，在卷积层抽取空域特征后，使用多个非线性函数得到语义信息。</p>
-<p>ConvKB则直接将实体和关系concat起来加以卷积：<br><img src="/pictures/KG/TransX/img6.png" alt="ConvKB模型公式"></p>
-<h6 id="RNN"><a href="#RNN" class="headerlink" title="RNN"></a>RNN</h6><p>RSN在RNN基础上加入skip connection来捕捉路径上的长程依赖。先使用Random Walk的方法生成随机路径(x[1], x[2], …, x[T])，使用RNN计算隐状态h[t] &#x3D; tanh(W_h<em>h[t-1] + W_x</em>x[t] + b)，skip connection对于实体和关系的计算不同。</p>
-<h6 id="Transformer"><a href="#Transformer" class="headerlink" title="Transformer"></a>Transformer</h6><p>CoKE使用Transformer的结构对边和路径进行编码，KG-BERT则利用预训练语言模型BERT作为编码器对实体和关系进行编码。</p>
-<h6 id="GNN"><a href="#GNN" class="headerlink" title="GNN"></a>GNN</h6><p>图神经网络对于图结构信息的挖掘具有一定优势。SACN使用Encoder-Decoder结构，将带权GCN作为Encoder，将Conv-TransE作为Decoder。</p>
-<p><img src="/pictures/KG/TransX/img8.jpg" alt="语义匹配模型计算公式"></p>
-<h3 id="训练"><a href="#训练" class="headerlink" title="训练"></a>训练</h3><h4 id="基于开放世界假设"><a href="#基于开放世界假设" class="headerlink" title="基于开放世界假设"></a>基于开放世界假设</h4><p>KGS只包含真实的事实，D+只存储正例。</p>
-<p>可以定义logistic loss:<br><img src="/pictures/KG/TransX/img9.png" alt="logistic loss定义"></p>
-<p>可以定义pairwise ranking loss:<br><img src="/pictures/KG/TransX/img10.png" alt="pairwise ranking loss定义"></p>
-<h4 id="基于闭合世界假设"><a href="#基于闭合世界假设" class="headerlink" title="基于闭合世界假设"></a>基于闭合世界假设</h4><p>没有包含在D+中的样例都是错误的。不存在负样本。</p>
-<p>定义squared loss:<br><img src="/pictures/KG/TransX/img11.png" alt="squared loss定义"></p>
- 
-      <!-- reward -->
-      
-    </div>
-    
-
-    <!-- copyright -->
-    
-    <footer class="article-footer">
-       
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/KGE/" rel="tag">KGE</a></li></ul>
-
-    </footer>
-  </div>
-
-   
-    
-</article>
-
-    
-    <article
-  id="post-NLP/K-BERT"
-  class="article article-type-post"
-  itemscope
-  itemprop="blogPost"
-  data-scroll-reveal
->
-  <div class="article-inner">
-    
-    <header class="article-header">
-       
-<h2 itemprop="name">
-  <a class="article-title" href="/2022/09/09/NLP/K-BERT/"
-    >K-BERT</a> 
-</h2>
- 
-
-      
-    </header>
-     
-    <div class="article-meta">
-      <a href="/2022/09/09/NLP/K-BERT/" class="article-date">
-  <time datetime="2022-09-09T02:02:49.987Z" itemprop="datePublished">2022-09-09</time>
-</a> 
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/%E8%87%AA%E7%84%B6%E8%AF%AD%E8%A8%80%E5%A4%84%E7%90%86/">自然语言处理</a>
-  </div>
-   
-    </div>
-      
-    <div class="article-entry" itemprop="articleBody">
-       
-  <h3 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h3><p>预训练的语言表示模型从大型语料库中捕获一般语言的表示，但是 <strong>缺乏领域特定的知识</strong>。</p>
-<p>过多的知识加入会使得 <strong>句子偏离正确的含义</strong>，这就是知识噪声问题。</p>
-<blockquote>
-<p>如何将外部知识整合到模型中成了一个关键点，这一步通常存在两个难点：</p>
-<ul>
-<li>异构嵌入空间（Heterogeneous Embedding Space）： 即文本的单词embedding和知识库的实体embedding通常是通过不同方式获取的，使得向量空间不一致。</li>
-<li>知识噪声（Knowledge Noise）： 即过多的知识融合可能会使原始句子偏离正确的本意。</li>
-</ul>
-</blockquote>
-<p>为了克服上述问题，K-Bert引入了<strong>软定位</strong> 和 <strong>可见矩阵</strong> 来限制插入知识的影响。</p>
-<p>K-BERT能够从预先训练好的BERT中加载模型参数，因此不需要单独的预训练，只需要一个KG数据，K-BERT就很容易将领域知识注入到模型中。</p>
-<h3 id="模型架构"><a href="#模型架构" class="headerlink" title="模型架构"></a>模型架构</h3><p>K-BERT模型主要包括四部分：知识层（Knowledge layer）、嵌入层（Embedding layer）、可见层（Seeing layer）和 Mask-Transformer编码层（Mask-Transformer Encoder）<br><img src="/pictures/NLP/K-BERT/img1.jpg" alt="K-BERT模型架构"></p>
-<p>如上图所示，K-BERT主要由4个层组成，分别是：</p>
-<ul>
-<li>knowledge layer：知识层，顾名思义是将知识图谱的事实融入到输入中，构建 <strong>sentence tree</strong> 作为新的输入。</li>
-<li>embedding layer：将sentence tree 进行embedding，转换成向量表达。</li>
-<li>seeing layer：该层的作用是为了避免知识噪声（Knowledge Noise）而引入的，主要是通过构建 visible matrix，<strong>限定每个字只能够看到跟自己相关的上下文以及知识</strong>，从而避免了知识噪声的引入。</li>
-<li>mask-transformer：mask-transformer 是在对transformer的一个改进，对于其中的self-attention，根据 <strong>visible matrix 限制了每个字的attention的范围</strong>，避免了字对于其他无相关的信息的关注。</li>
-</ul>
-<p>对于一个输入的句子，</p>
-<ol>
-<li>knowledge layer 首先是从知识图谱KG中找到相关的三元组，</li>
-<li>然后将这些三元组插入到输入的 input sentence 中，形成知识丰富（knowledge-rich）的句子树（sentence tree）。</li>
-<li>句子树然后同时输入给 embedding layer 以及 seeing layer，从而获得一个 token 级别的 embedding 表示以及一个 visible matrix。</li>
-<li>这个visible matrix 是用来控制每个token的可见域（visible scope），以防止输入的句子因为太多的知识嵌入而发生意思的改变。</li>
-</ol>
-<h4 id="Knowledge-Layer"><a href="#Knowledge-Layer" class="headerlink" title="Knowledge Layer"></a>Knowledge Layer</h4><p>知识层主要用于句子知识嵌入（knowledge injection）以及句子树（sentence tree）的转换。<br><img src="/pictures/NLP/K-BERT/img2.jpg" alt="句子树结构"></p>
-<p>举例说明句子树的构建：<br><img src="/pictures/NLP/K-BERT/img3.jpg" alt="句子树构建的例子"></p>
-<h4 id="Embedding-Layer"><a href="#Embedding-Layer" class="headerlink" title="Embedding Layer"></a>Embedding Layer</h4><p>和 BERT 类似，输入的句子需要经过embedding，作为模型的输入。具体 embedding 由三个部分组成，分别是 token embedding，soft position embedding 以及 segment embedding。<br><img src="/pictures/NLP/K-BERT/img4.jpg" alt="Embedding表示"></p>
-<h5 id="token-embedding"><a href="#token-embedding" class="headerlink" title="token embedding"></a>token embedding</h5><p>token embbeding 是将句子中的每个 token 通过look up table 映射成为一个维度为 H 的向量表示。此外，每个句子的开头有一个 [CLS] 这个特殊token，主要是为了句子分类的作用，同时 [MAKS] 是作为mask任务使用的。</p>
-<h5 id="soft-position-embedding"><a href="#soft-position-embedding" class="headerlink" title="soft-position embedding"></a>soft-position embedding</h5><p>我们可以发现，BERT 使用的时position embedding，并且使用的是绝对的position 表示。<br><img src="/pictures/NLP/K-BERT/img5.jpg" alt="Sentence Tree"></p>
-<p>如果使用BERT的position embedding方式，即hard-position index。这就导致<strong>原本的句子顺序发生了变化，失去了句子主干的信息位置</strong>。<br>解决方案就是：使用soft-position index。</p>
-<p>这就引发了另一个问题：知识噪音。一般字会给周围其他的字很大的attention score。<br>解决方案：引入seeing layer，控制self-attention的可见域。</p>
-<h4 id="seeing-layer"><a href="#seeing-layer" class="headerlink" title="seeing layer"></a>seeing layer</h4><p>Seeing layer是BERT和K-BERT之间最大的不同。</p>
-<blockquote>
-<p>我们插入的知识，只作用于它自身的三元组中的元素，对于其他的token，不产生任何影响。</p>
-</blockquote>
-<p>根据上述规则，我们可以得到一个visible matrix：<br><img src="/pictures/NLP/K-BERT/img6.jpg" alt="Visible Matrix"></p>
-<p>具体可见下图，红色表示可见区域，白色表示不可见区域。<br><img src="/pictures/NLP/K-BERT/img7.jpg" alt="Visible Matrix应用"></p>
-<h4 id="mask-attention"><a href="#mask-attention" class="headerlink" title="mask-attention"></a>mask-attention</h4><p>我们可以认为 visible matrix 获得了它的 sentence tree 的结构信息，我们根据这个矩阵构造 mask-self-attention, 实现了在嵌入知识的情况下，不增加噪音的目的。具体公式如下：<br><img src="/pictures/NLP/K-BERT/img8.png" alt="mask-self-attention计算公式"></p>
-<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>K-BERT 主要的创新点是将知识图谱的事实三元组融入到了预训练的语言模型中，并且不要我们自己进行预训练的操作，只需要在 fine-tuning 以及 inference 阶段进行知识嵌入即可，大大地方便了使用，并且在知识驱动的任务，例如QA，NER，推理任务中取得了很好的效果。</p>
-<blockquote>
-<p>文章主要解决了两个问题，包括了</p>
-<ul>
-<li>如何将异质向量空间（heterogeneous embedding space）的知识和预训练的语言空间进行结合，主要就是采用了knowledge layer 结合知识构建 sentence tree。</li>
-<li>另外就是在引入了 knowledge 之后，如何避免 knowledge noise，这边就是采用 soft position embedding 以及 seeing layer 中产生的 visible matrix，通过改造 transformer 的self-attetion 为 mask self-attention，控制每个 token 的可见域，从而解决KN问题。</li>
-</ul>
-</blockquote>
- 
-      <!-- reward -->
-      
-    </div>
-    
-
-    <!-- copyright -->
-    
-    <footer class="article-footer">
-       
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/NLP/" rel="tag">NLP</a></li></ul>
-
-    </footer>
-  </div>
-
-   
-    
-</article>
-
-    
-    <article
-  id="post-tools/Hadoop"
-  class="article article-type-post"
-  itemscope
-  itemprop="blogPost"
-  data-scroll-reveal
->
-  <div class="article-inner">
-    
-    <header class="article-header">
-       
-<h2 itemprop="name">
-  <a class="article-title" href="/2022/09/05/tools/Hadoop/"
-    >Hadoop</a> 
-</h2>
- 
-
-      
-    </header>
-     
-    <div class="article-meta">
-      <a href="/2022/09/05/tools/Hadoop/" class="article-date">
-  <time datetime="2022-09-05T13:25:03.893Z" itemprop="datePublished">2022-09-05</time>
-</a> 
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/%E5%B7%A5%E5%85%B7/">工具</a> / <a class="article-category-link" href="/categories/%E5%B7%A5%E5%85%B7/%E5%A4%A7%E6%95%B0%E6%8D%AE/">大数据</a>
-  </div>
-   
-    </div>
-      
-    <div class="article-entry" itemprop="articleBody">
-       
-  <h2 id="Hadoop概念"><a href="#Hadoop概念" class="headerlink" title="Hadoop概念"></a>Hadoop概念</h2><p>Hadoop 框架是用于计算机集群大数据处理的框架，所以它必须是一个可以部署在多台计算机上的软件。部署了 Hadoop 软件的主机之间通过<strong>套接字</strong> (网络) 进行通讯。<br>Hadoop 主要包含 <strong>HDFS</strong> 和 <strong>MapReduce</strong> 两大组件。</p>
-<blockquote>
-<ul>
-<li>HDFS 负责分布储存数据;</li>
-<li>MapReduce 负责对数据进行映射、规约处理，并汇总处理结果。</li>
-</ul>
-</blockquote>
-<p>Hadoop 框架最根本的原理就是利用大量的计算机同时运算来加快大量数据的处理速度。</p>
-<h3 id="HDFS"><a href="#HDFS" class="headerlink" title="HDFS"></a>HDFS</h3><p>Hadoop Distributed File System，Hadoop 分布式文件系统，简称 HDFS。<br>HDFS 用于在集群中储存文件，它所使用的核心思想是 Google 的 GFS 思想，可以存储很大的文件。</p>
-<p>在服务器集群中，文件存储往往被要求高效而稳定，HDFS同时实现了这两个优点。</p>
-<blockquote>
-<ul>
-<li>HDFS 高效的存储是通过 <strong>计算机集群独立处理请求</strong> 实现的。因为用户 (一半是后端程序) 在发出数据存储请求时，往往 <em><strong>响应服务器</strong></em> 正在处理其他请求，这是导致服务效率缓慢的主要原因。但如果响应服务器直接分配一个数据服务器给用户，然后 <em><strong>用户直接与数据服务器交互</strong></em>，效率会快很多。</li>
-<li>数据存储的稳定性往往通过”多存几份”的方式实现，HDFS 也使用了这种方式。<strong>HDFS 的存储单位是块 (Block)</strong> ，一个文件可能会被分为多个块储存在物理存储器中。因此 HDFS 往往会按照设定者的要求把数据块复制 n 份并存储在不同的数据节点 (储存数据的服务器) 上，如果一个数据节点发生故障数据也不会丢失。</li>
-</ul>
-</blockquote>
-<p><img src="/pictures/tools/Hadoop/img1.png" alt="HDFS架构图"></p>
-<h4 id="Block数据块"><a href="#Block数据块" class="headerlink" title="Block数据块"></a>Block数据块</h4><ul>
-<li>基本存储单位，一般大小为 <strong>64M</strong> （配置大的块主要是因为：<ul>
-<li>减少搜寻时间，一般硬盘传输速率比寻道时间要快，大的块可以减少寻道时间；</li>
-<li>减少管理块的数据开销，每个块都需要在NameNode上有对应的记录；</li>
-<li>对数据块进行读写，减少建立网络的连接成本）</li>
-</ul>
-</li>
-<li>一个大文件会被拆分成一个个的块，然后存储于不同的机器。如果一个文件少于Block大小，那么实际占用的空间为其文件的大小</li>
-<li>基本的读写单位，类似于磁盘的页，每次都是读写一个块</li>
-<li>每个块都会被复制到多台机器，默认复制 <strong>3</strong> 份</li>
-</ul>
-<blockquote>
-<p>HDFS 2.x以后的block默认为 <strong>128M</strong></p>
-</blockquote>
-<h4 id="HDFS节点"><a href="#HDFS节点" class="headerlink" title="HDFS节点"></a>HDFS节点</h4><p>HDFS 运行在许多不同的计算机上，有的计算机专门用于存储数据，有的计算机专门用于指挥其它计算机储存数据。这里所提到的”计算机”我们可以称之为集群中的节点。</p>
-<h5 id="命名节点-NameNode"><a href="#命名节点-NameNode" class="headerlink" title="命名节点 NameNode"></a>命名节点 NameNode</h5><p>命名节点 (NameNode) 是用于指挥其它节点存储的节点。任何一个”文件系统”(File System, FS) 都需要具备 <strong>根据文件路径映射到文件</strong> 的功能，命名节点就是用于储存这些映射信息并提供映射服务的计算机，在整个 HDFS 系统中扮演”管理员”的角色，因此 <em><strong>一个 HDFS 集群中只有一个命名节点</strong></em>。</p>
-<h5 id="数据节点-DataNode"><a href="#数据节点-DataNode" class="headerlink" title="数据节点 (DataNode)"></a>数据节点 (DataNode)</h5><p>数据节点 (DataNode) 使用来储存数据块的节点。当一个文件被命名节点承认并分块之后将会被储存到被分配的数据节点中去。数据节点具有储存数据、读写数据的功能，其中 <strong>存储的数据块比较类似于硬盘中的”扇区”概念，是 HDFS 存储的基本单位</strong>。</p>
-<blockquote>
-<ol>
-<li>保存具体的block数据</li>
-<li>负责数据的读写操作和复制操作</li>
-<li>DataNode启动时会向NameNode报告当前存储的数据块信息，后续也会定时报告修改信息</li>
-<li>DataNode之间会进行通信，复制数据块，保证数据的冗余性</li>
-</ol>
-</blockquote>
-<h5 id="副命名节点-Secondary-NameNode"><a href="#副命名节点-Secondary-NameNode" class="headerlink" title="副命名节点 (Secondary NameNode)"></a>副命名节点 (Secondary NameNode)</h5><p>副命名节点 (Secondary NameNode) 别名”次命名节点”，是命名节点的”秘书”。这个形容很贴切，因为它并不能代替命名节点的工作，无论命名节点是否有能力继续工作。它主要负责 <strong>分摊命名节点的压力、备份命名节点的状态并执行一些管理工作</strong>，如果命名节点要求它这样做的话。如果命名节点坏掉了，它也可以提供备份数据以恢复命名节点。副命名节点可以有多个。</p>
-<h4 id="Hadoop写文件"><a href="#Hadoop写文件" class="headerlink" title="Hadoop写文件"></a>Hadoop写文件</h4><blockquote>
-<ol>
-<li>客户端将文件写入本地磁盘的 HDFS Client 文件中</li>
-<li>当临时文件大小达到一个 block 大小时，HDFS client 通知 NameNode，申请写入文件</li>
-<li>NameNode 在 HDFS 的文件系统中创建一个文件，并把该 block id 和要写入的 DataNode 的列表返回给客户端</li>
-<li>客户端收到这些信息后，将临时文件写入 DataNodes<br>4.1. 客户端将文件内容写入第一个 DataNode（一般以 4kb 为单位进行传输）<br>4.2. 第一个 DataNode 接收后，将数据写入本地磁盘，同时也传输给第二个 DataNode<br>4.3. 依此类推到最后一个 DataNode，数据在 DataNode 之间是通过 pipeline 的方式进行复制的<br>4.4. 后面的 DataNode 接收完数据后，都会发送一个确认给前一个 DataNode，最终第一个 DataNode 返回确认给客户端<br>4.5. 当客户端接收到整个 block 的确认后，会向 NameNode 发送一个最终的确认信息<br>4.6. 如果写入某个 DataNode 失败，数据会继续写入其他的 DataNode。然后 NameNode 会找另外一个好的 DataNode 继续复制，以保证冗余性<br>4.7. 每个 block 都会有一个校验码，并存放到独立的文件中，以便读的时候来验证其完整性</li>
-<li>文件写完后（客户端关闭），NameNode 提交文件（这时文件才可见，如果提交前，NameNode 垮掉，那文件也就丢失了。fsync：只保证数据的信息写到 NameNode 上，但并不保证数据已经被写到DataNode 中）</li>
-</ol>
-</blockquote>
-<p><img src="/pictures/tools/Hadoop/img2.png" alt="HDFS写入数据流程"></p>
-<h4 id="Hadoop读文件"><a href="#Hadoop读文件" class="headerlink" title="Hadoop读文件"></a>Hadoop读文件</h4><blockquote>
-<ol>
-<li>客户端向NameNode发送读取请求</li>
-<li>NameNode返回文件的所有block和这些block所在的DataNodes（包括复制节点）</li>
-<li>客户端直接从DataNode中读取数据，如果该DataNode读取失败（DataNode失效或校验码不对），则从复制节点中读取（如果读取的数据就在本机，则直接读取，否则通过网络读取）</li>
-</ol>
-</blockquote>
-<p><img src="/pictures/tools/Hadoop/img3.png" alt="HDFS读取数据流程"></p>
-<h3 id="MapReduce"><a href="#MapReduce" class="headerlink" title="MapReduce"></a>MapReduce</h3><p>MapReduce是一种可用于数据处理的编程模型。Hadoop可以运行各种版本的MapReduce程序。MapReduce程序本质上是并行运行的，它可以将大规模的数据分析任务分发给任何一个拥有足够多机器的数据中心。</p>
-<p>MapReduce任务过程分为两个处理阶段：map阶段和reduce阶段。每个阶段都以键值对作为输入和输出，其类型由程序员选择。</p>
-<blockquote>
-<ul>
-<li><strong>map阶段</strong> – 输入是原始数据。键是某一行起始位置相对于文件起始位置的偏移量。map函数是一个数据准备阶段。</li>
-<li><strong>reduce阶段</strong> – 对map阶段的输出值进行处理。reduce函数进行数据进一步的筛选及其他操作。</li>
-</ul>
-</blockquote>
-<p><img src="/pictures/tools/Hadoop/img4.png" alt="MapReduce计算逻辑"></p>
-<blockquote>
-<p>map: (K1, V1) → list(K2, V2)<br>combine: (K2, list(V2)) → list(K2, V2)<br>reduce: (K2, list(V2)) → list(K3, V3)</p>
-</blockquote>
-<p>MapReduce主要是先读取文件数据，然后进行Map处理，接着Reduce处理，最后把处理结果写到文件中<br><img src="/pictures/tools/Hadoop/img5.png" alt="MapReduce基本流程"></p>
-<h3 id="Hadoop数据倾斜"><a href="#Hadoop数据倾斜" class="headerlink" title="Hadoop数据倾斜"></a>Hadoop数据倾斜</h3> 
-      <!-- reward -->
-      
-    </div>
-    
-
-    <!-- copyright -->
-    
-    <footer class="article-footer">
-       
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Big-Data/" rel="tag">Big Data</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/tools/" rel="tag">tools</a></li></ul>
-
-    </footer>
-  </div>
-
-   
-    
-</article>
-
-    
-    <article
-  id="post-NLP/Transformer"
-  class="article article-type-post"
-  itemscope
-  itemprop="blogPost"
-  data-scroll-reveal
->
-  <div class="article-inner">
-    
-    <header class="article-header">
-       
-<h2 itemprop="name">
-  <a class="article-title" href="/2022/09/04/NLP/Transformer/"
-    >Transformer</a> 
-</h2>
- 
-
-      
-    </header>
-     
-    <div class="article-meta">
-      <a href="/2022/09/04/NLP/Transformer/" class="article-date">
-  <time datetime="2022-09-04T09:05:38.247Z" itemprop="datePublished">2022-09-04</time>
-</a> 
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/%E8%87%AA%E7%84%B6%E8%AF%AD%E8%A8%80%E5%A4%84%E7%90%86/">自然语言处理</a>
-  </div>
-   
-    </div>
-      
-    <div class="article-entry" itemprop="articleBody">
-       
-  <p>参考资料：<a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/420820453">https://zhuanlan.zhihu.com/p/420820453</a></p>
-<h3 id="多头注意力机制"><a href="#多头注意力机制" class="headerlink" title="多头注意力机制"></a>多头注意力机制</h3><h4 id="提出背景"><a href="#提出背景" class="headerlink" title="提出背景"></a>提出背景</h4><p>现在主流的序列模型都是基于复杂的循环神经网络或者卷积神经网络构造而来的Encoder-Decoder模型。传统的Encoder-Decoder架构在建模过程中，下一时刻的计算过程会很依赖于上一时刻的输出，这种固有属性导致很难以 <strong>并行</strong> 的方式进行计算。<br>基于以上原因，提出了一种全新的Transformer架构来解决这一问题。Transformer架构的优点在于它完全摒弃了传统的循环结构，取而代之的是通过 <strong>注意力机制</strong> 来计算模型输入与输出的隐含表示，即自注意力机制。<br><img src="/pictures/NLP/Transformer/img1.png" alt="Transformer的网络结构"></p>
-<blockquote>
-<p>自注意力机制就是通过某种运算直接计算得到句子在编码过程中每个位置上的注意力权重；然后再以权重和的形式来计算得到整个句子的隐含向量表示。</p>
-</blockquote>
-<h4 id="什么是self-attention"><a href="#什么是self-attention" class="headerlink" title="什么是self-attention?"></a>什么是self-attention?</h4><p>注意力机制可以描述为将query和一系列的key-value对映射到某个输出的过程，而这个输出向量就是根据query和key计算得到的权重作用于value上的权重和。<br><img src="/pictures/NLP/Transformer/img2.png" alt="自注意力机制"><br>自注意力机制的核心过程就是通过Q和K计算得到注意力权重；然后再作用于V得到整个权重和的输出。计算公式如下：<br><img src="/pictures/NLP/Transformer/img3.png" alt="自注意力机制计算公式"><br>之所以要对QK进行缩放，是因为对于较大的dk来说，完成QK计算后会得到很大的值。而这将导致在经过 <strong>softmax</strong> 操作后产生非常小的梯度，不利于网络的训练。</p>
-<h4 id="Q-K-V怎么来的？"><a href="#Q-K-V怎么来的？" class="headerlink" title="Q,K,V怎么来的？"></a>Q,K,V怎么来的？</h4><p>假设输入序列“我是谁”，通过embedding映射得到3x4的矩阵进行句子表示。<br>Q、K和V其实就是输入X分别乘以3个不同的矩阵计算而来（但这仅仅局限于Encoder和Decoder在各自输入部分利用自注意力机制进行编码的过程，Encoder和Decoder交互部分的Q、K和V另有指代）。此处对于计算得到的Q、K、V，你可以理解为这是 <em><strong>对于同一个输入进行3次不同的线性变换来表示其不同的3种状态</strong></em>。<br><img src="/pictures/NLP/Transformer/img4.jpg" alt="QKV是怎么来的"><br>在计算得到Q、K、V之后，就可以进一步计算得到权重向量。<br><img src="/pictures/NLP/Transformer/img5.jpg" alt="注意力权重计算图"><br>从上图可以知道，通过权重矩阵模型就可以知道当前位置的向量，应该以何种方式（权重）将注意力集中到不同的位置上。 <em><strong>模型在对当前位置的信息进行编码时，会过度将注意力集中于自身位置</strong></em>，而这会导致其忽略其他位置信息。因此，作者使用的解决方案就是 <strong>多头注意力机制</strong>。<br>计算得到权重矩阵后，便可以将其作用于V，进而得到最终的编码输出。<br><img src="/pictures/NLP/Transformer/img6.jpg" alt="编码输出计算"><br>对于最终的输出的编码向量，每个位置的编码向量其实就是 <strong>所有向量的加权和</strong>。这也就体现了自注意力机制在编码过程中的权重分配过程。</p>
-<blockquote>
-<p>有了自注意力机制后，仅需要对于原始输入进行几次矩阵变换就能够得到最终包含不同注意力信息的编码向量。解决了传统序列逆袭那个在编码过程中需要无法并行的弊端。</p>
-</blockquote>
-<h4 id="Multi-Head-Attention"><a href="#Multi-Head-Attention" class="headerlink" title="Multi-Head-Attention"></a>Multi-Head-Attention</h4><p>自注意力机制的缺陷在于：<em><strong>模型对于当前位置的信息进行整合编码时候，会过多的将注意力集中于自身位置</strong></em>，影响模型的表征能力。<br>多头注意力机制可以解决上述问题（对于周围信息获取受限的问题），并且还能够给予注意力层的输出包含有不同子空间的编码表示信息，增强模型的表达能力。<br>多头注意力机制就是将原始的输入序列进行多组的自注意力处理；然后将每组自注意力机制的结果 <strong>拼接</strong>起来进行一次线性变换得到最终的输出结果。<br><img src="/pictures/NLP/Transformer/img7.png" alt="多头注意力机制网络结构"><br>其计算公式为：<br><img src="/pictures/NLP/Transformer/img8.png" alt="多头注意力机制计算公式"><br>论文中，作者使用 <strong>8</strong> 个并行的自注意力模块来构建一个自注意力层，并且限定每个模块的维度为 <strong>64</strong>。论文中使用的多头注意力机制其实就是将一个大的高维单头拆分成h个多头。<br><img src="/pictures/NLP/Transformer/img9.jpg" alt="多头注意力计算"><br>根据输入序列X和W1可以得到Q1,K1,V1，进一步根据自注意力计算公式得到输出Z1；同理，可以得到另一个自注意力模块得到输出Z2；最后，将Z1,Z2水平堆叠形成Z，乘以W便可以得到最终的多头注意力层的输出。</p>
-<h3 id="位置编码与编码解码过程"><a href="#位置编码与编码解码过程" class="headerlink" title="位置编码与编码解码过程"></a>位置编码与编码解码过程</h3><h4 id="Embedding机制"><a href="#Embedding机制" class="headerlink" title="Embedding机制"></a>Embedding机制</h4><h5 id="Token-Embedding"><a href="#Token-Embedding" class="headerlink" title="Token Embedding"></a>Token Embedding</h5><p>在Transformer模型中，首先要将文本通过Embedding层映射到低维稠密的向量空间，得到向量化表示，即Token Embedding。</p>
-<blockquote>
-<p>如果是换做之前的网络模型，例如CNN或者RNN，那么对于文本向量化的步骤就到此结束了，因为这些网络结构本身已经具备了捕捉时序特征的能力，不管是CNN中的n-gram形式还是RNN中的时序形式。</p>
-</blockquote>
-<p>自注意力机制在实际运算过程中，不过是几个矩阵来回相乘进行线性变换，这就导致即使打乱词序，最终计算得到的结果本质上没有任何变化。 <strong>自注意力机制会丢失文本原有的序列信息！</strong></p>
-<blockquote>
-<p>举个例子：在经过词嵌入表示后，序列“武松 打 虎”和“虎 打 武松”经过相同的权重矩阵后，输出结果并没有任何区别，只是交换了对应的位置。</p>
-</blockquote>
-<p>为了解决自注意力机制丢失序列信息问题，引入了positional Embedding来刻画数据在时序上的特征。</p>
-<h5 id="Positional-Embedding"><a href="#Positional-Embedding" class="headerlink" title="Positional Embedding"></a>Positional Embedding</h5><p>作者采用如下规则生成各个维度的位置信息：<br><img src="/pictures/NLP/Transformer/img10.png" alt="位置信息生成公式"></p>
-<p>在交换位置前与交换位置后，与同一个权重矩阵进行线性变换后的结果截然不同。因此，这就证明通过Positional Embedding可以弥补自注意力机制不能捕捉序列时序信息的缺陷。</p>
-<h4 id="Transformer网络结构"><a href="#Transformer网络结构" class="headerlink" title="Transformer网络结构"></a>Transformer网络结构</h4><p>一个单层Transformer网络结构图。<br><img src="/pictures/NLP/Transformer/img11.png" alt="Transformer网络结构"></p>
-<h5 id="Encoder层"><a href="#Encoder层" class="headerlink" title="Encoder层"></a>Encoder层</h5><p>对于Encoder部分来说其内部主要由两部分网络所构成(6层堆叠)：<em><strong>多头注意力机制</strong></em> 和 <em><strong>两层前馈神经网络</strong></em>。<br>同时，对于这两部分网络来说，都加入了残差连接，并且在残差连接后还进行了层归一化操作。对于每个部分来说其输出均为LayNorm(x + Sub-Layer(x))，并且在都加入了Dropout操作。<br>进一步，为了便于在这些地方使用残差连接，这两部分网络输出向量的维度均为 <strong>512</strong>。<br>对于第2部分的两层全连接网络来说，其具体计算过程为<br><img src="/pictures/NLP/Transformer/img12.png" alt="FFN层计算"><br>其中输入的维度为 <strong>512</strong>，第1层全连接层的输出维度为 <strong>2048</strong>，第2层全连接层的输出为 <strong>512</strong>，且同时 <em><strong>仅对于第1层网络的输出</strong></em> 还运用了Relu激活函数。</p>
-<h5 id="Decoder层"><a href="#Decoder层" class="headerlink" title="Decoder层"></a>Decoder层</h5><p>对于Decoder部分来说，其整体上与Encoder类似（6层堆叠），只是多了一个用于与Encoder输出进行交互的多头注意力机制。<br>不同于Encoder部分，在Decoder中一共包含有3个部分的网络结构。最上面的和最下面的部分（暂时忽略Mask）与Encoder相同，只是多了中间这个与Encoder输出（Memory）进行交互的部分，作者称之为“Encoder-Decoder attention”。<br>对于这部分的输入，<strong>Q来自于下面多头注意力机制的输出，K和V均是Encoder部分的输出（Memory）经过线性变换后得到</strong>。而作者之所以这样设计也是在模仿传统Encoder-Decoder网络模型的解码过程。<br>传统的基于Encoder-Decoder的Seq2Seq翻译模型的解码过程：<br><img src="/pictures/NLP/Transformer/img13.jpg" alt="传统的Seq2Seq翻译模型"><br>左半部分是编码器，右下部分为解码器，右上部分为注意力机制部分。 ~h[i]表示<strong>编码过程</strong>中，各个时刻的隐含状态，称之为每个时刻的Memory；h[t]表示解码当前时刻的隐含状态。此时，注意力机制的思想在于，<strong>希望模型能够在解码时，参考编码阶段每个时刻的记忆</strong>。</p>
-<blockquote>
-<ol>
-<li>解码第一个时刻”s”时，h[t]会首先同每一个记忆状态~h[i]进行相似度计算，得到注意力权重；</li>
-<li>然后，通过对隐含状态的加权求和，得到context vector内容</li>
-</ol>
-</blockquote>
-<p>以上是传统的解码交互方案。在Transformer中，K和V均是编码部分的输出Memory经过线性变换后的结果（此时Memory中包含了原始输入序列每个位置的编码信息），而Q是解码部分多头注意力机制输出的隐含向量经过线性变换后的结果。</p>
-<blockquote>
-<ol>
-<li>首先，通过Q和K交互计算得到注意力权重矩阵；</li>
-<li>然后，通过注意力权重与V进行计算，得到权重解码向量。此向量考虑了memory中各个位置编码信息的输出向量。</li>
-<li>最后，得到解码向量后，经过两层全连接层后，将其输入到分类层进行分类得到当前时刻的解码输出值。</li>
-</ol>
-</blockquote>
-<h5 id="QKV的来源"><a href="#QKV的来源" class="headerlink" title="QKV的来源"></a>QKV的来源</h5><p>根据Transformer结构图可知，在整个Transformer中涉及到自注意力机制的一共有3个部分：</p>
-<blockquote>
-<ul>
-<li>Encoder中的Multi-Head Attention；</li>
-<li>Decoder中的Masked Multi-Head Attention；</li>
-<li>Encoder和Decoder交互部分的Multi-Head Attention。</li>
-</ul>
-</blockquote>
-<ol>
-<li>对于Encoder中的Multi-Head Attention来说，其原始q、k、v均是Encoder的Token输入经过Embedding后的结果。q、k、v分别经过一次线性变换（各自乘以一个权重矩阵）后得到了Q、K、V，然后再进行自注意力运算得到Encoder部分的输出结果Memory。</li>
-<li>对于Decoder中的Masked Multi-Head Attention来说，其原始q、k、v均是Decoder的Token输入经过Embedding后的结果。q、k、v分别经过一次线性变换后得到了Q、K、V，然后再进行自注意力运算得到Masked Multi-Head Attention部分的输出结果，即待解码向量。</li>
-<li>对于Encoder和Decoder交互部分的Multi-Head Attention，其原始q、k、v分别是上面的带解码向量、Memory和Memory。q、k、v分别经过一次线性变换后得到了Q、K、V，然后再进行自注意力运算得到Decoder部分的输出结果。之所以这样设计也是在模仿传统Encoder-Decoder网络模型的解码过程。</li>
-</ol>
- 
-      <!-- reward -->
-      
-    </div>
-    
-
-    <!-- copyright -->
-    
-    <footer class="article-footer">
-       
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/NLP/" rel="tag">NLP</a></li></ul>
-
-    </footer>
-  </div>
-
-   
-    
-</article>
-
-    
-    <article
   id="post-NLP/Word2Vec"
   class="article article-type-post"
   itemscope
@@ -607,7 +160,7 @@
     <header class="article-header">
        
 <h2 itemprop="name">
-  <a class="article-title" href="/2022/09/04/NLP/Word2Vec/"
+  <a class="article-title" href="/2022/09/25/NLP/Word2Vec/"
     >Word2Vec</a> 
 </h2>
  
@@ -616,8 +169,8 @@
     </header>
      
     <div class="article-meta">
-      <a href="/2022/09/04/NLP/Word2Vec/" class="article-date">
-  <time datetime="2022-09-04T09:03:53.269Z" itemprop="datePublished">2022-09-04</time>
+      <a href="/2022/09/25/NLP/Word2Vec/" class="article-date">
+  <time datetime="2022-09-25T07:53:50.532Z" itemprop="datePublished">2022-09-25</time>
 </a> 
   <div class="article-category">
     <a class="article-category-link" href="/categories/%E8%87%AA%E7%84%B6%E8%AF%AD%E8%A8%80%E5%A4%84%E7%90%86/">自然语言处理</a>
@@ -631,7 +184,7 @@
 <blockquote>
 <p>先基于训练数据构建神经网络。当模型训练好以后，我们并不会使用这个训练好的模型处理新的任务，我们需要的是通过训练数据学习得到的参数，例如隐层的权重矩阵。</p>
 </blockquote>
-<p>Word2Vec的训练模型本质上是只具有一个隐含层的神经元网络，从大量文本语料中以无监督的方式学习语义知识。<br><img src="/picturesi/NLP/Word2Vec/img1.jpg.png" alt="Word2Vec单层网络结构"></p>
+<p>Word2Vec的训练模型本质上是只具有一个隐含层的神经元网络，从大量文本语料中以无监督的方式学习语义知识。<br><img src="/pictures/NLP/Word2Vec/img1.jpg.png" alt="Word2Vec单层网络结构"></p>
 <blockquote>
 <ul>
 <li>输入是One-Hot向量，Hidden Layer的激活函数是线性。Output Layer维度和Input Layer维度相同，用的是Softmax回归；</li>
@@ -717,7 +270,7 @@
 
     
     <article
-  id="post-NLP/FastText"
+  id="post-Normalization"
   class="article article-type-post"
   itemscope
   itemprop="blogPost"
@@ -728,8 +281,8 @@
     <header class="article-header">
        
 <h2 itemprop="name">
-  <a class="article-title" href="/2022/09/04/NLP/FastText/"
-    >FastText</a> 
+  <a class="article-title" href="/2022/09/25/Normalization/"
+    >Normalization</a> 
 </h2>
  
 
@@ -737,84 +290,81 @@
     </header>
      
     <div class="article-meta">
-      <a href="/2022/09/04/NLP/FastText/" class="article-date">
-  <time datetime="2022-09-04T09:02:29.407Z" itemprop="datePublished">2022-09-04</time>
+      <a href="/2022/09/25/Normalization/" class="article-date">
+  <time datetime="2022-09-25T07:48:34.905Z" itemprop="datePublished">2022-09-25</time>
 </a> 
   <div class="article-category">
-    <a class="article-category-link" href="/categories/%E8%87%AA%E7%84%B6%E8%AF%AD%E8%A8%80%E5%A4%84%E7%90%86/">自然语言处理</a>
+    <a class="article-category-link" href="/categories/%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD/">人工智能</a>
   </div>
    
     </div>
       
     <div class="article-entry" itemprop="articleBody">
        
-  <h3 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h3><p>fasttext是facebook开源的一个词向量与文本分类工具，在2016年开源，典型应用场景是“带监督的文本分类问题”。提供简单而高效的 <strong>文本分类</strong> 和 <strong>表征学习</strong> 的方法，性能比肩深度学习而且速度更快。</p>
-<p>FastText结合了自然语言处理和机器学习中的思想：</p>
-<ul>
-<li>使用词袋以及N-gram袋表征语句；</li>
-<li>使用子字信息；</li>
-<li>通过隐藏表征在类别间共享信息</li>
-</ul>
-<h3 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h3><p>核心思想：将整篇文档的词以及N-gram向量 <strong>叠加平均</strong> 得到文档向量，然后使用文档向量做softmax分类。</p>
-<h4 id="模型架构"><a href="#模型架构" class="headerlink" title="模型架构"></a>模型架构</h4><p>FastText架构和CBOW架构类似。不同之处在于，FastText预测标签，CBOW通过上下文预测中间词。<br><img src="/pictures/NLP/FastText/img1.jpg" alt="FastText模型架构"></p>
+  <p>机器学习领域有个很重要的假设：IID (Independent Identically Distribution) 独立同分布假设，即假设训练数据和测试数据是满足同分布的。</p>
 <blockquote>
-<p><strong>注意：</strong> 此架构图并没有展示词向量的训练过程。FastText模型也只有三层：输入层，隐含层，输出层。输入是多个向量表示的单词，输出是特定的Target，隐含层是对多个词向量的叠加平均。</p>
+<p>神经网络的学习过程本质上是为了学习数据的分布。<br>在mini-batch梯度下降训练的时候，如果每批训练数据的分布不同，那么网络在每次迭代的时候都要学习适应不同的分布，大大降低了网络的训练速度。</p>
 </blockquote>
-<p>与CBOW模型不同的是，</p>
-<ul>
-<li>CBOW的输入是目标单词的上下文，FastText的输入是多个单词以及其N-gram特征，这些特征用来表示单个文档；</li>
-<li>CBOW的输入单词是被one-hot编码过后的，FastText的输入特征是被embedding后的；</li>
-<li>CBOW的输出是目标词汇，FastText的输出是文档对应的类标。</li>
-</ul>
-<h4 id="层序softmax"><a href="#层序softmax" class="headerlink" title="层序softmax"></a>层序softmax</h4><p>对于有大量类别的数据集，FastText使用一个分层分类器，降低计算复杂度。<br>FastText利用了类别不均衡这个事实，通过使用Huffman算法建立用于表征类别的树形结构。因此，出现频次较高的类别更加接近根节点。</p>
-<h4 id="N-gram特征"><a href="#N-gram特征" class="headerlink" title="N-gram特征"></a>N-gram特征</h4><p>Word2Vec把语料库中的每个单词作为一个原子。这忽略了单词内部的形态特征，比如apple和apples。传统的Word2Vec中，这种单词内部形态信息因为它们被转换为不同的id丢失了。</p>
-<p>为了克服这个问题，FastText使用了字符级别的N-gram来表示一个单词。对于单词apple，假设N的取值为3，则它的trigram有：</p>
-<blockquote>
-<p>“&lt;ap”,  “app”,  “ppl”,  “ple”, “le&gt;”</p>
-</blockquote>
-<p>其中，&lt;表示前缀，&gt;表示后缀。于是，我们可以用这些trigram来表示“apple”这个单词，进一步，我们可以用这5个trigram的向量叠加来表示“apple”的词向量。</p>
-<p>这带来两点好处：</p>
-<ul>
-<li>对于低频词生成的词向量效果会更好。因为它们的N-gram可以和其他词共享；</li>
-<li>对于训练词库之外的单词，仍然可以构建它们的词向量。我们可以叠加它们的字符级N-gram向量。</li>
-</ul>
-<h3 id="应用"><a href="#应用" class="headerlink" title="应用"></a>应用</h3><p><strong>模型搭建步骤：</strong></p>
-<ol>
-<li>添加输入层：Embedding层输入是一批文档，每个文档有一个词汇索引序列构成；</li>
-<li>添加隐含层：投影层对一个文档中所有单词的向量进行叠加平均；</li>
-<li>添加输出层：Softmax层</li>
-<li>指定损失函数，优化器类型，评价指标，编译模型。</li>
-</ol>
-<p><strong>训练数据feed模型步骤</strong></p>
-<ol>
-<li>将文档分好词，构建词汇表；</li>
-<li>对类标进行one-hot化；</li>
-<li>对一批文本，将每个文本转化为词索引序列，每个类标转化为one-hot向量</li>
-</ol>
-<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><h4 id="如何获得词向量？"><a href="#如何获得词向量？" class="headerlink" title="如何获得词向量？"></a>如何获得词向量？</h4><p><strong>累加平均</strong> 一个词的N-gram集合包括自身整个词的隐向量表示。</p>
-<h4 id="FastText和Word2Vec区别"><a href="#FastText和Word2Vec区别" class="headerlink" title="FastText和Word2Vec区别"></a>FastText和Word2Vec区别</h4><p>相似处：</p>
+<h2 id="BatchNorm"><a href="#BatchNorm" class="headerlink" title="BatchNorm"></a>BatchNorm</h2><p>BatchNorm就是在深度神经网络训练过程中，使得每一层神经网络的输入保持相同分布。</p>
+<p>BN层在激活函数之前。BN层的作用机制：通过平滑隐藏层输入的分布，帮助随机梯度下降的进行，缓解随机梯度下降随遇后续层的负面影响。</p>
 <blockquote>
 <ol>
-<li>图模型结构很想，都是采用embedding向量形式，得到word的隐向量表达；</li>
-<li>采用很多相似的优化，比如使用层级sotmax优化训练和预测中的打分速度</li>
+<li>sigmoid, tanh激活函数。函数图像两端，梯度较小，容易出现 <strong>梯度衰减</strong> 问题。因此，把BN层放在非线性激活函数之前，将数据分布调整到均值为0附近，加速训练。</li>
+<li>relu激活函数。relu函数负半区的输出值被抑制，正半区的值被保留。因此，BN层放在前面，可以防止某一层的激活值全部被抑制，导致梯度全部为0，梯度消失。同理，防止梯度爆炸。</li>
 </ol>
 </blockquote>
-<p>不同之处：</p>
+<h3 id="Internal-Covariate-Shift-问题"><a href="#Internal-Covariate-Shift-问题" class="headerlink" title="Internal Covariate Shift 问题"></a>Internal Covariate Shift 问题</h3><p>在训练过程中，隐层的 <em><strong>输入分布</strong></em> 总是变来变去。导致下一层网络很难进行学习（神经网络本来就是要学习数据分布的）。</p>
+<blockquote>
+<p>Internal Covariate Shift: 发生在神经网络内部；<br>Covariate Shift: 发生在输入数据上。主要描述由于训练数据和测试数据存在分布差异，影响模型的泛化性和训练速度。</p>
+</blockquote>
+<h3 id="BatchNorm基本思想"><a href="#BatchNorm基本思想" class="headerlink" title="BatchNorm基本思想"></a>BatchNorm基本思想</h3><p>深度神经网络在做 <strong>非线性变化前</strong> 的激活输入值随着网络深度加深，在训练过程中，数据分布逐渐向着 <strong>非线性函数取值区间的上下限两端靠近</strong>，导致反向传播时，低层神经网络梯度消失，最终造成收敛变慢。</p>
+<p>BN就是规范化隐层数据分布，将数据分布强制规范到非线形激活函数比较敏感的区域，避免梯度消失问题产生。<br>就是说经过BN后，大部分输出值落在非线形函数的非饱和区，加速收敛过程。</p>
+<blockquote>
+<p>如果都通过BN，那么不就跟把非线性函数替换成线性函数效果相同了？这意味着什么？我们知道，如果是多层的线性函数变换其实这个深层是没有意义的，因为多层线性网络跟一层线性网络是等价的。这意味着网络的表达能力下降了，这也意味着深度的意义就没有了。</p>
+</blockquote>
+<p>BN为了保证模型的非线形，对变换后的数据分布，进行了scale加上shift操作，<strong>这两个参数通过训练学习得到</strong>。等价于非线性函数的值，从正中心周围的线性区域往非线性区域偏移。增强模型的表达能力。</p>
+<blockquote>
+<p><strong>BN的核心思想：</strong>在非线性和线性之间找到较好的平衡点。既能享受非线性较强的表达能力，又能避免非线性激活函数饱和区梯度消失问题。</p>
+</blockquote>
+<h3 id="BatchNorm训练阶段"><a href="#BatchNorm训练阶段" class="headerlink" title="BatchNorm训练阶段"></a>BatchNorm训练阶段</h3><p>对于mini-batch SGD来说，一次训练过程中包含m个训练实例，其具体BN操作就是对于隐层中 <strong>每个神经元</strong> 的激活值，进行如下变换：<br><img src="/pictures/AI/Normal/img1.png" alt="每个神经元数据的标准化操作"></p>
+<p>经过上述变化后，某个神经元的激活值变成了N(0, 1)正态分布。<br>为了防止网络表达能力下降，每个神经元增加两个调节参数，这两个参数通过训练学习得到，用来还原网络非线性表达能力。<br><img src="/pictures/AI/Normal/img2.png" alt="数据的放缩与偏移"></p>
+<p>BN的具体操作流程如下，</p>
 <blockquote>
 <ol>
-<li>输入层：Word2Vec的输出层，是context window内的term；而FastText对应的整个sentence的内容，包括term和N-gram的内容；</li>
-<li>输出层：Word2Vec的输出层，对应的是每个term，计算某个term的概率最大；而FastText的输出层对应的分类的label</li>
+<li>先求出此次批量数据x的均值</li>
+<li>求出此次batch的方差</li>
+<li>接下来就是对x做归一化</li>
+<li>最重要的一步，引入缩放和平移变量γ和β ,计算归一化后的值</li>
 </ol>
 </blockquote>
-<p>两者本质的不同，体现在H-softmax的使用：</p>
-<blockquote>
-<ul>
-<li>Word2Vec的目标是得到词向量，该词向量最终是在输入层中得到。输出层对应的H-softmax也会生成一系列的向量，但最终都会被抛弃；</li>
-<li>FastText充分利用H-softmax的分类功能，遍历分类树的所有叶节点，找到概率最大的label</li>
-</ul>
+<p><img src="/pictures/AI/Normal/img3.png" alt="BN具体流程"></p>
+<p>一个简单的代码实现，</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">def BatchNorm(x, gamma, beta, bn_param):</span><br><span class="line">&quot;&quot;&quot;</span><br><span class="line">param:x		: 输入数据，shape(B, L)</span><br><span class="line">param:gamma	: 缩放因子</span><br><span class="line">param:beta	: 平移因子</span><br><span class="line">param:bn_param	: batchnorm所需要的一些参数</span><br><span class="line">	eps		: 接近0的数，防止分母出现0</span><br><span class="line">	momentum	: 动量参数，一般为0.9，0.99，0.999</span><br><span class="line">	running_mean	: 滑动平均的方式计算新的均值</span><br><span class="line">	running_var	: 滑动平均的方式计算新的方差</span><br><span class="line">&quot;&quot;&quot;</span><br><span class="line"></span><br><span class="line">    x_mean = x.mean(axis=0)</span><br><span class="line">    x_var = x.var(axis=0)</span><br><span class="line">    x_norm = (x - x_mean) / np.sqrt(x_var + eps)</span><br><span class="line">    x_norm = gamma * x_norm + beta</span><br><span class="line"></span><br><span class="line">    # 滑动平均计算得到均值方差信息，用于推断阶段</span><br><span class="line">    running_mean = bn_param[&#x27;running_mean&#x27;]</span><br><span class="line">    running_var = bn_parma[&#x27;running_var&#x27;]</span><br><span class="line">    momentum = bn_param[&#x27;momentum&#x27;]</span><br><span class="line"></span><br><span class="line">    running_mean = momentum * running_mean + (1-momentum) * x_mean</span><br><span class="line">    running_var = momentum * running_var + (1-momentum) * x_var</span><br><span class="line"></span><br><span class="line">    bn_param[&#x27;running_mean&#x27;] = running_mean</span><br><span class="line">    bn_param[&#x27;running_var&#x27;] = running_var</span><br><span class="line"></span><br><span class="line">    return x_norm, bn_param</span><br></pre></td></tr></table></figure>
+
+<p>在训练中完成的任务，每次训练给一个批量，然后计算批量的均值方差，但是在测试的时候可不是这样，测试的时候 <strong>每次只输入一张图片</strong>，这怎么计算批量的均值和方差，于是，就有了代码中下面两行，在训练的时候实现计算好mean和var，测试的时候直接拿来用就可以了，不用计算均值和方差。</p>
+<h3 id="BatchNorm优势"><a href="#BatchNorm优势" class="headerlink" title="BatchNorm优势"></a>BatchNorm优势</h3><blockquote>
+<ol>
+<li>不仅仅极大提升了训练速度，收敛过程大大加快；</li>
+<li>还能增加分类效果，一种解释是这是类似于Dropout的一种防止过拟合的正则化表达方式，所以不用Dropout也能达到相当的效果；</li>
+<li>另外调参过程也简单多了，对于初始化要求没那么高，而且可以使用大的学习率等；</li>
+<li>batchnorm降低了数据之间的绝对差异，有一个去相关的性质，更多的考虑相对差异性，因此在分类任务上具有更好的效果。</li>
+</ol>
 </blockquote>
-<h4 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h4><p>FastText的学习速度比较快，效果不错。fastText适用于分类类别非常大而且数据集足够多的情况。当分类类别比较小或者数据集比较少的话，很容易过拟合。</p>
-<p>可以完成无监督的词向量的学习，可以学习得到词向量；也可以用于有监督学习的分类任务（新闻文本分类，垃圾邮件分类，情感分析，电商中用户评论的褒贬分析）</p>
+<h2 id="Layer-Normalization"><a href="#Layer-Normalization" class="headerlink" title="Layer Normalization"></a>Layer Normalization</h2><h3 id="BatchNorm缺点"><a href="#BatchNorm缺点" class="headerlink" title="BatchNorm缺点"></a>BatchNorm缺点</h3><p>Batch size太小会影响模型性能。对batchsize的大小比较敏感，由于每次计算均值和方差是在一个batch上，所以 <strong>如果batchsize太小，则计算的均值、方差不足以代表整个数据分布</strong>；</p>
+<p>BN实际使用时需要计算并且保存某一层神经网络batch的均值和方差等统计信息，对于对一个固定深度的前向神经网络（DNN，CNN）使用BN，很方便；但对于RNN来说，sequence的长度是不一致的，换句话说RNN的深度不是固定的，不同的time-step需要保存不同的statics特征，可能存在一个特殊sequence比其他sequence长很多，这样training时，计算很麻烦。</p>
+<p>BN不适用于RNN等动态网络，适用于CNN；LN适用于RNN。</p>
+<blockquote>
+<p>很直观的一个例子：BN计算每个句子同一个位置字的均值和方差，但因为每个句子的长度不一样，最后是padding成一样的长度；那假如在该位置时，最后一句在该位置是没有字的，也就是用0表示了，那就会影响整个结果。</p>
+</blockquote>
+<h3 id="区别"><a href="#区别" class="headerlink" title="区别"></a>区别</h3><p>BN的主要思想：在每一层的每一批数据（一个batch里的同一个通道）上进行归一化；<br>LN的主要思想：在每一个样本（一个样本的不同通道）上计算均值和方差，并不是BN那种在批方向计算均值和方差。<br><img src="/pictures/AI/Normal/img4.png" alt="BN和LN的区别"></p>
+<h3 id="源码实现"><a href="#源码实现" class="headerlink" title="源码实现"></a>源码实现</h3><p>Layer Normalization在NLP的直观图中，就是对一个batch中的同一句话中的 <strong>每个字</strong> 分别进行归一化。</p>
+<p>如果只看 NLP 问题，假设我们的 batch 是（2,3,4）的，也就是 batch_size &#x3D; 2, seq_length &#x3D; 3, dim &#x3D; 4 的，假设第一个句子是 w1 w2 w3，第二个句子是 w4 w5 w6，那么这个 tensor 可以写为</p>
+<blockquote>
+<p>[ [[w11,w12,w13,w14], …]<br>[[w41,w42,w43,w44], …] ]</p>
+</blockquote>
+<p>如果是 BN 的话，会对同一个 batch 里对应位置上的 token 求平均值，也就是说 (w11+w12+w13+w14+w41+w42+w43+w44)&#x2F;8是其中一个 mean，一共会求出 3 个 mean，也就是上图里 C 个（seq_length）个 mean。</p>
+<p>如果是 LN 的话，<strong>看起来（其实并不是）</strong> 是对每个 sample 里的所有 feature 求 mean，也就是(w11+w12+w13+w14+w21+w22+w23+w24+w31+w32+w33+w34)&#x2F;12，可以求出一共 2 个 mean，也就是图里 N（batch_size）个 mean。<br><img src="/pictures/AI/Normal/img5.png" alt="Layer Norm的不同"></p>
+<p>左图和我们认为的 LN 一致，也是我一直认为的 LN，但是右图却是在一个 token 上求平均，带回我们原来的问题，对于一个(2,3,4)的 tensor，(w11+w12+w13+w14)&#x2F;4 是一个 mean，一共会有 2*3&#x3D;6 个 mean。</p>
  
       <!-- reward -->
       
@@ -825,7 +375,7 @@
     
     <footer class="article-footer">
        
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/NLP/" rel="tag">NLP</a></li></ul>
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/AI/" rel="tag">AI</a></li></ul>
 
     </footer>
   </div>
@@ -836,7 +386,7 @@
 
     
     <article
-  id="post-NLP/BERT"
+  id="post-Programming/C++/9-内联函数"
   class="article article-type-post"
   itemscope
   itemprop="blogPost"
@@ -847,8 +397,8 @@
     <header class="article-header">
        
 <h2 itemprop="name">
-  <a class="article-title" href="/2022/09/04/NLP/BERT/"
-    >BERT</a> 
+  <a class="article-title" href="/2022/09/18/Programming/C++/9-%E5%86%85%E8%81%94%E5%87%BD%E6%95%B0/"
+    >第9章 内联函数</a> 
 </h2>
  
 
@@ -856,40 +406,499 @@
     </header>
      
     <div class="article-meta">
-      <a href="/2022/09/04/NLP/BERT/" class="article-date">
-  <time datetime="2022-09-04T09:01:46.173Z" itemprop="datePublished">2022-09-04</time>
+      <a href="/2022/09/18/Programming/C++/9-%E5%86%85%E8%81%94%E5%87%BD%E6%95%B0/" class="article-date">
+  <time datetime="2022-09-18T14:03:01.151Z" itemprop="datePublished">2022-09-18</time>
 </a> 
   <div class="article-category">
-    <a class="article-category-link" href="/categories/%E8%87%AA%E7%84%B6%E8%AF%AD%E8%A8%80%E5%A4%84%E7%90%86/">自然语言处理</a>
+    <a class="article-category-link" href="/categories/%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80/">编程语言</a> / <a class="article-category-link" href="/categories/%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80/C/">C++</a>
   </div>
    
     </div>
       
     <div class="article-entry" itemprop="articleBody">
        
-  <p>BERT全称为Bidirectional Encoder Representation from Transformers，是一个预训练的语言表征模型。<br>它强调了不再像以往一样采用传统的单向语言模型或者把两个单向语言模型进行浅层拼接的方法进行预训练，而是采用新的 <strong>masked language model（MLM）</strong> ，以致能生成深度的双向语言表征。</p>
-<p>该模型的主要优点：</p>
-<ul>
-<li>采用MLM对双向的Transformers进行预训练，以生成深层的双向语言表征；</li>
-<li>预训练后，只需要添加一个额外的输出层进行fine-tune，就可以在各种各样的下游任务中取得优异的表现。在此过程中不需要对BERT结构进行修改。</li>
-</ul>
-<h3 id="BERT提出动机"><a href="#BERT提出动机" class="headerlink" title="BERT提出动机"></a>BERT提出动机</h3><p>预训练语言模型对于下游很多自然语言处理任务都有着显著改善。现有的训练模型的网络结构限制了模型本身的表达能力，最主要的限制就是没有采用<strong>双向编码</strong>的方法来对输入进行编码。这就导致模型只能看见当前时刻之前的信息，而不能同时捕捉当前时刻之后的信息。</p>
-<p>在论文中，作者提出了采用BERT(Bidirectional Encoder Representations from Transformers)这一网络结构来实现模型的双向编码学习能力。同时，为了使得模型能够有效的学习到双向编码的能力，BERT在训练过程中使用了基于掩盖的语言模型(Masked Language Model, MLM)，即随机对输入序列中的某些位置进行遮蔽，然后通过模型来对其进行预测。</p>
-<p>由于MLM 预测任务能够使得模型编码得到的结果同时包含上下文的语境信息，因此有利于训练得到更深的BERT网络模型。除此之外，在训练BERT的过程中作者还加入了下句预测任务(Next Sentence Prediction, NSP)， 即同时输入两句话到模型中，然后预测第 2 句话是不是第 1 句话的下一句话。</p>
-<h3 id="BERT网络结构"><a href="#BERT网络结构" class="headerlink" title="BERT网络结构"></a>BERT网络结构</h3><p>BERT网络结构整体上就是由多层的Transformer Encoder堆叠所形成。其上半部分的结构与之前介绍的Transformer Encoder差不多，只不过在Input部分多了一个<strong>Segment Embedding</strong>。</p>
-<h4 id="Input-Embedding"><a href="#Input-Embedding" class="headerlink" title="Input Embedding"></a>Input Embedding</h4><p>在 BERT 中 Input Embedding 模块主要包含三个部分:Token Embedding、Positional Embedding 和 Segment Embedding。</p>
+  <p>在C中，保持效率的一个方法是使用宏(macro)。宏可以不要普通的函数调用代价 就可使之看起来像函数调用。宏的实现是用预处理器而不是编译器。预处理器直接用宏代 码代替宏调用，所以就没有了参数压栈、生成汇编语言的CALL、返回参数、执行汇编语 言的RETURN等的开销。所有的工作由预处理器来完成，因此不用花费什么就具有了程序 调用的便利和可读性。</p>
+<p>在C++中，使用预处理器宏存在两个问题。</p>
 <blockquote>
 <ul>
-<li>这里需要注意的是 BERT 中的 Positional Embedding 对于每个位置的编码并不是采用公式计算得到，而是类似普 通的词嵌入一样为每一个位置初始化了一个向量，然后随着网络一起训练得到。BERT 开源的预训练模型最大只支持 512 个字符的长度，这是因为其在训练过程中(位置)词表的最大长度只有 512。</li>
-<li>Segment Embedding 的作用是用来区分输入序列中的不同部分，其本质就是通过一个普通的词嵌入来区分每一个序列所处的位置。</li>
+<li>第一个问题在C中也存在:宏看起来像一个函数调用，但并不总是这样。这样就隐藏了难以发现的错误。</li>
+<li>第二个问题是C++特有的:预处理器不允许访问类的成员数据。这意味着预处理器宏不能用作类的成员函数。</li>
 </ul>
 </blockquote>
-<p>最后，将这3个Embedding进行相加（并进行标准化）便得到了最终的Input Embedding部分的输出。<br><img src="/pictures/NLP/BERT/img1.png" alt="BERT的Embedding输入"><br>最上面的 Input 表示原始的输入序列，其中第一个字符“[CLS]” 是一个特殊的分类标志，如果下游任务是做文本分类的话，那么在 BERT 的输出 结果中可以只取“[CLS]”对应的向量进行分类即可**(不过实验表明，取所有位置向量的均值往往有着更好的效果)**；而其中的“[SEP]”字符则是用来作为将两句话分开的标志。</p>
-<h4 id="BERT-Encoder"><a href="#BERT-Encoder" class="headerlink" title="BERT Encoder"></a>BERT Encoder</h4><p>在论文中作者分别用 L 来表示 BertLayer 的层数，即 BertEncoder 是由 L 个 BertLayer 所构成;用 H 来表示模型的维度;用 A 来表示多头注意力中多头的个数。<br>同时，在论文中作者分别就 BERT_BASE (L&#x3D;12, H&#x3D;768, A&#x3D;12) 和 BERT_LARGE (L&#x3D;24,H&#x3D;1024,A&#x3D;16)这两种尺寸的 BERT 模型进行了实验对比。</p>
-<h4 id="MLM与NSP"><a href="#MLM与NSP" class="headerlink" title="MLM与NSP"></a>MLM与NSP</h4><p>对于 MLM 任务来说，其做法是随机掩盖掉输入序列中15% 的 Token(即用“[MASK]”替换掉原有的 Token)，然后在 BERT 的输出结果中 取对应掩盖位置上的向量进行真实值预测。<br>虽然 MLM 的这种做法能够得到一个很好的预训练模型，但 是仍旧存在不足之处。由于在 fine-tuning 时，由于输入序列中并不存在“[MASK]” 这样的 Token，因此这将导致 pre-training 和 fine-tuning 之间存在不匹配不一致的 问题(GAP)。<br>为了解决这一问题，作者在原始 MLM 的基础了做了部分改动，即先选定15% 的Token，然后将其中的80%替换为“[MASK]”、10%随机替换为其它Token、 剩下的10% 不变。最后取这15% 的 Token 对应的输出做分类来预测其真实值。</p>
-<p>由于很多下游任务需要依赖于分析两句话之间的关系来进行建模，例如问题 回答等。为了使得模型能够具备有这样的能力，作者在论文中又提出了二分类的 下句预测任务。<br>具体地，对于每个样本来说都是由 A 和 B 两句话构成，其中50%的情况 B 确实为 A 的下一句话(标签为 IsNext)，另外的50%的情况是 B 为语料中其它 的随机句子(标签为 NotNext)，然后模型来预测 B 是否为 A 的下一句话。<br><img src="/pictures/NLP/BERT/img2.png" alt="BERT的训练任务"></p>
+<h3 id="预处理器的缺陷"><a href="#预处理器的缺陷" class="headerlink" title="预处理器的缺陷"></a>预处理器的缺陷</h3><p>第一个问题是表达式在宏内展开，所以它们的优先级不同于所期望的优先级。<br>第二个问题则复杂一些。不像普通函数，每次在宏中使用一个参数，都对这个参数求值。只要使用普通变量调用宏仅，求值就无危险。但假如参数求值有副作用，那么结果可能出乎预料，并肯定不能模仿函数行为。</p>
+<h4 id="宏和访问"><a href="#宏和访问" class="headerlink" title="宏和访问"></a>宏和访问</h4><p>预处理器只是简单地执行字符替代。</p>
+<p>在宏里简直没有办法表示类的范围。由于没 有可以取代预处理器宏的方法，程序设计者出于效率考虑，不得不让一些数据成员成为 public类型，这样就会暴露内部实现并妨碍在这个实现中的改变，从而消除了private提供的保护。</p>
+<h3 id="内联函数"><a href="#内联函数" class="headerlink" title="内联函数"></a>内联函数</h3><p>联函数能够像普通函数一样具有我们所有期望的任何行为。惟一不同之处是内联函数在适当的地方像宏一样展开，所以不需要函数调用的开销。</p>
+<p>任何在类中定义的函数自动地成为内联函数，但也可以在非类的函数前面加上inline 关键字使之成为内联函数。但为了使之有效，必须使函数体和声明结合在一起，否则，编 译器将它作为普通函数对待。</p>
+<p>一般应该把内联定义放在头文件里。当编译器看到这个定义时，它把函数类型(函数 名+返回值)和函数体放到符号表里。当使用函数时，编译器检查以确保调用是正确的且 返回值被正确使用，然后将函数调用替换为函数体，因而消除了开销。内联代码的确占用 空间，但假如函数较小，这实际上比为了一个普通函数调用而产生的代码(参数压栈和执 行CALL)占用的空间还少。</p>
+ 
+      <!-- reward -->
+      
+    </div>
+    
+
+    <!-- copyright -->
+    
+    <footer class="article-footer">
+       
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/C/" rel="tag">C++</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Programming/" rel="tag">Programming</a></li></ul>
+
+    </footer>
+  </div>
+
+   
+    
+</article>
+
+    
+    <article
+  id="post-Programming/C++/8-常量"
+  class="article article-type-post"
+  itemscope
+  itemprop="blogPost"
+  data-scroll-reveal
+>
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h2 itemprop="name">
+  <a class="article-title" href="/2022/09/18/Programming/C++/8-%E5%B8%B8%E9%87%8F/"
+    >第8章 常量</a> 
+</h2>
+ 
+
+      
+    </header>
+     
+    <div class="article-meta">
+      <a href="/2022/09/18/Programming/C++/8-%E5%B8%B8%E9%87%8F/" class="article-date">
+  <time datetime="2022-09-18T13:38:50.474Z" itemprop="datePublished">2022-09-18</time>
+</a> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80/">编程语言</a> / <a class="article-category-link" href="/categories/%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80/C/">C++</a>
+  </div>
+   
+    </div>
+      
+    <div class="article-entry" itemprop="articleBody">
+       
+  <p>常量概念(由关键字const表示)是为了使程序员能够在变和不变之间画一条界线。这在C++程序设计项目中提供了安全性和可控性。</p>
+<p>const的最初动机是取代预处理器#defines来进行值替代。从这以后它曾被用于指针、 函数变量、返回类型、类对象以及成员函数。</p>
+<h3 id="值替代"><a href="#值替代" class="headerlink" title="值替代"></a>值替代</h3><p>当用C语言进行程序设计时，预处理器可以不受限制地建立宏并用它来替代值。因为预处理器只做些文本替代，它既 <strong>没有类型检查概念</strong>，也没有 <strong>类型检查功能</strong>，所以预处理器的值替代会产生一些微小的问题，这些问题在C++中可以通过使用const值而避免。</p>
+<p>C++用const来消除 <strong>宏定义没有类型信息</strong> 问题，具体方法是把值替代移交给编译器。</p>
+<h4 id="头文件里的const"><a href="#头文件里的const" class="headerlink" title="头文件里的const"></a>头文件里的const</h4><p>要使用const而非#define，同样必须把const定义放进 <strong>头文件</strong> 里。这样，通过包含头文件，可把const定义单独放在一个地方并把它分配给一个编译单元。C++中的const默认为 内部连接(internal linkage)，也就是说，const仅在const被定义过的文件里才是可见的， 而在连接时不能被其他编译单元看到。</p>
+<p>当定义一个const时，<strong>必须赋一个值给它，除非用extern作出了清楚的说明</strong>。</p>
+<p>通常C++编译器并 <strong>不为const创建存储空间</strong>，相反它把这个定义保存在它的符号表里。<br>上面的extern强制进行了存储空间分配(另外还有一些情况，如取一个const的地址，也要进行存储空间分配)，由于extern意味着使用 <strong>外部连接</strong> ，因此 <strong>分配存储空间</strong>，这也就是说有几个不同的编译单元应当能够引用它，所以它必须有存储空间。</p>
+<p>由于编译器不能完全避免为const分配内存，所以const的定义必须 <strong>默认内部连接</strong>，即连接仅在特定的编译单元内;否则，由于众多的const在多个cpp文件内分配存储，容易引起连接错误，连接程序在多个对象文件里看到同样的定义就会“抱怨”。然而，因为const默认内部连接，所以连接程序不会跨过编译单元连接那些定义，因此不会有冲突。在大部分场合使用内建数据类型的情况，包括常量表达式，编译都能执行常量折叠。</p>
+<h4 id="const的安全性"><a href="#const的安全性" class="headerlink" title="const的安全性"></a>const的安全性</h4><p>const的作用不仅限于在常数表达式里代替#defines。如果用运行期间产生的值初始化一个变量而且知道在变量生命期内是不变的，则用const限定该变量是程序设计中的一个很好的做法。</p>
+<p>就实际来说，如果想让一个值不变，就应该使之成为const。这不仅为防止意外的更改提供安全措施，也消除了读存储器和读内存操作，使编译器产生的代码更有效。</p>
+<h4 id="与C语言的区别"><a href="#与C语言的区别" class="headerlink" title="与C语言的区别"></a>与C语言的区别</h4><p>C中const的意思是“一个不能被改变的普通变量”，const常量总是占用存储而且它的名字是全局符。</p>
+<p>C默认const是外部连接的；C++默认const是内部连接。<br>在C++中，一个const不必创建内存空间，而在C中，一个const总是需要创建一块内存空间。</p>
+<h3 id="指针"><a href="#指针" class="headerlink" title="指针"></a>指针</h3><p>当使用带有指针的const时，有两种选择:const修饰指针正指向的对象，或者const修饰在指针里存储的地址。</p>
+<h4 id="指向const的指针"><a href="#指向const的指针" class="headerlink" title="指向const的指针"></a>指向const的指针</h4><p>正如任何复杂的定义一样，定义指针的技巧是在标识符的开始处读它并从里向外读。const修饰“最靠近”它的那个。</p>
+<h4 id="const指针"><a href="#const指针" class="headerlink" title="const指针"></a>const指针</h4><p>使指针本身成为一个const指针，必须把const标明的部分放在*的右边。</p>
+<p>因为指针本身现在是const指针，编译器要求给它一个初始值，这个值在指针生命期间内不变。然而要改变它所指向的值是可以的。</p>
+<h4 id="赋值和类型检查"><a href="#赋值和类型检查" class="headerlink" title="赋值和类型检查"></a>赋值和类型检查</h4><p>可以把一个非const对象的地址赋给一个const指针，因为也许有时不想改变某些可以改变的东西。<br>然而，不能把一个const对象的地址赋给一个非const指针，因为这样做可能通过被赋值的指针改变这个对象的值。</p>
+<h3 id="函数参数和返回值"><a href="#函数参数和返回值" class="headerlink" title="函数参数和返回值"></a>函数参数和返回值</h3><p>如果按值传递对象，对客户来讲，用const限定没有意义(它意味着传递的参数在函数里是不能被修改的)。<br>如果按常量返回用户定义类型的一个对象的值，这意味着返回值不能被修改。<br>如果传递并返回地址，const将保证该地址内容不会被改变。</p>
+<h4 id="传递const值"><a href="#传递const值" class="headerlink" title="传递const值"></a>传递const值</h4><p>在函数里，const有这样的意义:参数不能被改变。所以它其实是函数创建者的工具，而不是函数调用者的工具。</p>
+<p>为了不使调用者混淆，在函数内部用const限定参数优于在参数表里用const限定参数。</p>
+<h4 id="返回const值"><a href="#返回const值" class="headerlink" title="返回const值"></a>返回const值</h4><p>对返回值来讲，存在一个类似的道理，即如果一个函数的返回值是一个常量（const）。这就约定了函数框架里的原变量不会被修改。另外。因为这是按值返回的，所以这个变量被制成副本，使得初值不会被返回值所修改。</p>
+<p>当处理用户定义的类型时，按值返回常量是很重要的。如果一个函数按值返回一个类对象为const时，那么这个函数的返回值不能是一个左值(即它不能被赋值，也不能被修改)。</p>
+<h4 id="传递和返回地址"><a href="#传递和返回地址" class="headerlink" title="传递和返回地址"></a>传递和返回地址</h4><p>如果传递或返回一个地址(一个指针或一个引用)，客户程序员去取地址并修改其初值是可能的。<br>如果使这个指针或者引用成为const，就会阻止这类事的发生，这是非常重要的事情。<br>事实上，无论什么时候传递一个地址给一个函数，都应该尽可能用const修饰它。如果不这样做，就不能以const指针参数的方式使用这个函数。</p>
+<h3 id="类"><a href="#类" class="headerlink" title="类"></a>类</h3><p>为了保证一个类对象为常量，引进了const成员函数:const成员函数只能对于const对象调用。</p>
+<h4 id="类里的const"><a href="#类里的const" class="headerlink" title="类里的const"></a>类里的const</h4><p>常数表达式使用常量的地方之一是在类里。典型的例子是在一个类里建立一个数组，并用const代替#define设置数组大小以及用于有关数组的计算。数组大小一直隐藏在类里，这样，如果用size表示数组大小，就可以把size这个名字用在另一个类里而不发生冲突。然而所有的#define从定义的地方起就被预处理器看成是全局的，所以用#define就不会得到预期的效果。</p>
+<p>它在每个类对象里分配存储并代表一个值，这个值一旦被初始化以后就不能改变。在一个类里使用const意味着“在这个对象生命期内，它是一个常量”。然而，对这个常量来讲，每个不同的对象可以含有一个不同的值。</p>
+<p><strong>在一个类里建立一个普通的（非static的）const时，不能给它初值。这个初始化工作必须在构造函数里进行。</strong></p>
+<h4 id="编译期间类里的常量"><a href="#编译期间类里的常量" class="headerlink" title="编译期间类里的常量"></a>编译期间类里的常量</h4><p>如何让一个类有编译期间的常量成员?这就要求使用另外一个关键字static。</p>
+<p>关键字static意味着“不管类的对象被创建多 少次，都只有一个实例”，这正是所需要的:类中的一个常量成员，在该类的所有对象中 它都一样。因此，一个内建类型的static const可以看做一个编译期间的常量。</p>
+<h4 id="const对象和成员函数"><a href="#const对象和成员函数" class="headerlink" title="const对象和成员函数"></a>const对象和成员函数</h4><p>编译器强调对象为const的，因此它必须保证对象的数据成员在其生命期内不被改变。</p>
+<p>仅仅声明一个函数在类定义里是const的，还不能保证成员函 数按声明的方式去做，所以编译器强迫程序员在定义函数时要重申const说明。</p>
+<p>为确保函数定义的 常量性，如果我们改变对象中的任何成员或调用一个非const成员函数，编译器就将发出 一个出错信息。</p>
+<p>要理解声明const成员函数的语法，首先注意前面的带const的函数声明，它表示函数 的返回值是const，但这不会产生想要的结果。相反，必须把修饰符const放在函数参数表 的后面。</p>
+<p>关键字const必须用同样的方式重复出现在定义里，否则编译器把它看成一个不同的 函数。</p>
+<h3 id="volatile"><a href="#volatile" class="headerlink" title="volatile"></a>volatile</h3><p>volatile的语法与const是一样的，但是volatile的意思是“在编译器认识的范围外，这个 数据可以被改变”。可以被其他进程修改，不能被自己修改。</p>
+<p>如果编译器说:“我已经把数据读进寄存器，而且再没有与寄存器接触”。一般情况 下，它不需要再读这个数据。但是，如果数据是volatile修饰的，编译器就不能作出这样的 假定，因为这个数据可能被其他进程改变了，它必须重读这个数据而不是优化这个代码来 消除通常情况下那些冗余的读操作代码。</p>
+<h3 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h3><p>关键字const能将对象、函数参数、返回值和成员函数定义为常量，并能消除预处理 器的值替代而不使预处理器的影响。所有这些都为程序设计提供了又一种非常好的类型检 查形式以及安全性。使用所谓的常量正确性(const correctness)(在任何可能的地方使用 const)已成为项目的救星。</p>
+ 
+      <!-- reward -->
+      
+    </div>
+    
+
+    <!-- copyright -->
+    
+    <footer class="article-footer">
+       
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/C/" rel="tag">C++</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Programming/" rel="tag">Programming</a></li></ul>
+
+    </footer>
+  </div>
+
+   
+    
+</article>
+
+    
+    <article
+  id="post-Programming/C++/7-函数重载与默认参数"
+  class="article article-type-post"
+  itemscope
+  itemprop="blogPost"
+  data-scroll-reveal
+>
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h2 itemprop="name">
+  <a class="article-title" href="/2022/09/17/Programming/C++/7-%E5%87%BD%E6%95%B0%E9%87%8D%E8%BD%BD%E4%B8%8E%E9%BB%98%E8%AE%A4%E5%8F%82%E6%95%B0/"
+    >第7章 函数重载与默认参数</a> 
+</h2>
+ 
+
+      
+    </header>
+     
+    <div class="article-meta">
+      <a href="/2022/09/17/Programming/C++/7-%E5%87%BD%E6%95%B0%E9%87%8D%E8%BD%BD%E4%B8%8E%E9%BB%98%E8%AE%A4%E5%8F%82%E6%95%B0/" class="article-date">
+  <time datetime="2022-09-17T10:29:00.417Z" itemprop="datePublished">2022-09-17</time>
+</a> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80/">编程语言</a> / <a class="article-category-link" href="/categories/%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80/C/">C++</a>
+  </div>
+   
+    </div>
+      
+    <div class="article-entry" itemprop="articleBody">
+       
+  <p>函数重载意味着，我们有两个库，它们都有同名的函数，只要它们的参数列表不同就不会发生冲突。</p>
+<h3 id="名字修饰"><a href="#名字修饰" class="headerlink" title="名字修饰"></a>名字修饰</h3><p>我们建议在函数名前加 类名的方法来命名函数，所以编译器使用的内部名字可能就是_f和_X_f。函数名不仅与类 名关系密切，而且还跟其他因素有关。</p>
+<p>可以对不同的函数用同样的名字，只要求函数的参数不同。编译器会修饰这些名字、范围和参数来产生内部名以供它和连接器使用。</p>
+<h3 id="默认参数"><a href="#默认参数" class="headerlink" title="默认参数"></a>默认参数</h3><p>默认参数是在函数声明 时就已给定的一个值，如果在调用函数时没有指定这一参数的值，编译器就会自动地插上这个值。</p>
+<p>在使用默认参数时必须记住两条规则。</p>
+<ol>
+<li>只有参数列表的后部参数才是可默认的，也就是说，不可以在一个默认参数后面又跟一个非默认的参数。</li>
+<li>一旦在一个函数调用中开始使用默认参数，那么这个参数后面的所有参数都必须是默认的(这可以从第一条中导出)。</li>
+</ol>
+<p>默认参数只能放在 <strong>函数声明</strong> 中，通常在一个头文件中。编译器必须在使用该函数之前知道默认值。</p>
+<h4 id="占位符参数"><a href="#占位符参数" class="headerlink" title="占位符参数"></a>占位符参数</h4><p>函数声明时，参数可以没有标识符，当这些不带标识符的参数用做默认参数时，看起<br>来很有意思。</p>
+<p>这种语 法允许把一个参数用做占位符而不去用它。其目的在于以后可以修改函数定义而不需要修 改所有的函数调用。</p>
+<h3 id="选择重载还是默认参数"><a href="#选择重载还是默认参数" class="headerlink" title="选择重载还是默认参数"></a>选择重载还是默认参数</h3><p>不能把默认参数作为一个标志去决定执行函数的哪一块，这是基本原则。在这种情况下，只要能够，就应该把函数分解成两个或多个重载的函数。一个默认的参数应该是一个在一般情况下放在这个位置的值。这个值出现的可能比其他值要大，所以客户程序员可以忽略它或只在需要改变默认值时才去用它。</p>
+<p>默认参数的引用是为了使函数调用更容易，特别是当这些函数的许多参数都有特定值时。它不仅使书写函数调用更容易，而且阅读也更方便，尤其是当类的创建者能够制定参数，以便把那些最不可能调整的默认参数放在参数表的最后面时。</p>
+<p>默认参数的一个重要应用情况是在开始定义函数时用了一组参数，而使用了一段时间后发现要增加一些参数。通过把这些新增参数都作为默认的参数，就可以保证所有使用这一函数的客户代码不会受到影响。</p>
+ 
+      <!-- reward -->
+      
+    </div>
+    
+
+    <!-- copyright -->
+    
+    <footer class="article-footer">
+       
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/C/" rel="tag">C++</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Programmming/" rel="tag">Programmming</a></li></ul>
+
+    </footer>
+  </div>
+
+   
+    
+</article>
+
+    
+    <article
+  id="post-Programming/C++/6-初始化与清除"
+  class="article article-type-post"
+  itemscope
+  itemprop="blogPost"
+  data-scroll-reveal
+>
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h2 itemprop="name">
+  <a class="article-title" href="/2022/09/17/Programming/C++/6-%E5%88%9D%E5%A7%8B%E5%8C%96%E4%B8%8E%E6%B8%85%E9%99%A4/"
+    >第6章 初始化与清除</a> 
+</h2>
+ 
+
+      
+    </header>
+     
+    <div class="article-meta">
+      <a href="/2022/09/17/Programming/C++/6-%E5%88%9D%E5%A7%8B%E5%8C%96%E4%B8%8E%E6%B8%85%E9%99%A4/" class="article-date">
+  <time datetime="2022-09-17T09:59:08.220Z" itemprop="datePublished">2022-09-17</time>
+</a> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80/">编程语言</a> / <a class="article-category-link" href="/categories/%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80/C/">C++</a>
+  </div>
+   
+    </div>
+      
+    <div class="article-entry" itemprop="articleBody">
+       
+  <h3 id="用构造函数确保初始化"><a href="#用构造函数确保初始化" class="headerlink" title="用构造函数确保初始化"></a>用构造函数确保初始化</h3><p>类的设计者可以通过提供一个叫做 <strong>构造函数(constructor)</strong> 的特殊函数来 <strong>保证每个对象都被初始化</strong>。如果一个类有构造函数，<strong>编译器在创建对象时就自动调用这一函数</strong>，这一切在客户程序员使用他们的对象之前就已经完成了。是否调用构造函数不需要客户程序员来考虑，它是由编 译器在对象定义时完成的。</p>
+<p><strong>构造函数的名字与类的名字一样</strong>。这样的函数在初始化时会自动被调用。</p>
+<p>传递到构造函数的第一个(秘密)参数是this指针，也就是调用这一函数的对象的地址，不过，对构造函数来说，this指针指向一个没有被初始化的内存块，构造函数的作用就是 <strong>正确的初始化该内存块</strong>。</p>
+<p>像其他函数一样，也可以通过向构造函数传递参数，指定对象该如何创建或设定对象 初始值。</p>
+<p>构造函数和析构函数是两个非常特殊的函数:它们没有返回值。这与返回值为void的 函数显然不同。如果它们有返回值，要么编译器必须知 道如何处理返回值，要么就只能由客户程序员自己来显式地调用构造函数与析构函数，这 样一来，安全性就被破坏了。</p>
+<h3 id="用析构函数确保清除"><a href="#用析构函数确保清除" class="headerlink" title="用析构函数确保清除"></a>用析构函数确保清除</h3><p>在C++中，清除就像初始化一样重要。它通过析构函数来保证清除的执行。析构函数的语法与构造函数一样，用类的名字作为函数名。然而析构函数前面加上一个 <strong>代字号(~)<strong>，以和构造函数区别。另外，</strong>析构函数不带任何参数，因为析构不需任何选项</strong>。<br>当对象超出它的作用域时，<strong>编译器</strong> 将自动调用析构函数。</p>
+ 
+      <!-- reward -->
+      
+    </div>
+    
+
+    <!-- copyright -->
+    
+    <footer class="article-footer">
+       
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/C/" rel="tag">C++</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Programming/" rel="tag">Programming</a></li></ul>
+
+    </footer>
+  </div>
+
+   
+    
+</article>
+
+    
+    <article
+  id="post-Programming/C++/4-数据抽象"
+  class="article article-type-post"
+  itemscope
+  itemprop="blogPost"
+  data-scroll-reveal
+>
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h2 itemprop="name">
+  <a class="article-title" href="/2022/09/15/Programming/C++/4-%E6%95%B0%E6%8D%AE%E6%8A%BD%E8%B1%A1/"
+    >第4章 数据抽象</a> 
+</h2>
+ 
+
+      
+    </header>
+     
+    <div class="article-meta">
+      <a href="/2022/09/15/Programming/C++/4-%E6%95%B0%E6%8D%AE%E6%8A%BD%E8%B1%A1/" class="article-date">
+  <time datetime="2022-09-15T03:06:37.476Z" itemprop="datePublished">2022-09-15</time>
+</a> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80/">编程语言</a> / <a class="article-category-link" href="/categories/%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80/C/">C++</a>
+  </div>
+   
+    </div>
+      
+    <div class="article-entry" itemprop="articleBody">
+       
+  <p>库只是他人已经写好的一些代码，按某种方式包装在一起。通常，最小的包是带有扩 展名(如lib)的文件和向编译器声明库中有什么的一个或多个头文件。连接器知道如何 在库文件中搜索和提取相应的已编译的代码。但是，这只是提供库的一种方法。在跨越多 种体系结构的平台(例如Linux&#x2F;Unix)上，通常，提供库的最明智的方法是使用源代码， 这样它就能在新的目标机上被重新配置和编译。</p>
+<p>所以，库大概是改进生产效率的最重要的方法。C++的主要设计目标之一就是使库使 用起来更加容易。这种说法暗示，在C中使用库有一些难度。理解这个因素将使我们对 C++设计有一个初步的了解，并因而对如何使用它有更深入的认识。</p>
+<h4 id="基本对象"><a href="#基本对象" class="headerlink" title="基本对象"></a>基本对象</h4> 
+      <!-- reward -->
+      
+    </div>
+    
+
+    <!-- copyright -->
+    
+    <footer class="article-footer">
+       
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/C/" rel="tag">C++</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Programming/" rel="tag">Programming</a></li></ul>
+
+    </footer>
+  </div>
+
+   
+    
+</article>
+
+    
+    <article
+  id="post-Programming/C++/3-Cpp中的C"
+  class="article article-type-post"
+  itemscope
+  itemprop="blogPost"
+  data-scroll-reveal
+>
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h2 itemprop="name">
+  <a class="article-title" href="/2022/09/14/Programming/C++/3-Cpp%E4%B8%AD%E7%9A%84C/"
+    >第3章 Cpp中的C</a> 
+</h2>
+ 
+
+      
+    </header>
+     
+    <div class="article-meta">
+      <a href="/2022/09/14/Programming/C++/3-Cpp%E4%B8%AD%E7%9A%84C/" class="article-date">
+  <time datetime="2022-09-14T09:51:13.575Z" itemprop="datePublished">2022-09-14</time>
+</a> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80/">编程语言</a> / <a class="article-category-link" href="/categories/%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80/C/">C++</a>
+  </div>
+   
+    </div>
+      
+    <div class="article-entry" itemprop="articleBody">
+       
+   
+      <!-- reward -->
+      
+    </div>
+    
+
+    <!-- copyright -->
+    
+    <footer class="article-footer">
+       
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/C/" rel="tag">C++</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Programming/" rel="tag">Programming</a></li></ul>
+
+    </footer>
+  </div>
+
+   
+    
+</article>
+
+    
+    <article
+  id="post-Programming/C++/2-对象的创建与使用"
+  class="article article-type-post"
+  itemscope
+  itemprop="blogPost"
+  data-scroll-reveal
+>
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h2 itemprop="name">
+  <a class="article-title" href="/2022/09/14/Programming/C++/2-%E5%AF%B9%E8%B1%A1%E7%9A%84%E5%88%9B%E5%BB%BA%E4%B8%8E%E4%BD%BF%E7%94%A8/"
+    >第2章 对象的创建与使用</a> 
+</h2>
+ 
+
+      
+    </header>
+     
+    <div class="article-meta">
+      <a href="/2022/09/14/Programming/C++/2-%E5%AF%B9%E8%B1%A1%E7%9A%84%E5%88%9B%E5%BB%BA%E4%B8%8E%E4%BD%BF%E7%94%A8/" class="article-date">
+  <time datetime="2022-09-14T09:42:53.496Z" itemprop="datePublished">2022-09-14</time>
+</a> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80/">编程语言</a> / <a class="article-category-link" href="/categories/%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80/C/">C++</a>
+  </div>
+   
+    </div>
+      
+    <div class="article-entry" itemprop="articleBody">
+       
+  <p>用户定义的数据类型或类(class)，是C++区别于传统过程型语言的地方。类是一种 新的数据类型，用来解决特定问题。一旦创建了一个类，任何人都可以使用它而不需知道 它的构造方式和工作原理细节。本章仅把类作为C++内置的另一种数据类型来使用。</p>
+<h3 id="语言翻译过程"><a href="#语言翻译过程" class="headerlink" title="语言翻译过程"></a>语言翻译过程</h3><p>任何一种计算机语言都要从某种人们容易理解的形式(源代码)转化成计算机能执行 的形式(机器指令)。通常，翻译器分为两类:解释器(interpreter)和编译器 (compiler)。</p>
+<h4 id="解释器"><a href="#解释器" class="headerlink" title="解释器"></a>解释器</h4><p>解释器将源代码转化成一些动作(它可由多组机器指令组成)并立即执行这些动作。</p>
+<h4 id="编译器"><a href="#编译器" class="headerlink" title="编译器"></a>编译器</h4><p>编译器直接把源代码转化成汇编语言或机器指令。最终的结果是一个或多个机器代码<br>的文件。这是一个复杂的过程，通常分几步完成。使用编译器时，从写源代码转到执行代<br>码，是一个较长的过程。</p>
+<h4 id="编译过程"><a href="#编译过程" class="headerlink" title="编译过程"></a>编译过程</h4><p>某些语言(特别是 C&#x2F;C++)编译时，首先要对源代码执行 <strong>预处理</strong>。</p>
 <blockquote>
-<p>总的来说，如果单从网络结构上来看 BERT 并没有太大的创新，这也正如作 者所说“BERT 整体上就是由多层的 Transformer Encoder 堆叠而来”，并且所谓 的“bidirectional”其实指的也就是 Transformer 中的 self-attention 机制。同时， 在掌柜看来真正让 BERT 表现出色的应该是基于 MLM 和 NSP 这两种任务的预 训练过程，使得训练得到的模型具有强大的表征能力。</p>
+<p>预处理器(preprocessor)是一个简单的程序，它用程序员(利用预处理器指令)定义好的模式代替源代码中的模式。<br>预处理器指令用来节省输入，增加代码的可读性。</p>
+</blockquote>
+<p>编译一般分两遍进行。</p>
+<blockquote>
+<ol>
+<li>首先，对预处理过的代码进行语法分析。编译器把源代码分解 成小的单元并把它们按树形结构组织起来。表达式“A+B”中的“A”、“+”和“B”就是语法分 析树的叶子节点。</li>
+<li>编译的第二遍，由代码生成器(code generator)遍历语法分析树，把树的每个节点转 化成汇编语言或机器代码。如果代码生成器生成的是汇编语言，那么还必须用汇编器对其 汇编。</li>
+</ol>
+</blockquote>
+<p>两种情况的最后结果都是生成目标模块(通常是，一个以.o或.obj为扩展名的文件)。</p>
+<h5 id="静态类型检查"><a href="#静态类型检查" class="headerlink" title="静态类型检查"></a>静态类型检查</h5><p>类型检查(type checking)是 <strong>编译器在第一遍</strong> 中完成的。类型检查是检查函数参数是 否正确使用，以防止许多程序设计错误。由于类型检查是 <em><strong>在编译阶段而不是程序运行阶段</strong></em> 进行的，所以称之为静态类型检查(static type checking)。</p>
+<h3 id="分段编辑工具"><a href="#分段编辑工具" class="headerlink" title="分段编辑工具"></a>分段编辑工具</h3><p>当创建大的项目时，分段编译尤其重要。在C&#x2F;C++中，可以将一个大程序构造成为许多小程序块，而这些小程序块容易管理，可独立测试。<br>程序分割的最基本的方法是创建命名子程序。在C和C++里，子程序称为函数(function)，函数是一段代码段，可以将这些函数放在不同的文件中，并能分别编译。另一种解释，<strong>函数是程序的基本单位</strong>，因为不能把一个函数分开，让其不同的部分放在不同的文件中;整个函数必须完整地放在一个文件里(尽管文件可拥有不止一个函数)。</p>
+<p>编译一个文件时，C或C++编译器必须知道在另一些文件中的函数和数据，特别是它的名字和基本用法。编译器就是要确保函数和数据被正确地使用。<strong>“告知编译器”外部函数和数据的名称及它们的模样</strong>，这一过程就是声明(declaration)。</p>
+<h4 id="声明与定义"><a href="#声明与定义" class="headerlink" title="声明与定义"></a>声明与定义</h4><blockquote>
+<p>声明是向编译器介绍名字—标识符。它告诉编译器“这个函数或这个变量在某处可找到，它的模样像什么”。<br>而定义是说:“在这里建立变量”或“在这里建立函数”。它为名字分配存储空间。无论定义的是函数还是变量，编译器都要为它们在定义点分配存储空间。</p>
+</blockquote>
+<p>对于变量，<strong>编译器确定变量的大小，然后在内存中开辟空间来保存变量的数据</strong>。对于函<br>数，编译器会生成代码，这些代码最终也要占用一定的内存。</p>
+<h4 id="连接"><a href="#连接" class="headerlink" title="连接"></a>连接</h4><p>连接器把由编译器生成的目标模块(一般是带“.o”或“.obj”扩展名的文件)连接成为操作系统可以加载和执行的程序。它是编译过程的最后阶段。</p>
+<h4 id="使用库文件"><a href="#使用库文件" class="headerlink" title="使用库文件"></a>使用库文件</h4><p>使用库必须:</p>
+<blockquote>
+<ol>
+<li>包含库的头文件。</li>
+<li>使用库中的函数和变量。</li>
+<li>把库连接进可执行程序。</li>
+</ol>
+</blockquote>
+<p>当C或C++要对函数和变量进行外部引用时，根据引用情况，连接器会选择两种处理 方法中的一种。如果还未遇到过这个函数或变量的定义，连接器会把它的标识符加到“未 解析的引用”列表中。如果连接器遇到过函数或变量定义，那么这就是已解决的引用。</p>
+<p>如果连接器在目标模块列表中不能找到函数或变量的定义，它将去查找库。库有某种 索引方式，连接器不必到库里查找所有目标模块—而只需浏览索引。当连接器在库中找到 定义后，就将整个目标模块而不仅仅是函数定义连接到可执行程序。</p>
+<p>因为连接器按指定的顺序查找文件，所以，用户使用与库函数同名的函数，把带有这<br>种函数的文件插到库文件名列表之前，就能用他自己的函数取代库函数。</p>
+ 
+      <!-- reward -->
+      
+    </div>
+    
+
+    <!-- copyright -->
+    
+    <footer class="article-footer">
+       
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/C/" rel="tag">C++</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Programming/" rel="tag">Programming</a></li></ul>
+
+    </footer>
+  </div>
+
+   
+    
+</article>
+
+    
+    <article
+  id="post-Programming/C++/1-对象导言"
+  class="article article-type-post"
+  itemscope
+  itemprop="blogPost"
+  data-scroll-reveal
+>
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h2 itemprop="name">
+  <a class="article-title" href="/2022/09/14/Programming/C++/1-%E5%AF%B9%E8%B1%A1%E5%AF%BC%E8%A8%80/"
+    >第1章 对象导言</a> 
+</h2>
+ 
+
+      
+    </header>
+     
+    <div class="article-meta">
+      <a href="/2022/09/14/Programming/C++/1-%E5%AF%B9%E8%B1%A1%E5%AF%BC%E8%A8%80/" class="article-date">
+  <time datetime="2022-09-14T08:47:46.075Z" itemprop="datePublished">2022-09-14</time>
+</a> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80/">编程语言</a> / <a class="article-category-link" href="/categories/%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80/C/">C++</a>
+  </div>
+   
+    </div>
+      
+    <div class="article-entry" itemprop="articleBody">
+       
+  <h3 id="抽象的过程"><a href="#抽象的过程" class="headerlink" title="抽象的过程"></a>抽象的过程</h3><p>所有的程序设计语言都是提供抽象。</p>
+<blockquote>
+<ol>
+<li>万物皆对象；</li>
+<li>程序就是一组对象，对象之间通过发送消息互相通知做什么；</li>
+<li>每个对象否有自己的由其他对象构成的存储区；</li>
+<li>每个对象都有一个类型；</li>
+<li>一个特定类型的所有对象都能接收相同的消息。</li>
+</ol>
 </blockquote>
  
       <!-- reward -->
@@ -901,7 +910,7 @@
     
     <footer class="article-footer">
        
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/NLP/" rel="tag">NLP</a></li></ul>
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/C/" rel="tag">C++</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Programming/" rel="tag">Programming</a></li></ul>
 
     </footer>
   </div>
@@ -914,6 +923,11 @@
   </article>
   
 
+  
+  <nav class="page-nav">
+    
+    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="page-number" href="/page/3/">3</a><a class="extend next" rel="next" href="/page/2/">下一页</a>
+  </nav>
   
 </section>
 </div>
