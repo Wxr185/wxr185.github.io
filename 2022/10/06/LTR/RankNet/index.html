@@ -13,7 +13,7 @@
         name="viewport"
         content="width=device-width, initial-scale=1, maximum-scale=1"
       />
-      <title>Normalization |  Alien笔记</title>
+      <title>RankNet |  Alien笔记</title>
   <meta name="generator" content="hexo-theme-ayer">
       
       <link rel="shortcut icon" href="/favicon.ico" />
@@ -55,7 +55,7 @@
     <main class="content on">
       <section class="outer">
   <article
-  id="post-Normalization"
+  id="post-LTR/RankNet"
   class="article article-type-post"
   itemscope
   itemprop="blogPost"
@@ -66,7 +66,7 @@
     <header class="article-header">
        
 <h1 class="article-title sea-center" style="border-left:0" itemprop="name">
-  Normalization
+  RankNet
 </h1>
  
 
@@ -74,11 +74,11 @@
     </header>
      
     <div class="article-meta">
-      <a href="/2022/09/25/Normalization/" class="article-date">
-  <time datetime="2022-09-25T07:48:34.905Z" itemprop="datePublished">2022-09-25</time>
+      <a href="/2022/10/06/LTR/RankNet/" class="article-date">
+  <time datetime="2022-10-06T06:40:11.122Z" itemprop="datePublished">2022-10-06</time>
 </a> 
   <div class="article-category">
-    <a class="article-category-link" href="/categories/%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD/">人工智能</a>
+    <a class="article-category-link" href="/categories/LTR/">LTR</a> / <a class="article-category-link" href="/categories/LTR/Pairwise/">Pairwise</a>
   </div>
   
 <div class="word_count">
@@ -86,7 +86,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-quill-pen-line"></i>
             <span class="post-meta-item-text"> 字数统计:</span>
-            <span class="post-count">2.2k</span>
+            <span class="post-count">1.4k</span>
         </span>
     </span>
 
@@ -95,7 +95,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-book-open-line"></i>
             <span class="post-meta-item-text"> 阅读时长≈</span>
-            <span class="post-count">8 分钟</span>
+            <span class="post-count">4 分钟</span>
         </span>
     </span>
 </div>
@@ -110,70 +110,37 @@
   
     <div class="article-entry" itemprop="articleBody">
        
-  <p>机器学习领域有个很重要的假设：IID (Independent Identically Distribution) 独立同分布假设，即假设训练数据和测试数据是满足同分布的。</p>
-<blockquote>
-<p>神经网络的学习过程本质上是为了学习数据的分布。<br>在mini-batch梯度下降训练的时候，如果每批训练数据的分布不同，那么网络在每次迭代的时候都要学习适应不同的分布，大大降低了网络的训练速度。</p>
-</blockquote>
-<h2 id="BatchNorm"><a href="#BatchNorm" class="headerlink" title="BatchNorm"></a>BatchNorm</h2><p>BatchNorm就是在深度神经网络训练过程中，使得每一层神经网络的输入保持相同分布。</p>
-<p>BN层在激活函数之前。BN层的作用机制：通过平滑隐藏层输入的分布，帮助随机梯度下降的进行，缓解随机梯度下降随遇后续层的负面影响。</p>
-<blockquote>
-<ol>
-<li>sigmoid, tanh激活函数。函数图像两端，梯度较小，容易出现 <strong>梯度衰减</strong> 问题。因此，把BN层放在非线性激活函数之前，将数据分布调整到均值为0附近，加速训练。</li>
-<li>relu激活函数。relu函数负半区的输出值被抑制，正半区的值被保留。因此，BN层放在前面，可以防止某一层的激活值全部被抑制，导致梯度全部为0，梯度消失。同理，防止梯度爆炸。</li>
-</ol>
-</blockquote>
-<h3 id="Internal-Covariate-Shift-问题"><a href="#Internal-Covariate-Shift-问题" class="headerlink" title="Internal Covariate Shift 问题"></a>Internal Covariate Shift 问题</h3><p>在训练过程中，隐层的 <em><strong>输入分布</strong></em> 总是变来变去。导致下一层网络很难进行学习（神经网络本来就是要学习数据分布的）。</p>
-<blockquote>
-<p>Internal Covariate Shift: 发生在神经网络内部；<br>Covariate Shift: 发生在输入数据上。主要描述由于训练数据和测试数据存在分布差异，影响模型的泛化性和训练速度。</p>
-</blockquote>
-<h3 id="BatchNorm基本思想"><a href="#BatchNorm基本思想" class="headerlink" title="BatchNorm基本思想"></a>BatchNorm基本思想</h3><p>深度神经网络在做 <strong>非线性变化前</strong> 的激活输入值随着网络深度加深，在训练过程中，数据分布逐渐向着 <strong>非线性函数取值区间的上下限两端靠近</strong>，导致反向传播时，低层神经网络梯度消失，最终造成收敛变慢。</p>
-<p>BN就是规范化隐层数据分布，将数据分布强制规范到非线形激活函数比较敏感的区域，避免梯度消失问题产生。<br>就是说经过BN后，大部分输出值落在非线形函数的非饱和区，加速收敛过程。</p>
-<blockquote>
-<p>如果都通过BN，那么不就跟把非线性函数替换成线性函数效果相同了？这意味着什么？我们知道，如果是多层的线性函数变换其实这个深层是没有意义的，因为多层线性网络跟一层线性网络是等价的。这意味着网络的表达能力下降了，这也意味着深度的意义就没有了。</p>
-</blockquote>
-<p>BN为了保证模型的非线形，对变换后的数据分布，进行了scale加上shift操作，<strong>这两个参数通过训练学习得到</strong>。等价于非线性函数的值，从正中心周围的线性区域往非线性区域偏移。增强模型的表达能力。</p>
-<blockquote>
-<p><strong>BN的核心思想：</strong>在非线性和线性之间找到较好的平衡点。既能享受非线性较强的表达能力，又能避免非线性激活函数饱和区梯度消失问题。</p>
-</blockquote>
-<h3 id="BatchNorm训练阶段"><a href="#BatchNorm训练阶段" class="headerlink" title="BatchNorm训练阶段"></a>BatchNorm训练阶段</h3><p>对于mini-batch SGD来说，一次训练过程中包含m个训练实例，其具体BN操作就是对于隐层中 <strong>每个神经元</strong> 的激活值，进行如下变换：<br><img src="/pictures/AI/Normal/img1.png" alt="每个神经元数据的标准化操作"></p>
-<p>经过上述变化后，某个神经元的激活值变成了N(0, 1)正态分布。<br>为了防止网络表达能力下降，每个神经元增加两个调节参数，这两个参数通过训练学习得到，用来还原网络非线性表达能力。<br><img src="/pictures/AI/Normal/img2.png" alt="数据的放缩与偏移"></p>
-<p>BN的具体操作流程如下，</p>
+  <p>RankNet是2005年微软提出的一种pairwise的Learning to Rank算法，它从 <strong>概率</strong> 的角度来解决排序问题。RankNet的核心是提出了一种 <strong>概率损失函数来学习Ranking Function</strong>，并应用Ranking Function对文档进行排序。这里的Ranking Function可以是 <strong>任意对参数可微的模型</strong>，也就是说，该概率损失函数并不依赖于特定的机器学习模型，在论文中，RankNet是基于神经网络实现的。除此之外，GDBT等模型也可以应用于该框架。</p>
+<p>算法的核心思想：<em><strong>最小化文档对的排序误差</strong></em>。</p>
+<h3 id="训练数据"><a href="#训练数据" class="headerlink" title="训练数据"></a>训练数据</h3><p>区别于标准的机器学习的数据结构，<br><img src="/pictures/LTR/RankNet/img1.jpeg" alt="标准的机器学习数据结构"></p>
+<p>RankNet做了如下定义，训练样本由 <strong>item对</strong> 构成，最终的训练样本集为：<br><img src="/pictures/LTR/RankNet/img2.png" alt="RankNet数据结构"></p>
+<h4 id="样本标签"><a href="#样本标签" class="headerlink" title="样本标签"></a>样本标签</h4><h5 id="预测相关性概率"><a href="#预测相关性概率" class="headerlink" title="预测相关性概率"></a>预测相关性概率</h5><p>对于任意一个doc对(U_i, U_j)，模型输出的score分别为s_i和s_j。那么根据模型的预测，U_i比U_j与Query更相关的概率为：<br><img src="/pictures/LTR/RankNet/img3.png" alt="预测相关性概率"></p>
+<p>由于RankNet使用的模型一般为神经网络，根据以往经验，sigmoid函数能够提供一个比较好的概率评估。</p>
+<p>RankNet证明了如果知道一个待排序文档的排列中相邻两个文档之间的排序概率，则通过推导可以算出每两个文档之间的排序概率。因此对于一个待排序文档序列，只需计算相邻文档之间的排序概率，不需要计算所有pair，减少计算量。</p>
+<h5 id="真实相关性概率"><a href="#真实相关性概率" class="headerlink" title="真实相关性概率"></a>真实相关性概率</h5><p>对于训练数据中的U_i和U_j，它们都包含有一个与Query相关性的真实label，比如U_i与Query的相关性label为good，U_j与Query的相关性label为bad，那么显然U_i比U_j更相关。我们定义U_i比U_j更相关的真实概率为：<br><img src="/pictures/LTR/RankNet/img4.png" alt="真实相关性概率"></p>
+<p>在RankNet中类别标签记为S_ij ∈ {+1, -1, 0}。由于接下来要使用交叉熵作为损失函数，因此将标签S_ij与真实概率P_ij（真实相关性）进行上图所示的一一映射。<br>如果U_i比U_j更相关，那么Sij&#x3D;1；如果U_i不如U_j相关，那么S_ij&#x3D;−1；如果U_i、U_j与Query的相关程度相同，那么S_ij&#x3D;0。</p>
+<h3 id="假设函数"><a href="#假设函数" class="headerlink" title="假设函数"></a>假设函数</h3><p>f 没有固定的形式，RankNet 设计为两层浅层网络，这也是 RankNet 得名的原因。f 没有固定形式预留了灵活的空间，为后面 LambdaMART 埋下伏笔。<br><img src="/pictures/LTR/RankNet/img8.jpeg" alt="单个样本的交叉熵损失"></p>
+<h3 id="损失函数"><a href="#损失函数" class="headerlink" title="损失函数"></a>损失函数</h3><p>RankNet使用交叉熵作为损失函数，单个样本的交叉熵损失函数为<br><img src="/pictures/LTR/RankNet/img5.png" alt="单个样本的交叉熵损失"></p>
+<p>对于一个排序，RankNet从各个doc的相对关系来评价排序结果的好坏，排序的效果越好，那么有错误相对关系的pair就越少。RankNet本质上就是以 <strong>错误的pair最少</strong> 为优化目标。</p>
+<p>在抽象成cost function时，RankNet实际上是引入了概率的思想：不是直接判断Ui排在Uj前面，而是说Ui以一定的概率P排在Uj前面，即是以预测概率与真实概率的差距最小作为优化目标。最后，RankNet使用Cross Entropy作为cost function，来衡量P_ij和~P_ij的拟合程度。化简后，有<br><img src="/pictures/LTR/RankNet/img6.png" alt="化简后的交叉熵损失"></p>
+<p>下面展示了当S_ij分别取1，0，-1的时候cost function以s_i-s_j为变量的示意图：<br><img src="/pictures/LTR/RankNet/img7.png" alt="损失函数曲线变化"></p>
+<p>可以看到当S_ij&#x3D;1时，模型预测的s_i比s_j越大，其代价越小；S_ij&#x3D;−1时，s_i比s_j越小，代价越小；S_ij&#x3D;0时，代价的最小值在s_i与s_j相等处取得。</p>
+<p>该损失函数有以下几个特点：</p>
 <blockquote>
 <ol>
-<li>先求出此次批量数据x的均值</li>
-<li>求出此次batch的方差</li>
-<li>接下来就是对x做归一化</li>
-<li>最重要的一步，引入缩放和平移变量γ和β ,计算归一化后的值</li>
+<li>当两个相关性不同的文档算出来的模型分数相同时，损失函数的值大于0，仍会对这对pair做惩罚，使他们的排序位置区分开；</li>
+<li>损失函数是一个类线性函数，可以有效减少异常样本数据对模型的影响，因此具有鲁棒性。</li>
 </ol>
 </blockquote>
-<p><img src="/pictures/AI/Normal/img3.png" alt="BN具体流程"></p>
-<p>一个简单的代码实现，</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">def BatchNorm(x, gamma, beta, bn_param):</span><br><span class="line">&quot;&quot;&quot;</span><br><span class="line">param:x		: 输入数据，shape(B, L)</span><br><span class="line">param:gamma	: 缩放因子</span><br><span class="line">param:beta	: 平移因子</span><br><span class="line">param:bn_param	: batchnorm所需要的一些参数</span><br><span class="line">	eps		: 接近0的数，防止分母出现0</span><br><span class="line">	momentum	: 动量参数，一般为0.9，0.99，0.999</span><br><span class="line">	running_mean	: 滑动平均的方式计算新的均值</span><br><span class="line">	running_var	: 滑动平均的方式计算新的方差</span><br><span class="line">&quot;&quot;&quot;</span><br><span class="line"></span><br><span class="line">    x_mean = x.mean(axis=0)</span><br><span class="line">    x_var = x.var(axis=0)</span><br><span class="line">    x_norm = (x - x_mean) / np.sqrt(x_var + eps)</span><br><span class="line">    x_norm = gamma * x_norm + beta</span><br><span class="line"></span><br><span class="line">    # 滑动平均计算得到均值方差信息，用于推断阶段</span><br><span class="line">    running_mean = bn_param[&#x27;running_mean&#x27;]</span><br><span class="line">    running_var = bn_parma[&#x27;running_var&#x27;]</span><br><span class="line">    momentum = bn_param[&#x27;momentum&#x27;]</span><br><span class="line"></span><br><span class="line">    running_mean = momentum * running_mean + (1-momentum) * x_mean</span><br><span class="line">    running_var = momentum * running_var + (1-momentum) * x_var</span><br><span class="line"></span><br><span class="line">    bn_param[&#x27;running_mean&#x27;] = running_mean</span><br><span class="line">    bn_param[&#x27;running_var&#x27;] = running_var</span><br><span class="line"></span><br><span class="line">    return x_norm, bn_param</span><br></pre></td></tr></table></figure>
-
-<p>在训练中完成的任务，每次训练给一个批量，然后计算批量的均值方差，但是在测试的时候可不是这样，测试的时候 <strong>每次只输入一张图片</strong>，这怎么计算批量的均值和方差，于是，就有了代码中下面两行，在训练的时候实现计算好mean和var，测试的时候直接拿来用就可以了，不用计算均值和方差。</p>
-<h3 id="BatchNorm优势"><a href="#BatchNorm优势" class="headerlink" title="BatchNorm优势"></a>BatchNorm优势</h3><blockquote>
-<ol>
-<li>不仅仅极大提升了训练速度，收敛过程大大加快；</li>
-<li>还能增加分类效果，一种解释是这是类似于Dropout的一种防止过拟合的正则化表达方式，所以不用Dropout也能达到相当的效果；</li>
-<li>另外调参过程也简单多了，对于初始化要求没那么高，而且可以使用大的学习率等；</li>
-<li>batchnorm降低了数据之间的绝对差异，有一个去相关的性质，更多的考虑相对差异性，因此在分类任务上具有更好的效果。</li>
-</ol>
-</blockquote>
-<h2 id="Layer-Normalization"><a href="#Layer-Normalization" class="headerlink" title="Layer Normalization"></a>Layer Normalization</h2><h3 id="BatchNorm缺点"><a href="#BatchNorm缺点" class="headerlink" title="BatchNorm缺点"></a>BatchNorm缺点</h3><p>Batch size太小会影响模型性能。对batchsize的大小比较敏感，由于每次计算均值和方差是在一个batch上，所以 <strong>如果batchsize太小，则计算的均值、方差不足以代表整个数据分布</strong>；</p>
-<p>BN实际使用时需要计算并且保存某一层神经网络batch的均值和方差等统计信息，对于对一个固定深度的前向神经网络（DNN，CNN）使用BN，很方便；但对于RNN来说，sequence的长度是不一致的，换句话说RNN的深度不是固定的，不同的time-step需要保存不同的statics特征，可能存在一个特殊sequence比其他sequence长很多，这样training时，计算很麻烦。</p>
-<p>BN不适用于RNN等动态网络，适用于CNN；LN适用于RNN。</p>
+<h3 id="优化算法"><a href="#优化算法" class="headerlink" title="优化算法"></a>优化算法</h3><p><img src="/pictures/LTR/RankNet/img9.jpeg" alt="损失函数求偏导数"></p>
+<p>损失函数L_ij（上文中表示为C_ij）分别对s_i和s_j求偏微分，可以发现他们之间互为异号，将其定义为lambda：<br><img src="/pictures/LTR/RankNet/img10.jpeg" alt="偏微分互为异号"></p>
+<p>根据上述性质，损失函数的梯度可以改写为：<br><img src="/pictures/LTR/RankNet/img11.webp" alt="损失函数的梯度计算"></p>
+<p>其中，倒数第三行就是 RankNet 的梯度向量，倒数第二行是 <strong>LambdaRank</strong> 的梯度向量，它在 RankNet 的基础上加上了 <strong>nDCG</strong> 的变化量，在优化的过程中融入了评估指标的信息。 nDCG 本身不可微，这里 <strong>只是计算出这个标量，没有涉及到梯度</strong> 的意思。</p>
 <blockquote>
-<p>很直观的一个例子：BN计算每个句子同一个位置字的均值和方差，但因为每个句子的长度不一样，最后是padding成一样的长度；那假如在该位置时，最后一句在该位置是没有字的，也就是用0表示了，那就会影响整个结果。</p>
+<p>关于这个变化量的绝对值的物理意义，我个人的理解打个不恰当的比喻就是“火上浇油、推波助澜”，如果一个样本对中的两个样本排序悬殊较大，那么互换位置后的变化量也相对较大，就会产生一个较大的梯度信息，告诉算法这俩不是一路人，你要努力地优化让他们进一步拉开差距；而如果两个样本排序悬殊较小，无论是排名靠前还是靠后，都不会产生较大的梯度信息，或者说是给 RankNet 的原始梯度打了一个大大的折扣，告诉算法这俩是“绝代双骄”或者“难兄难弟”，你不用过分地拆散他们。</p>
 </blockquote>
-<h3 id="区别"><a href="#区别" class="headerlink" title="区别"></a>区别</h3><p>BN的主要思想：在每一层的每一批数据（一个batch里的同一个通道）上进行归一化；<br>LN的主要思想：在每一个样本（一个样本的不同通道）上计算均值和方差，并不是BN那种在批方向计算均值和方差。<br><img src="/pictures/AI/Normal/img4.png" alt="BN和LN的区别"></p>
-<h3 id="源码实现"><a href="#源码实现" class="headerlink" title="源码实现"></a>源码实现</h3><p>Layer Normalization在NLP的直观图中，就是对一个batch中的同一句话中的 <strong>每个字</strong> 分别进行归一化。</p>
-<p>如果只看 NLP 问题，假设我们的 batch 是（2,3,4）的，也就是 batch_size &#x3D; 2, seq_length &#x3D; 3, dim &#x3D; 4 的，假设第一个句子是 w1 w2 w3，第二个句子是 w4 w5 w6，那么这个 tensor 可以写为</p>
-<blockquote>
-<p>[ [[w11,w12,w13,w14], …]<br>[[w41,w42,w43,w44], …] ]</p>
-</blockquote>
-<p>如果是 BN 的话，会对同一个 batch 里对应位置上的 token 求平均值，也就是说 (w11+w12+w13+w14+w41+w42+w43+w44)&#x2F;8是其中一个 mean，一共会求出 3 个 mean，也就是上图里 C 个（seq_length）个 mean。</p>
-<p>如果是 LN 的话，<strong>看起来（其实并不是）</strong> 是对每个 sample 里的所有 feature 求 mean，也就是(w11+w12+w13+w14+w21+w22+w23+w24+w31+w32+w33+w34)&#x2F;12，可以求出一共 2 个 mean，也就是图里 N（batch_size）个 mean。<br><img src="/pictures/AI/Normal/img5.png" alt="Layer Norm的不同"></p>
-<p>左图和我们认为的 LN 一致，也是我一直认为的 LN，但是右图却是在一个 token 上求平均，带回我们原来的问题，对于一个(2,3,4)的 tensor，(w11+w12+w13+w14)&#x2F;4 是一个 mean，一共会有 2*3&#x3D;6 个 mean。</p>
+<p>最后一行，就是 LambdaMART 的梯度向量，将 Net 换成了 GBDT。</p>
+<p>工程上，XGBoost 提供了得天独厚的 LambdaMART 框架，通过指定 objective&#x3D;”rank:map”, eval_metric&#x3D;”map@n” 等参数实现。需要特别注意的是，排序任务需要对 DMatrix 数据结构设置分组信息，使用 set_group() 方法。</p>
  
       <!-- reward -->
       
@@ -238,12 +205,12 @@
     <a class="modal-close" href="javascript:;"><i class="ri-close-circle-line"></i></a>
     <p>扫一扫，分享到微信</p>
     <div class="wx-qrcode">
-      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=http://example.com/2022/09/25/Normalization/" alt="微信分享二维码">
+      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=http://example.com/2022/10/06/LTR/RankNet/" alt="微信分享二维码">
     </div>
 </div>
 
 <div id="share-mask"></div>  
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/AI/" rel="tag">AI</a></li></ul>
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/LTR/" rel="tag">LTR</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Pairwise/" rel="tag">Pairwise</a></li></ul>
 
     </footer>
   </div>
@@ -251,19 +218,10 @@
    
   <nav class="article-nav">
     
-      <a href="/2022/09/25/NLP/Word2Vec/" class="article-nav-link">
-        <strong class="article-nav-caption">上一篇</strong>
-        <div class="article-nav-title">
-          
-            Word2Vec
-          
-        </div>
-      </a>
     
-    
-      <a href="/2022/09/13/RecomSys/MMoE/" class="article-nav-link">
+      <a href="/2022/10/06/LTR/Learning-to-Ranking/" class="article-nav-link">
         <strong class="article-nav-caption">下一篇</strong>
-        <div class="article-nav-title">MMoE</div>
+        <div class="article-nav-title">Learning to Ranking</div>
       </a>
     
   </nav>

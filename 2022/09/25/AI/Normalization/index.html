@@ -13,7 +13,7 @@
         name="viewport"
         content="width=device-width, initial-scale=1, maximum-scale=1"
       />
-      <title>Word2Vec |  Alien笔记</title>
+      <title>Normalization |  Alien笔记</title>
   <meta name="generator" content="hexo-theme-ayer">
       
       <link rel="shortcut icon" href="/favicon.ico" />
@@ -55,7 +55,7 @@
     <main class="content on">
       <section class="outer">
   <article
-  id="post-NLP/Word2Vec"
+  id="post-AI/Normalization"
   class="article article-type-post"
   itemscope
   itemprop="blogPost"
@@ -66,7 +66,7 @@
     <header class="article-header">
        
 <h1 class="article-title sea-center" style="border-left:0" itemprop="name">
-  Word2Vec
+  Normalization
 </h1>
  
 
@@ -74,11 +74,11 @@
     </header>
      
     <div class="article-meta">
-      <a href="/2022/09/25/NLP/Word2Vec/" class="article-date">
-  <time datetime="2022-09-25T07:53:50.532Z" itemprop="datePublished">2022-09-25</time>
+      <a href="/2022/09/25/AI/Normalization/" class="article-date">
+  <time datetime="2022-09-25T07:48:34.905Z" itemprop="datePublished">2022-09-25</time>
 </a> 
   <div class="article-category">
-    <a class="article-category-link" href="/categories/%E8%87%AA%E7%84%B6%E8%AF%AD%E8%A8%80%E5%A4%84%E7%90%86/">自然语言处理</a>
+    <a class="article-category-link" href="/categories/%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD/">人工智能</a>
   </div>
   
 <div class="word_count">
@@ -86,7 +86,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-quill-pen-line"></i>
             <span class="post-meta-item-text"> 字数统计:</span>
-            <span class="post-count">1.5k</span>
+            <span class="post-count">2.2k</span>
         </span>
     </span>
 
@@ -95,7 +95,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-book-open-line"></i>
             <span class="post-meta-item-text"> 阅读时长≈</span>
-            <span class="post-count">5 分钟</span>
+            <span class="post-count">8 分钟</span>
         </span>
     </span>
 </div>
@@ -110,75 +110,70 @@
   
     <div class="article-entry" itemprop="articleBody">
        
-  <h3 id="什么是Word2Vec"><a href="#什么是Word2Vec" class="headerlink" title="什么是Word2Vec?"></a>什么是Word2Vec?</h3><p>Word2Vec模型实际上分了两个部分，第一部分建立模型，第二部分通过模型获取嵌入词向量。<br>Word2Vec的整个建模过程实际上与自编码器的思想很相似。</p>
+  <p>机器学习领域有个很重要的假设：IID (Independent Identically Distribution) 独立同分布假设，即假设训练数据和测试数据是满足同分布的。</p>
 <blockquote>
-<p>先基于训练数据构建神经网络。当模型训练好以后，我们并不会使用这个训练好的模型处理新的任务，我们需要的是通过训练数据学习得到的参数，例如隐层的权重矩阵。</p>
+<p>神经网络的学习过程本质上是为了学习数据的分布。<br>在mini-batch梯度下降训练的时候，如果每批训练数据的分布不同，那么网络在每次迭代的时候都要学习适应不同的分布，大大降低了网络的训练速度。</p>
 </blockquote>
-<p>Word2Vec的训练模型本质上是只具有一个隐含层的神经元网络，从大量文本语料中以无监督的方式学习语义知识。<br><img src="/pictures/NLP/Word2Vec/img1.jpg.png" alt="Word2Vec单层网络结构"></p>
-<blockquote>
-<ul>
-<li>输入是One-Hot向量，Hidden Layer的激活函数是线性。Output Layer维度和Input Layer维度相同，用的是Softmax回归；</li>
-<li>训练Word2Vec需要用到反向传播算法，本质是链式求导；</li>
-<li>我们并不关心模型训练任务，我们真正需要的是这个模型通过学习得到的参数，即隐层的权重矩阵；</li>
-<li>Word2Vec本质是一种降维操作。</li>
-</ul>
-</blockquote>
-<p>Word2Vec其实就是通过学习文本来用词向量的方式表征词的语义信息，即通过一个嵌入空间是的语义相似的单词在该空间内距离很近。<br><strong>Embedding</strong> 其实就是一个映射，将单词从原先所属的空间映射到新的多维空间中。通过对词汇表中单词进行这种数值表示方式的学习，能够进行 <em><strong>向量化</strong></em> 的操作。  </p>
-<h3 id="模型结构"><a href="#模型结构" class="headerlink" title="模型结构"></a>模型结构</h3><p>Word2Vec模型中，主要有两种结构：</p>
-<blockquote>
-<ul>
-<li><strong>CBOW模型</strong> ：训练输入是某一个特征词的上下文相关的词对应的词向量，而输出就是这特定的一个词的词向量；  </li>
-<li><strong>Skip-gram模型</strong> ：输入是特定的一个词的词向量，而输出是特定词对应的上下文词向量；</li>
-</ul>
-</blockquote>
-<p><img src="/pictures/NLP/Word2Vec/img2.png" alt="Word2Vec网络结构"></p>
-<h4 id="Skip-gram"><a href="#Skip-gram" class="headerlink" title="Skip-gram"></a>Skip-gram</h4><p>Skip-gram模型，通过中间词预测上下文。</p>
-<ul>
-<li>首先，选择句子中的一个词作为中心词；</li>
-<li>定义skip_window参数，限制从中心词左右可以选词的范围；</li>
-<li>神经网络基于这些训练数据将会输出一个概率分布，这个概率代表词典中每个词是上下文的可能性。</li>
-</ul>
-<p>训练样本的构成是通过选择输入词前后skip_window范围内的词语与输入词进行组合。下图中，蓝色代表input word，方框内代表位于窗口内的单词。<br><img src="/pictures/NLP/Word2Vec/img5.png" alt="训练样本构建"><br>模型将会从每对单词出现的次数中学习得到统计规律。</p>
-<p>以下是Skip-gram模型结构：<br><img src="/pictures/NLP/Word2Vec/img3.png" alt="Skip-gram网络结构"><br>隐层没有使用任何激活函数，但是输出层使用了softmax。<br>我们基于成对的单词来对神经网络进行训练，训练样本是上述单词对，其中input word和output word都是onehot向量。最终模型输出是一个概率分布。</p>
-<blockquote>
-<p>可以看成y &#x3D; f(x)模型的并联，cost function是单个cost function的累加 <strong>（取log之后）</strong>。</p>
-</blockquote>
-<h4 id="CBOW"><a href="#CBOW" class="headerlink" title="CBOW"></a>CBOW</h4><p><img src="/pictures/NLP/Word2Vec/img4.jpg" alt="CBOW网络结构"><br>注意到，跟Skip-gram模型的并联不同，CBOW输入要对多个单词进行输入处理，一般是求和然后平均，输出的cost function不变。</p>
+<h2 id="BatchNorm"><a href="#BatchNorm" class="headerlink" title="BatchNorm"></a>BatchNorm</h2><p>BatchNorm就是在深度神经网络训练过程中，使得每一层神经网络的输入保持相同分布。</p>
+<p>BN层在激活函数之前。BN层的作用机制：通过平滑隐藏层输入的分布，帮助随机梯度下降的进行，缓解随机梯度下降随遇后续层的负面影响。</p>
 <blockquote>
 <ol>
-<li>输入层：上下文单词的one-hot向量表示；</li>
-<li>所有one-hot向量分别乘以共享的输入权重矩阵W；</li>
-<li>所得的向量 <strong>相加求平均</strong> 作为隐层向量；</li>
-<li>乘以输出矩阵W’；</li>
-<li>得到向量，经过softmax函数处理得到V-dim概率分布；</li>
-<li>概率最大的index所指示的单词作为预测词与true label的one-hot做比较，误差越小越好（根据误差更新权重矩阵）。</li>
+<li>sigmoid, tanh激活函数。函数图像两端，梯度较小，容易出现 <strong>梯度衰减</strong> 问题。因此，把BN层放在非线性激活函数之前，将数据分布调整到均值为0附近，加速训练。</li>
+<li>relu激活函数。relu函数负半区的输出值被抑制，正半区的值被保留。因此，BN层放在前面，可以防止某一层的激活值全部被抑制，导致梯度全部为0，梯度消失。同理，防止梯度爆炸。</li>
 </ol>
 </blockquote>
-<h3 id="训练Tricks"><a href="#训练Tricks" class="headerlink" title="训练Tricks"></a>训练Tricks</h3><p>Word2Vec本质上是一个语言模型，它的输出节点数是V个，对应了V个词语，本质上是一个多分类问题。但实际当中，词表数量巨大，计算复杂度巨高，所以需要技巧来加速训练。</p>
+<h3 id="Internal-Covariate-Shift-问题"><a href="#Internal-Covariate-Shift-问题" class="headerlink" title="Internal Covariate Shift 问题"></a>Internal Covariate Shift 问题</h3><p>在训练过程中，隐层的 <em><strong>输入分布</strong></em> 总是变来变去。导致下一层网络很难进行学习（神经网络本来就是要学习数据分布的）。</p>
 <blockquote>
-<ul>
-<li>层级softmax：本质是把N分类问题变成log(N)次的二分类；</li>
-<li>负采样：本质是预测总体类别的一个子集</li>
-</ul>
+<p>Internal Covariate Shift: 发生在神经网络内部；<br>Covariate Shift: 发生在输入数据上。主要描述由于训练数据和测试数据存在分布差异，影响模型的泛化性和训练速度。</p>
 </blockquote>
-<h4 id="负采样"><a href="#负采样" class="headerlink" title="负采样"></a>负采样</h4><p>在训练神经网络时，每个训练样本都将会调整所有神经网络中参数。词汇表决定了Word2Vec模型将会有非常大的权重矩阵，并且所有权重参数会随着数十亿训练昂呢不断调整。<br>负采样每次让一个训练样本更新一小部分的权重参数，从而降低梯度下降过程中的计算成本。  </p>
-<p>负样本的选择规则：一个单词被选作负采样的概率与它出现的频次有关，出现频次越高的单词越容易被选择作为负样本，经验公式如下：<br><img src="/pictures/NLP/Word2Vec/img6.png.webp" alt="负采样概率"><br>f(w)代表每个单词被赋予的一个权重，即出现的词频。</p>
-<h4 id="层序Softmax"><a href="#层序Softmax" class="headerlink" title="层序Softmax"></a>层序Softmax</h4><p>Huffman原理：权重越大的节点，越靠近根节点。</p>
+<h3 id="BatchNorm基本思想"><a href="#BatchNorm基本思想" class="headerlink" title="BatchNorm基本思想"></a>BatchNorm基本思想</h3><p>深度神经网络在做 <strong>非线性变化前</strong> 的激活输入值随着网络深度加深，在训练过程中，数据分布逐渐向着 <strong>非线性函数取值区间的上下限两端靠近</strong>，导致反向传播时，低层神经网络梯度消失，最终造成收敛变慢。</p>
+<p>BN就是规范化隐层数据分布，将数据分布强制规范到非线形激活函数比较敏感的区域，避免梯度消失问题产生。<br>就是说经过BN后，大部分输出值落在非线形函数的非饱和区，加速收敛过程。</p>
+<blockquote>
+<p>如果都通过BN，那么不就跟把非线性函数替换成线性函数效果相同了？这意味着什么？我们知道，如果是多层的线性函数变换其实这个深层是没有意义的，因为多层线性网络跟一层线性网络是等价的。这意味着网络的表达能力下降了，这也意味着深度的意义就没有了。</p>
+</blockquote>
+<p>BN为了保证模型的非线形，对变换后的数据分布，进行了scale加上shift操作，<strong>这两个参数通过训练学习得到</strong>。等价于非线性函数的值，从正中心周围的线性区域往非线性区域偏移。增强模型的表达能力。</p>
+<blockquote>
+<p><strong>BN的核心思想：</strong>在非线性和线性之间找到较好的平衡点。既能享受非线性较强的表达能力，又能避免非线性激活函数饱和区梯度消失问题。</p>
+</blockquote>
+<h3 id="BatchNorm训练阶段"><a href="#BatchNorm训练阶段" class="headerlink" title="BatchNorm训练阶段"></a>BatchNorm训练阶段</h3><p>对于mini-batch SGD来说，一次训练过程中包含m个训练实例，其具体BN操作就是对于隐层中 <strong>每个神经元</strong> 的激活值，进行如下变换：<br><img src="/pictures/AI/Normal/img1.png" alt="每个神经元数据的标准化操作"></p>
+<p>经过上述变化后，某个神经元的激活值变成了N(0, 1)正态分布。<br>为了防止网络表达能力下降，每个神经元增加两个调节参数，这两个参数通过训练学习得到，用来还原网络非线性表达能力。<br><img src="/pictures/AI/Normal/img2.png" alt="数据的放缩与偏移"></p>
+<p>BN的具体操作流程如下，</p>
 <blockquote>
 <ol>
-<li>对每个词按照权重进行排序，将每次词看成一个独立的单节点的树；</li>
-<li>合并最小的两个子树，新的根节点权重为两者根节点权重之和；</li>
-<li>将新的树插入排序进树集合中；</li>
-<li>重复2，3步骤，直到合并所有树。</li>
+<li>先求出此次批量数据x的均值</li>
+<li>求出此次batch的方差</li>
+<li>接下来就是对x做归一化</li>
+<li>最重要的一步，引入缩放和平移变量γ和β ,计算归一化后的值</li>
 </ol>
 </blockquote>
-<h3 id="区别"><a href="#区别" class="headerlink" title="区别"></a>区别</h3><blockquote>
-<p>cbow是用周围词预测中心词，训练过程中其实是在从output的loss学习周围词的信息也就是embedding，但是在中间层是average的，一共预测V次；<br>skip-gram是用中心词预测周围词，对每一个中心词都有K个词作为output，对一个词的预测有K次，所以能够更有效的从context中学习信息，共预测K*V次，因此，skip-gram的训练时间更长。</p>
+<p><img src="/pictures/AI/Normal/img3.png" alt="BN具体流程"></p>
+<p>一个简单的代码实现，</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">def BatchNorm(x, gamma, beta, bn_param):</span><br><span class="line">&quot;&quot;&quot;</span><br><span class="line">param:x		: 输入数据，shape(B, L)</span><br><span class="line">param:gamma	: 缩放因子</span><br><span class="line">param:beta	: 平移因子</span><br><span class="line">param:bn_param	: batchnorm所需要的一些参数</span><br><span class="line">	eps		: 接近0的数，防止分母出现0</span><br><span class="line">	momentum	: 动量参数，一般为0.9，0.99，0.999</span><br><span class="line">	running_mean	: 滑动平均的方式计算新的均值</span><br><span class="line">	running_var	: 滑动平均的方式计算新的方差</span><br><span class="line">&quot;&quot;&quot;</span><br><span class="line"></span><br><span class="line">    x_mean = x.mean(axis=0)</span><br><span class="line">    x_var = x.var(axis=0)</span><br><span class="line">    x_norm = (x - x_mean) / np.sqrt(x_var + eps)</span><br><span class="line">    x_norm = gamma * x_norm + beta</span><br><span class="line"></span><br><span class="line">    # 滑动平均计算得到均值方差信息，用于推断阶段</span><br><span class="line">    running_mean = bn_param[&#x27;running_mean&#x27;]</span><br><span class="line">    running_var = bn_parma[&#x27;running_var&#x27;]</span><br><span class="line">    momentum = bn_param[&#x27;momentum&#x27;]</span><br><span class="line"></span><br><span class="line">    running_mean = momentum * running_mean + (1-momentum) * x_mean</span><br><span class="line">    running_var = momentum * running_var + (1-momentum) * x_var</span><br><span class="line"></span><br><span class="line">    bn_param[&#x27;running_mean&#x27;] = running_mean</span><br><span class="line">    bn_param[&#x27;running_var&#x27;] = running_var</span><br><span class="line"></span><br><span class="line">    return x_norm, bn_param</span><br></pre></td></tr></table></figure>
+
+<p>在训练中完成的任务，每次训练给一个批量，然后计算批量的均值方差，但是在测试的时候可不是这样，测试的时候 <strong>每次只输入一张图片</strong>，这怎么计算批量的均值和方差，于是，就有了代码中下面两行，在训练的时候实现计算好mean和var，测试的时候直接拿来用就可以了，不用计算均值和方差。</p>
+<h3 id="BatchNorm优势"><a href="#BatchNorm优势" class="headerlink" title="BatchNorm优势"></a>BatchNorm优势</h3><blockquote>
+<ol>
+<li>不仅仅极大提升了训练速度，收敛过程大大加快；</li>
+<li>还能增加分类效果，一种解释是这是类似于Dropout的一种防止过拟合的正则化表达方式，所以不用Dropout也能达到相当的效果；</li>
+<li>另外调参过程也简单多了，对于初始化要求没那么高，而且可以使用大的学习率等；</li>
+<li>batchnorm降低了数据之间的绝对差异，有一个去相关的性质，更多的考虑相对差异性，因此在分类任务上具有更好的效果。</li>
+</ol>
 </blockquote>
-<p>鉴于skip-gram学习的词向量更细致，当 <strong>数据量较少或者语料库中有大量低频词</strong> 时，使用skip-gram学习比较合适。</p>
+<h2 id="Layer-Normalization"><a href="#Layer-Normalization" class="headerlink" title="Layer Normalization"></a>Layer Normalization</h2><h3 id="BatchNorm缺点"><a href="#BatchNorm缺点" class="headerlink" title="BatchNorm缺点"></a>BatchNorm缺点</h3><p>Batch size太小会影响模型性能。对batchsize的大小比较敏感，由于每次计算均值和方差是在一个batch上，所以 <strong>如果batchsize太小，则计算的均值、方差不足以代表整个数据分布</strong>；</p>
+<p>BN实际使用时需要计算并且保存某一层神经网络batch的均值和方差等统计信息，对于对一个固定深度的前向神经网络（DNN，CNN）使用BN，很方便；但对于RNN来说，sequence的长度是不一致的，换句话说RNN的深度不是固定的，不同的time-step需要保存不同的statics特征，可能存在一个特殊sequence比其他sequence长很多，这样training时，计算很麻烦。</p>
+<p>BN不适用于RNN等动态网络，适用于CNN；LN适用于RNN。</p>
 <blockquote>
-<p>CBOW中的目标函数是使条件概率P(w|context(w))最大化<br>Skip-gram中的目标函数是使条件概率P(context(w)|w)最大化</p>
+<p>很直观的一个例子：BN计算每个句子同一个位置字的均值和方差，但因为每个句子的长度不一样，最后是padding成一样的长度；那假如在该位置时，最后一句在该位置是没有字的，也就是用0表示了，那就会影响整个结果。</p>
 </blockquote>
+<h3 id="区别"><a href="#区别" class="headerlink" title="区别"></a>区别</h3><p>BN的主要思想：在每一层的每一批数据（一个batch里的同一个通道）上进行归一化；<br>LN的主要思想：在每一个样本（一个样本的不同通道）上计算均值和方差，并不是BN那种在批方向计算均值和方差。<br><img src="/pictures/AI/Normal/img4.png" alt="BN和LN的区别"></p>
+<h3 id="源码实现"><a href="#源码实现" class="headerlink" title="源码实现"></a>源码实现</h3><p>Layer Normalization在NLP的直观图中，就是对一个batch中的同一句话中的 <strong>每个字</strong> 分别进行归一化。</p>
+<p>如果只看 NLP 问题，假设我们的 batch 是（2,3,4）的，也就是 batch_size &#x3D; 2, seq_length &#x3D; 3, dim &#x3D; 4 的，假设第一个句子是 w1 w2 w3，第二个句子是 w4 w5 w6，那么这个 tensor 可以写为</p>
+<blockquote>
+<p>[ [[w11,w12,w13,w14], …]<br>[[w41,w42,w43,w44], …] ]</p>
+</blockquote>
+<p>如果是 BN 的话，会对同一个 batch 里对应位置上的 token 求平均值，也就是说 (w11+w12+w13+w14+w41+w42+w43+w44)&#x2F;8是其中一个 mean，一共会求出 3 个 mean，也就是上图里 C 个（seq_length）个 mean。</p>
+<p>如果是 LN 的话，<strong>看起来（其实并不是）</strong> 是对每个 sample 里的所有 feature 求 mean，也就是(w11+w12+w13+w14+w21+w22+w23+w24+w31+w32+w33+w34)&#x2F;12，可以求出一共 2 个 mean，也就是图里 N（batch_size）个 mean。<br><img src="/pictures/AI/Normal/img5.png" alt="Layer Norm的不同"></p>
+<p>左图和我们认为的 LN 一致，也是我一直认为的 LN，但是右图却是在一个 token 上求平均，带回我们原来的问题，对于一个(2,3,4)的 tensor，(w11+w12+w13+w14)&#x2F;4 是一个 mean，一共会有 2*3&#x3D;6 个 mean。</p>
  
       <!-- reward -->
       
@@ -243,12 +238,12 @@
     <a class="modal-close" href="javascript:;"><i class="ri-close-circle-line"></i></a>
     <p>扫一扫，分享到微信</p>
     <div class="wx-qrcode">
-      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=http://example.com/2022/09/25/NLP/Word2Vec/" alt="微信分享二维码">
+      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=http://example.com/2022/09/25/AI/Normalization/" alt="微信分享二维码">
     </div>
 </div>
 
 <div id="share-mask"></div>  
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/NLP/" rel="tag">NLP</a></li></ul>
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/AI/" rel="tag">AI</a></li></ul>
 
     </footer>
   </div>
@@ -256,19 +251,19 @@
    
   <nav class="article-nav">
     
-      <a href="/2022/10/05/NLP/RoBERTa/" class="article-nav-link">
+      <a href="/2022/09/25/NLP/Word2Vec/" class="article-nav-link">
         <strong class="article-nav-caption">上一篇</strong>
         <div class="article-nav-title">
           
-            RoBERTa
+            Word2Vec
           
         </div>
       </a>
     
     
-      <a href="/2022/09/25/AI/Normalization/" class="article-nav-link">
+      <a href="/2022/09/13/RecomSys/MMoE/" class="article-nav-link">
         <strong class="article-nav-caption">下一篇</strong>
-        <div class="article-nav-title">Normalization</div>
+        <div class="article-nav-title">MMoE</div>
       </a>
     
   </nav>

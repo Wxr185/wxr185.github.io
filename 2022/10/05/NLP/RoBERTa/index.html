@@ -13,7 +13,7 @@
         name="viewport"
         content="width=device-width, initial-scale=1, maximum-scale=1"
       />
-      <title>Word2Vec |  Alien笔记</title>
+      <title>RoBERTa |  Alien笔记</title>
   <meta name="generator" content="hexo-theme-ayer">
       
       <link rel="shortcut icon" href="/favicon.ico" />
@@ -55,7 +55,7 @@
     <main class="content on">
       <section class="outer">
   <article
-  id="post-NLP/Word2Vec"
+  id="post-NLP/RoBERTa"
   class="article article-type-post"
   itemscope
   itemprop="blogPost"
@@ -66,7 +66,7 @@
     <header class="article-header">
        
 <h1 class="article-title sea-center" style="border-left:0" itemprop="name">
-  Word2Vec
+  RoBERTa
 </h1>
  
 
@@ -74,8 +74,8 @@
     </header>
      
     <div class="article-meta">
-      <a href="/2022/09/25/NLP/Word2Vec/" class="article-date">
-  <time datetime="2022-09-25T07:53:50.532Z" itemprop="datePublished">2022-09-25</time>
+      <a href="/2022/10/05/NLP/RoBERTa/" class="article-date">
+  <time datetime="2022-10-05T03:32:52.653Z" itemprop="datePublished">2022-10-05</time>
 </a> 
   <div class="article-category">
     <a class="article-category-link" href="/categories/%E8%87%AA%E7%84%B6%E8%AF%AD%E8%A8%80%E5%A4%84%E7%90%86/">自然语言处理</a>
@@ -86,7 +86,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-quill-pen-line"></i>
             <span class="post-meta-item-text"> 字数统计:</span>
-            <span class="post-count">1.5k</span>
+            <span class="post-count">2.4k</span>
         </span>
     </span>
 
@@ -95,7 +95,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-book-open-line"></i>
             <span class="post-meta-item-text"> 阅读时长≈</span>
-            <span class="post-count">5 分钟</span>
+            <span class="post-count">9 分钟</span>
         </span>
     </span>
 </div>
@@ -110,75 +110,73 @@
   
     <div class="article-entry" itemprop="articleBody">
        
-  <h3 id="什么是Word2Vec"><a href="#什么是Word2Vec" class="headerlink" title="什么是Word2Vec?"></a>什么是Word2Vec?</h3><p>Word2Vec模型实际上分了两个部分，第一部分建立模型，第二部分通过模型获取嵌入词向量。<br>Word2Vec的整个建模过程实际上与自编码器的思想很相似。</p>
-<blockquote>
-<p>先基于训练数据构建神经网络。当模型训练好以后，我们并不会使用这个训练好的模型处理新的任务，我们需要的是通过训练数据学习得到的参数，例如隐层的权重矩阵。</p>
-</blockquote>
-<p>Word2Vec的训练模型本质上是只具有一个隐含层的神经元网络，从大量文本语料中以无监督的方式学习语义知识。<br><img src="/pictures/NLP/Word2Vec/img1.jpg.png" alt="Word2Vec单层网络结构"></p>
-<blockquote>
-<ul>
-<li>输入是One-Hot向量，Hidden Layer的激活函数是线性。Output Layer维度和Input Layer维度相同，用的是Softmax回归；</li>
-<li>训练Word2Vec需要用到反向传播算法，本质是链式求导；</li>
-<li>我们并不关心模型训练任务，我们真正需要的是这个模型通过学习得到的参数，即隐层的权重矩阵；</li>
-<li>Word2Vec本质是一种降维操作。</li>
-</ul>
-</blockquote>
-<p>Word2Vec其实就是通过学习文本来用词向量的方式表征词的语义信息，即通过一个嵌入空间是的语义相似的单词在该空间内距离很近。<br><strong>Embedding</strong> 其实就是一个映射，将单词从原先所属的空间映射到新的多维空间中。通过对词汇表中单词进行这种数值表示方式的学习，能够进行 <em><strong>向量化</strong></em> 的操作。  </p>
-<h3 id="模型结构"><a href="#模型结构" class="headerlink" title="模型结构"></a>模型结构</h3><p>Word2Vec模型中，主要有两种结构：</p>
-<blockquote>
-<ul>
-<li><strong>CBOW模型</strong> ：训练输入是某一个特征词的上下文相关的词对应的词向量，而输出就是这特定的一个词的词向量；  </li>
-<li><strong>Skip-gram模型</strong> ：输入是特定的一个词的词向量，而输出是特定词对应的上下文词向量；</li>
-</ul>
-</blockquote>
-<p><img src="/pictures/NLP/Word2Vec/img2.png" alt="Word2Vec网络结构"></p>
-<h4 id="Skip-gram"><a href="#Skip-gram" class="headerlink" title="Skip-gram"></a>Skip-gram</h4><p>Skip-gram模型，通过中间词预测上下文。</p>
-<ul>
-<li>首先，选择句子中的一个词作为中心词；</li>
-<li>定义skip_window参数，限制从中心词左右可以选词的范围；</li>
-<li>神经网络基于这些训练数据将会输出一个概率分布，这个概率代表词典中每个词是上下文的可能性。</li>
-</ul>
-<p>训练样本的构成是通过选择输入词前后skip_window范围内的词语与输入词进行组合。下图中，蓝色代表input word，方框内代表位于窗口内的单词。<br><img src="/pictures/NLP/Word2Vec/img5.png" alt="训练样本构建"><br>模型将会从每对单词出现的次数中学习得到统计规律。</p>
-<p>以下是Skip-gram模型结构：<br><img src="/pictures/NLP/Word2Vec/img3.png" alt="Skip-gram网络结构"><br>隐层没有使用任何激活函数，但是输出层使用了softmax。<br>我们基于成对的单词来对神经网络进行训练，训练样本是上述单词对，其中input word和output word都是onehot向量。最终模型输出是一个概率分布。</p>
-<blockquote>
-<p>可以看成y &#x3D; f(x)模型的并联，cost function是单个cost function的累加 <strong>（取log之后）</strong>。</p>
-</blockquote>
-<h4 id="CBOW"><a href="#CBOW" class="headerlink" title="CBOW"></a>CBOW</h4><p><img src="/pictures/NLP/Word2Vec/img4.jpg" alt="CBOW网络结构"><br>注意到，跟Skip-gram模型的并联不同，CBOW输入要对多个单词进行输入处理，一般是求和然后平均，输出的cost function不变。</p>
+  <p>参考博客：<a target="_blank" rel="noopener" href="https://blog.csdn.net/Decennie/article/details/120010025">https://blog.csdn.net/Decennie/article/details/120010025</a></p>
+<h2 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h2><p>RoBERTa 模型是BERT 的改进版(A Robustly Optimized BERT，即简单粗暴称为强力优化的BERT方法)。</p>
+<p>在 <strong>模型规模、算力和数据</strong> 上，与BERT相比主要有以下几点改进：</p>
 <blockquote>
 <ol>
-<li>输入层：上下文单词的one-hot向量表示；</li>
-<li>所有one-hot向量分别乘以共享的输入权重矩阵W；</li>
-<li>所得的向量 <strong>相加求平均</strong> 作为隐层向量；</li>
-<li>乘以输出矩阵W’；</li>
-<li>得到向量，经过softmax函数处理得到V-dim概率分布；</li>
-<li>概率最大的index所指示的单词作为预测词与true label的one-hot做比较，误差越小越好（根据误差更新权重矩阵）。</li>
+<li>更大的模型参数量（论文提供的训练时间来看，模型使用 1024 块 V100 GPU 训练了 1 天的时间）</li>
+<li>更大bacth size。RoBERTa 在训练过程中使用了更大的bacth size。尝试过从 256 到 8000 不等的bacth size。</li>
+<li>更多的训练数据（包括：CC-NEWS 等在内的 160GB 纯文本。而最初的BERT使用16GB BookCorpus数据集和英语维基百科进行训练）</li>
 </ol>
 </blockquote>
-<h3 id="训练Tricks"><a href="#训练Tricks" class="headerlink" title="训练Tricks"></a>训练Tricks</h3><p>Word2Vec本质上是一个语言模型，它的输出节点数是V个，对应了V个词语，本质上是一个多分类问题。但实际当中，词表数量巨大，计算复杂度巨高，所以需要技巧来加速训练。</p>
-<blockquote>
-<ul>
-<li>层级softmax：本质是把N分类问题变成log(N)次的二分类；</li>
-<li>负采样：本质是预测总体类别的一个子集</li>
-</ul>
-</blockquote>
-<h4 id="负采样"><a href="#负采样" class="headerlink" title="负采样"></a>负采样</h4><p>在训练神经网络时，每个训练样本都将会调整所有神经网络中参数。词汇表决定了Word2Vec模型将会有非常大的权重矩阵，并且所有权重参数会随着数十亿训练昂呢不断调整。<br>负采样每次让一个训练样本更新一小部分的权重参数，从而降低梯度下降过程中的计算成本。  </p>
-<p>负样本的选择规则：一个单词被选作负采样的概率与它出现的频次有关，出现频次越高的单词越容易被选择作为负样本，经验公式如下：<br><img src="/pictures/NLP/Word2Vec/img6.png.webp" alt="负采样概率"><br>f(w)代表每个单词被赋予的一个权重，即出现的词频。</p>
-<h4 id="层序Softmax"><a href="#层序Softmax" class="headerlink" title="层序Softmax"></a>层序Softmax</h4><p>Huffman原理：权重越大的节点，越靠近根节点。</p>
+<p>另外，RoBERTa在 <strong>训练方法</strong> 上有以下改进：</p>
 <blockquote>
 <ol>
-<li>对每个词按照权重进行排序，将每次词看成一个独立的单节点的树；</li>
-<li>合并最小的两个子树，新的根节点权重为两者根节点权重之和；</li>
-<li>将新的树插入排序进树集合中；</li>
-<li>重复2，3步骤，直到合并所有树。</li>
+<li>去掉下一句预测(NSP)任务</li>
+<li>动态掩码。BERT 依赖随机掩码和预测 token。原版的 BERT 实现在数据预处理期间执行一次掩码，得到一个静态掩码。 而 RoBERTa 使用了动态掩码：每次向模型输入一个序列时都会生成新的掩码模式。这样，在大量数据不断输入的过程中，模型会逐渐适应不同的掩码策略，学习不同的语言表征。</li>
+<li>文本编码。Byte-Pair Encoding（BPE）是字符级和词级别表征的混合，支持处理自然语言语料库中的众多常见词汇。原版的 BERT 实现使用字符级别的 BPE 词汇，大小为 30K，是在利用启发式分词规则对输入进行预处理之后学得的。Facebook 研究者没有采用这种方式，而是考虑用更大的 byte 级别 BPE 词汇表来训练 BERT，这一词汇表包含 50K 的 subword 单元，且没有对输入作任何额外的预处理或分词。</li>
 </ol>
 </blockquote>
-<h3 id="区别"><a href="#区别" class="headerlink" title="区别"></a>区别</h3><blockquote>
-<p>cbow是用周围词预测中心词，训练过程中其实是在从output的loss学习周围词的信息也就是embedding，但是在中间层是average的，一共预测V次；<br>skip-gram是用中心词预测周围词，对每一个中心词都有K个词作为output，对一个词的预测有K次，所以能够更有效的从context中学习信息，共预测K*V次，因此，skip-gram的训练时间更长。</p>
-</blockquote>
-<p>鉴于skip-gram学习的词向量更细致，当 <strong>数据量较少或者语料库中有大量低频词</strong> 时，使用skip-gram学习比较合适。</p>
+<h3 id="对于NSP任务的解析和改用"><a href="#对于NSP任务的解析和改用" class="headerlink" title="对于NSP任务的解析和改用"></a>对于NSP任务的解析和改用</h3><p>NSP这个任务在预训练类型的训练中，一直被人诟病，觉得作用不大。SpanBERT文章,也弃用了NSP，而是 <strong>直接把上下句当成一个长句的语料</strong>，进行训练。觉得超长句语料可以让预训练模型学习的更好（这个观点其实在Roberta里实验里论证过了，更长的句子更利于模型获取更多上下文的信息，利于模型参数训练）。</p>
+<p>关于NSP为什么作用不大，可能有以下原因：</p>
 <blockquote>
-<p>CBOW中的目标函数是使条件概率P(w|context(w))最大化<br>Skip-gram中的目标函数是使条件概率P(context(w)|w)最大化</p>
+<ol>
+<li>超长句相比于NSP上下句的分割模式，利于模型学习更长上下文信息，也利于模型参数训练（但这也必然带来训练的时间、开销变大）；</li>
+<li>在 NSP 的负例构造，上下句来自于不同的文档组装，会给 MLM 任务带来很大噪音。</li>
+</ol>
 </blockquote>
+<h3 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h3><p>RoBERTa建立在BERT的语言掩蔽策略的基础上，修改BERT中的关键超参数，包括 <strong>删除BERT的下一个句子训练前目标</strong>，以及 <strong>使用更大的bacth size和学习率进行训练</strong>。RoBERTa也接受了比BERT多一个数量级的训练，时间更长。这使得RoBERTa表示能够比BERT更好地推广到下游任务。</p>
+<h2 id="实验设置"><a href="#实验设置" class="headerlink" title="实验设置"></a>实验设置</h2><h3 id="配置"><a href="#配置" class="headerlink" title="配置"></a>配置</h3><p>在 DGX-1 机器上使用混合精度浮点算法进行训练，每台机器都有 8×32GB Nvidia V100 GPU。</p>
+<h3 id="数据"><a href="#数据" class="headerlink" title="数据"></a>数据</h3><p>RoBERTa 采用 160 G 训练文本，远超 BERT 的 16G 文本，其中包括：</p>
+<blockquote>
+<ol>
+<li>BOOKCORPUS 和英文维基百科：原始 BERT 的训练集，大小 16GB。</li>
+<li>CC-NEWS：包含2016年9月到2019年2月爬取的6300万篇英文新闻，大小 76 GB（经过过滤之后）。</li>
+<li>OPENWEBTEXT：从 Reddit 上共享的 URL （至少3个点赞）中提取的网页内容，大小 38 GB 。</li>
+<li>STORIES：CommonCrawl 数据集的一个子集，包含 Winograd 模式的故事风格，大小 31GB 。</li>
+</ol>
+</blockquote>
+<h3 id="评估"><a href="#评估" class="headerlink" title="评估"></a>评估</h3><p>使用以下三个基准评估下游任务的预训练模型:</p>
+<blockquote>
+<ol>
+<li>GLUE 通用语言理解评估（GLUE）基准是用于评估自然语言理解系统的 9 个数据集的集合。</li>
+<li>SQuAD 斯坦福问题答疑数据集（SQuAD）提供了一段背景和一个问题。任务是通过从上下文中提取相关跨度来回答问题。</li>
+<li>RACE 考试的重新理解（RACE）任务是一个大型阅读理解数据集，有超过 28000 个段落和近100000 个问题。该数据集来自中国的英语考试，专为中学生和高中生设计。</li>
+</ol>
+</blockquote>
+<h2 id="训练过程分析"><a href="#训练过程分析" class="headerlink" title="训练过程分析"></a>训练过程分析</h2><p>本节探讨在保持模型架构不变的情况下，哪些量化指标对预训练BERT模型有影响。首先维持训练BERT模型架构不变，其配置与BERT-base相同（L &#x3D; 12， H &#x3D; 768， A &#x3D; 12，110M 参数）。</p>
+<h3 id="静态-VS-动态mask"><a href="#静态-VS-动态mask" class="headerlink" title="静态 VS 动态mask"></a>静态 VS 动态mask</h3><h4 id="原始静态mask"><a href="#原始静态mask" class="headerlink" title="原始静态mask"></a>原始静态mask</h4><p>BERT中是预处理训练数据时，每个样本只会进行 <strong>一次随机mask</strong> （因此每个epoch都是重复），后续的每个训练步都采用相同的mask，这是原始静态mask，即单个静态mask，这是原始 BERT 的做法。</p>
+<h4 id="修改版静态mask"><a href="#修改版静态mask" class="headerlink" title="修改版静态mask"></a>修改版静态mask</h4><p>在预处理的时候将数据集 <strong>拷贝 10 次</strong>，每次拷贝采用 <strong>不同的 mask</strong>（总共40 epochs，所以每一个mask对应的数据被训练4个epoch）。这等价于 <strong>原始的数据集采用10种静态 mask 来训练 40个 epoch</strong>。</p>
+<h4 id="动态mask"><a href="#动态mask" class="headerlink" title="动态mask"></a>动态mask</h4><p>并没有在预处理的时候执行 mask，而是在 <strong>每次向模型提供输入时动态生成 mask</strong> ，所以是时刻变化的。</p>
+<h4 id="实验结论"><a href="#实验结论" class="headerlink" title="实验结论"></a>实验结论</h4><p>不同模式的实验效果如下表所示。其中 reference 为BERT 用到的原始静态 mask，static 为修改版的静态mask。<br><img src="/pictures/NLP/RoBERTa/img1.png" alt="静态VS动态mask效果对比"></p>
+<p>从Table1中可以看出，修改版的静态mask与BERT原始静态mask效果相当；动态mask又与静态mask效果差不多，或者说略好了静态mask。基于上述结果的判断，及其动态mask在效率上的优势，<strong>本文后续的实验统一采用动态mask</strong>。</p>
+<h3 id="Model-Input-Format-and-NSP"><a href="#Model-Input-Format-and-NSP" class="headerlink" title="Model Input Format and NSP"></a>Model Input Format and NSP</h3><p>原始的BERT包含2个任务，预测被mask掉的单词和下一句预测。鉴于最近有研究(Lample and Conneau,2019; Yang et al., 2019; Joshi et al., 2019)开始质疑下一句预测(NSP)的必要性，本文设计了以下4种训练方式：</p>
+<h4 id="SEGMENT-PAIR-NSP"><a href="#SEGMENT-PAIR-NSP" class="headerlink" title="SEGMENT-PAIR + NSP"></a>SEGMENT-PAIR + NSP</h4><p>输入包含两部分，每个部分是来自同一文档或者不同文档的 segment （segment 是连续的多个句子），这两个segment 的token总数少于 512 。预训练包含 MLM 任务和 NSP 任务。这是原始 BERT 的做法。</p>
+<h4 id="SENTENCE-PAIR-NSP"><a href="#SENTENCE-PAIR-NSP" class="headerlink" title="SENTENCE-PAIR + NSP"></a>SENTENCE-PAIR + NSP</h4><p>输入也是包含两部分，每个部分是来自同一个文档或者不同文档的单个句子，这两个句子的token 总数少于 512 。由于这些输入明显少于512 个tokens，因此增加batch size的大小，以使 tokens 总数保持与SEGMENT-PAIR + NSP 相似。预训练包含 MLM 任务和 NSP 任务。</p>
+<h4 id="FULL-SENTENCES"><a href="#FULL-SENTENCES" class="headerlink" title="FULL-SENTENCES"></a>FULL-SENTENCES</h4><p>输入只有一部分（而不是两部分），来自同一个文档或者不同文档的连续多个句子，token 总数不超过 512 。输入可能跨越文档边界，如果跨文档，则在上一个文档末尾添加文档边界token 。预训练不包含 NSP 任务。</p>
+<h4 id="DOC-SENTENCES"><a href="#DOC-SENTENCES" class="headerlink" title="DOC-SENTENCES"></a>DOC-SENTENCES</h4><p>输入只有一部分（而不是两部分），输入的构造类似于FULL-SENTENCES，只是不需要跨越文档边界，其输入来自同一个文档的连续句子，token 总数不超过 512 。在文档末尾附近采样的输入可以短于 512个tokens， 因此在这些情况下动态增加batch size大小以达到与 FULL-SENTENCES 相同的tokens总数。预训练不包含 NSP 任务。</p>
+<h4 id="实验结论-1"><a href="#实验结论-1" class="headerlink" title="实验结论"></a>实验结论</h4><p><img src="/pictures/NLP/RoBERTa/img2.png" alt="训练方式对比"></p>
+<p>BERT采用 <strong>SEGMENT-PAIR</strong> 输入格式。如果在采用NSP loss情况下，SEGMENT-PAIR优于SENTENCE-PAIR。单个句子会损害下游任务，可能是因为句子过短，模型没有充分学习。</p>
+<p>在不采用NSP loss情况下，用来自单个文档的文本块进行训练。该设置性能优于最初发布的BRRT-base结果。与原始BERT相比，去掉NSP损失能够使得下游任务的表现持平或者略微升高。</p>
+<p>实验还发现将序列限制为来自单个文档(DOC-SENTENCES)的性能略好于序列来自多个文档(FULL-SENTENCES)。</p>
+<h3 id="Training-with-large-batches"><a href="#Training-with-large-batches" class="headerlink" title="Training with large batches"></a>Training with large batches</h3><p>通过梯度累积，训练batch size&#x3D;2K序列的125K步，或batch size&#x3D;8K的31K步，这两者在计算成本上大约是是等价的。</p>
+<p>large batches训练提高了masked language modeling 目标的困惑度，以及最终任务的准确性。large batches也更容易分布式数据并行训练， 在后续实验中，文本使用bacth size&#x3D;8K进行并行训练。</p>
+<h3 id="Text-Encoding"><a href="#Text-Encoding" class="headerlink" title="Text Encoding"></a>Text Encoding</h3><p>字节对编码(BPE)(Sennrich et al.,2016)是字符级和单词级表示的混合，该编码方案可以处理自然语言语料库中常见的大量词汇。BPE不依赖于完整的单词，而是依赖于子词(sub-word)单元，这些子词单元是通过对训练语料库进行统计分析而提取的，其词表大小通常在 1万到 10万之间。当对海量多样语料建模时，unicode characters占据了该词表的大部分。</p>
+<blockquote>
+<p>基于 char-level ：原始 BERT 的方式，它通过对输入文本进行启发式的词干化之后处理得到。<br>基于 bytes-level：与 char-level 的区别在于bytes-level 使用 bytes 而不是 unicode 字符作为 sub-word 的基本单位，因此可以编码任何输入文本而不会引入 UNKOWN 标记。</p>
+</blockquote>
+<p>当采用 bytes-level 的 BPE 之后，词表大小从3万（原始 BERT 的 char-level ）增加到5万。这分别为 BERT-base和 BERT-large增加了1500万和2000万额外的参数。</p>
  
       <!-- reward -->
       
@@ -243,7 +241,7 @@
     <a class="modal-close" href="javascript:;"><i class="ri-close-circle-line"></i></a>
     <p>扫一扫，分享到微信</p>
     <div class="wx-qrcode">
-      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=http://example.com/2022/09/25/NLP/Word2Vec/" alt="微信分享二维码">
+      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=http://example.com/2022/10/05/NLP/RoBERTa/" alt="微信分享二维码">
     </div>
 </div>
 
@@ -256,19 +254,19 @@
    
   <nav class="article-nav">
     
-      <a href="/2022/10/05/NLP/RoBERTa/" class="article-nav-link">
+      <a href="/2022/10/06/LTR/Learning-to-Ranking/" class="article-nav-link">
         <strong class="article-nav-caption">上一篇</strong>
         <div class="article-nav-title">
           
-            RoBERTa
+            Learning to Ranking
           
         </div>
       </a>
     
     
-      <a href="/2022/09/25/AI/Normalization/" class="article-nav-link">
+      <a href="/2022/09/25/NLP/Word2Vec/" class="article-nav-link">
         <strong class="article-nav-caption">下一篇</strong>
-        <div class="article-nav-title">Normalization</div>
+        <div class="article-nav-title">Word2Vec</div>
       </a>
     
   </nav>
