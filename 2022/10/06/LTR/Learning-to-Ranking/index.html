@@ -244,7 +244,7 @@
 <h3 id="MAP-Mean-Average-Precision"><a href="#MAP-Mean-Average-Precision" class="headerlink" title="MAP (Mean Average Precision)"></a>MAP (Mean Average Precision)</h3><p>在二分类中，常常使用Precision, Recall, ROC 曲线，AUC来评价一个模型的性能，然而这些指标很难对多分类模型进行准确的评价。</p>
 <p>AP 是指的在所有Recall的可能取值情况下，得到的所有的Precision的平均值。AP衡量的是我们训练得到的模型在每个类别上的好坏，MAP衡量的是该模型在所有类别上的好坏，得到AP后，MAP的计算就变得很简单了，就是取所有AP的平均值。</p>
 <p>MAP（Mean Average Precision）是信息检中的一个评价指标。MAP假定相关度有两个级别 —— 相关与不相关。 首先了解下AP（Average Precision）计算方法：<br><img src="/pictures/LTR/Learning-to-Ranking/img6.png" alt="AP的计算公式"></p>
-<p>上式中，k为文档在排序列表中的位置，p(k) 为前k个结果的准确率，rel(k)表示位置k的文档是否相关，相关为1，不相关为0。MAP为一组查询AP的平均值。</p>
+<p>上式中，k为文档在排序列表中的位置，p(k) 为前k个结果的准确率，<strong>rel(k)表示位置k的文档是否相关，相关为1，不相关为0</strong>。MAP为一组查询AP的平均值。</p>
 <blockquote>
 <p>假设有两个主题，主题1有4个相关网页，主题2有5个相关网页。某系统对于主题1检索出4个相关网页，其rank分别为1, 2, 4, 7；对于主题2检索出3个相关网页，其rank分别为1,3,5。对于主题1，平均准确率为(1&#x2F;1+2&#x2F;2+3&#x2F;4+4&#x2F;7)&#x2F;4&#x3D;0.83。对于主题2，平均准确率为(1&#x2F;1+2&#x2F;3+3&#x2F;5+0+0)&#x2F;5&#x3D;0.45。则MAP&#x3D; (0.83+0.45)&#x2F;2&#x3D;0.64。</p>
 </blockquote>

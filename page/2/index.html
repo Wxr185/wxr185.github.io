@@ -151,6 +151,84 @@
     
     
     <article
+  id="post-RecomSys/FM"
+  class="article article-type-post"
+  itemscope
+  itemprop="blogPost"
+  data-scroll-reveal
+>
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h2 itemprop="name">
+  <a class="article-title" href="/2022/09/12/RecomSys/FM/"
+    >FM</a> 
+</h2>
+ 
+
+      
+    </header>
+     
+    <div class="article-meta">
+      <a href="/2022/09/12/RecomSys/FM/" class="article-date">
+  <time datetime="2022-09-12T03:45:34.425Z" itemprop="datePublished">2022-09-12</time>
+</a> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E6%8E%A8%E8%8D%90%E7%B3%BB%E7%BB%9F/">推荐系统</a>
+  </div>
+   
+    </div>
+      
+    <div class="article-entry" itemprop="articleBody">
+       
+  <h3 id="FM"><a href="#FM" class="headerlink" title="FM"></a>FM</h3><h4 id="提出背景"><a href="#提出背景" class="headerlink" title="提出背景"></a>提出背景</h4><p>传统线性模型忽略了特征之间的交叉联系；特征高维稀疏，并且容易维度爆炸。</p>
+<p>FM就是Factor Machine，因子分解机。<br>FM通过对两两特征组合，引入交叉项特征，提高模型得分；其次是高维灾难，通过引入隐向量（对参数矩阵进行矩阵分解），完成对特征的参数估计。</p>
+<h4 id="模型公式"><a href="#模型公式" class="headerlink" title="模型公式"></a>模型公式</h4><p><strong>一般的线性模型</strong><br><img src="/pictures/RecomSys/FM/img1.png" alt="一般线性模型"></p>
+<p><strong>二阶多项式模型</strong><br><img src="/pictures/RecomSys/FM/img2.png" alt="二阶多项式模型"><br>上式中，n表示样本的特征数量，x[i]表示第i个特征。<br>与线性模型相比，FM模型多了后面特征组合的部分。</p>
+<h4 id="FM求解"><a href="#FM求解" class="headerlink" title="FM求解"></a>FM求解</h4><p>从上面的式子可以看到，组合部分的特征相关参数有 n(n−1)&#x2F;2 个。但是对于稀疏数据来说，同时满足 x i , x[i], x[j] 都不为0的情况十分少，这就会导致 w[i][j] 无法通过训练得到。</p>
+<p>为了求解得到w[i][j]，我们对于每一个特征分量 x[i] 引入 <strong>隐向量</strong> V[i] &#x3D; (v[i][1], …, v[i][k])，利用v[i]，v[j]对w[i][j]进行求解。<br><img src="/pictures/RecomSys/FM/img3.png" alt="权重矩阵W求解"></p>
+<p>求解v[i]和v[j]的具体过程如下：<br><img src="/pictures/RecomSys/FM/img4.png" alt="核心计算公式"></p>
+<h3 id="FFM"><a href="#FFM" class="headerlink" title="FFM"></a>FFM</h3><h4 id="概念"><a href="#概念" class="headerlink" title="概念"></a>概念</h4><p>同一个categorical特征经过One-Hot编码生成的数值特征都可以放到同一个field，包括用户性别、职业、品类偏好等。</p>
+<p>在FFM中，每一维特征 x[i]，针对其它特征的每一种field f[j]，都会学习一个隐向量 v[i][f]。因此，<em><strong>隐向量不仅与特征相关，也与field相关</strong></em>。也就是说，“Day&#x3D;26&#x2F;11&#x2F;15”这个特征与“Country”特征和“Ad_type”特征进行关联的时候使用不同的隐向量，这与“Country”和“Ad_type”的内在差异相符，也是FFM中“field-aware”的由来。</p>
+<p>假设样本的 n 个特征属于 f 个field，那么FFM的二次项有 nf个隐向量。而在FM模型中，每一维特征的隐向量只有一个，即二次项有n个隐向量。FM可以看作FFM的特例，是把所有特征都归属到一个field时的FFM模型。根据FFM的field敏感特性，可以导出其模型方程。<br><img src="/pictures/RecomSys/FM/img5.png" alt="FFM计算公式"><br>其中，fj 是第 j 个特征所属的field。如果隐向量的长度为 k，那么FFM的二次参数有 nfk 个，远多于FM模型的 nk 个。此外，由于隐向量与field相关，FFM二次项并不能够化简，其预测复杂度是 O(kn2)。</p>
+<h4 id="区别"><a href="#区别" class="headerlink" title="区别"></a>区别</h4><blockquote>
+<ol>
+<li>FM和FFM模型的二次项的个数都是 n(n−1)&#x2F;2 个，区别在于FM模型中二次项<strong>存在重复使用的隐向量</strong>，而FFM模型没有，这正是由于FFM的域的概念的存在</li>
+<li>FM模型的参数量为nk，FFM模型的参数量为nfk个</li>
+<li>FM模型的时间复杂度可以优化为线性的，而FFM模型为nfk（最坏时，即当所有特征都是独自一个域时，为n^2k）</li>
+</ol>
+</blockquote>
+<h4 id="应用"><a href="#应用" class="headerlink" title="应用"></a>应用</h4><p>在DSP或者推荐场景中，FFM主要用来评估站内的CTR和CVR，即一个用户对一个商品的潜在点击率和点击后的转化率。<br>CTR和CVR预估模型都是在线下训练，然后线上预测。两个模型采用的特征大同小异，主要分三类：</p>
+<blockquote>
+<ol>
+<li>用户相关的特征: 年龄、性别、职业、兴趣、品类偏好、浏览&#x2F;购买品类等基本信息，以及用户近期点击量&#x2F;购买量&#x2F;消费额等统计信息</li>
+<li>商品相关的特征: 商品所属品类、销量、价格、评分、历史CTR&#x2F;CVR等信息</li>
+<li>用户-商品匹配特征: 浏览&#x2F;购买品类匹配、浏览&#x2F;购买商家匹配、兴趣偏好匹配等</li>
+</ol>
+</blockquote>
+<p>为了使用FFM方法，所有的特征必须转换成“field_id:feat_id:value”格式，field_id代表特征所属field的编号，feat_id是特征编号，value是特征的值。数值型的特征比较容易处理，只需分配单独的field编号，如用户评论得分、商品的历史CTR&#x2F;CVR等。categorical特征需要经过One-Hot编码成数值型，编码产生的所有特征同属于一个field，而特征的值只能是0或1，如用户的性别、年龄段，商品的品类id等。除此之外，还有第三类特征，如用户浏览&#x2F;购买品类，有多个品类id且用一个数值衡量用户浏览或购买每个品类商品的数量。这类特征按照categorical特征处理，不同的只是特征的值不是0或1，而是代表用户浏览或购买数量的数值。按前述方法得到field_id之后，再对转换后特征顺序编号，得到feat_id，特征的值也可以按照之前的方法获得。 </p>
+ 
+      <!-- reward -->
+      
+    </div>
+    
+
+    <!-- copyright -->
+    
+    <footer class="article-footer">
+       
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Recom/" rel="tag">Recom</a></li></ul>
+
+    </footer>
+  </div>
+
+   
+    
+</article>
+
+    
+    <article
   id="post-KG/TransX"
   class="article article-type-post"
   itemscope

@@ -151,6 +151,82 @@
     
     
     <article
+  id="post-AI/Focal-Loss"
+  class="article article-type-post"
+  itemscope
+  itemprop="blogPost"
+  data-scroll-reveal
+>
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h2 itemprop="name">
+  <a class="article-title" href="/2022/10/08/AI/Focal-Loss/"
+    >Focal Loss</a> 
+</h2>
+ 
+
+      
+    </header>
+     
+    <div class="article-meta">
+      <a href="/2022/10/08/AI/Focal-Loss/" class="article-date">
+  <time datetime="2022-10-08T07:42:48.013Z" itemprop="datePublished">2022-10-08</time>
+</a> 
+  <div class="article-category">
+    <a class="article-category-link" href="/categories/%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD/">人工智能</a> / <a class="article-category-link" href="/categories/%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD/%E6%8D%9F%E5%A4%B1%E5%87%BD%E6%95%B0/">损失函数</a>
+  </div>
+   
+    </div>
+      
+    <div class="article-entry" itemprop="articleBody">
+       
+  <h2 id="提出原因"><a href="#提出原因" class="headerlink" title="提出原因"></a>提出原因</h2><p>Focal Loss的出现是为了 <strong>解决训练集正负样本极度不平衡</strong> 的情况。作者认为更少的部分学习起来更难，于是在Focal Loss上设计得更加倾向于这一类样本。</p>
+<p>作者提出通过reshape标准交叉熵损失解决类别不均衡（Class Imbalance）,这样它就能降低容易分类的样例的比重（Well-classified Examples）。这个方法专注训练在Hard Examples的稀疏集合上，能够防止大量的Easy Negatives在训练中压倒训练器。</p>
+<p>以前的一些思路集中在采样样本，使更少（等同于更难训练）的那类样本在数据中所占的比重更大，Focal Loss并没有进行采样，而是 <strong>对容易的那类进行了降权处理</strong>，结果上有很好的效果。</p>
+<h3 id="交叉熵损失函数"><a href="#交叉熵损失函数" class="headerlink" title="交叉熵损失函数"></a>交叉熵损失函数</h3><p>常用的分类损失函数为交叉熵损失函数：<br><img src="/pictures/AI/Focal-Loss/img1.png" alt="交叉熵损失函数"><br>其中，^p为预测概率大小，y为label在二分类中对应0, 1。</p>
+<h3 id="样本不均衡问题"><a href="#样本不均衡问题" class="headerlink" title="样本不均衡问题"></a>样本不均衡问题</h3><p>对于二分类问题，损失函数可以写为：<br><img src="/pictures/AI/Focal-Loss/img2.png" alt="二分类的交叉熵损失函数"><br>其中m为正样本个数，n为负样本个数，N为样本总数，m+n&#x3D;N。</p>
+<p>当样本分布失衡时，在损失函数L的分布也会发生倾斜，如m&lt;&lt;n时，负样本就会在损失函数占据主导地位。<strong>由于损失函数的倾斜，模型训练过程中会倾向于样本多的类别，造成模型对少样本类别的性能较差</strong>。</p>
+<h3 id="平衡交叉熵函数"><a href="#平衡交叉熵函数" class="headerlink" title="平衡交叉熵函数"></a>平衡交叉熵函数</h3><p>基于样本非平衡造成的损失函数倾斜，一个直观的做法就是在损失函数中添加权重因子，提高少数类别在损失函数中的权重，平衡损失函数的分布。如在上述二分类问题中，添加权重参数 a 和 1-a<br><img src="/pictures/AI/Focal-Loss/img3.png" alt="平衡交叉熵函数"><br>其中，a &#x2F; (1-a) &#x3D; n &#x2F; m，即权重的大小根据正负样本的分布进行设置。</p>
+<h2 id="Focal-Loss"><a href="#Focal-Loss" class="headerlink" title="Focal Loss"></a>Focal Loss</h2><p>focal loss也是针对样本不均衡问题，从loss角度提供的另外一种解决方法。</p>
+<p>focal loss的具体形式为：<br><img src="/pictures/AI/Focal-Loss/img4.png" alt="Focal loss函数"><br>p_t反映了与ground truth即类别y的接近程度，p_t越大说明越接近类别y，即分类越准确。r&gt;0为可调节因子。</p>
+<p>focal loss相比交叉熵多了一个modulating factor即 (1-p_t)^r 。对于分类准确的样本p_t–&gt;1，modulating factor趋近于0。对于分类不准确的样本1-p_t–&gt;1，modulating factor趋近于1。即相比交叉熵损失，focal loss对于分类不准确的样本，损失没有改变，对于分类准确的样本，损失会变小。 整体而言，相当于 <strong>增加了分类不准确样本在损失函数中的权重</strong>。</p>
+<p>p_t也反应了分类的难易程度，p_t越大，说明分类的置信度越高，代表样本越易分；p_t越小，分类的置信度越低，代表样本越难分。因此focal loss相当于增加了难分样本在损失函数的权重，使得损失函数倾向于难分的样本，有助于提高难分样本的准确度。focal loss与交叉熵的对比，可见下图：<br><img src="/pictures/AI/Focal-Loss/img5.png" alt="focal loss使得损失函数更加倾向于难分样本"></p>
+<p><strong>作者最后将 α -balanced loss也加入了公式</strong>，最后公式为：<br><img src="/pictures/AI/Focal-Loss/img7.png" alt="Focal loss函数最终形式"></p>
+<h3 id="VS-平衡交叉熵函数"><a href="#VS-平衡交叉熵函数" class="headerlink" title="VS 平衡交叉熵函数"></a>VS 平衡交叉熵函数</h3><p>focal loss相比balanced cross entropy而言，二者都是试图解决样本不平衡带来的模型训练问题，后者从 <strong>样本分布角度对损失函数添加权重因子</strong>，前者从 <strong>样本分类难易程度出发</strong>，使loss聚焦于难分样本。</p>
+<h2 id="为什么有效？"><a href="#为什么有效？" class="headerlink" title="为什么有效？"></a>为什么有效？</h2><p>focal loss从样本难易分类角度出发，解决样本非平衡带来的模型训练问题。</p>
+<p>相信很多人会在这里有一个疑问，样本难易分类角度怎么能够解决样本非平衡的问题，直觉上来讲样本非平衡造成的问题就是样本数少的类别分类难度较高。因此从样本难易分类角度出发，使得loss聚焦于难分样本，解决了样本少的类别分类准确率不高的问题，当然 <strong>难分样本不限于样本少的类别</strong>，也就是 <strong>focal loss不仅仅解决了样本非平衡的问题，同样有助于模型的整体性能提高</strong>。</p>
+<blockquote>
+<p>样本难分的原因可能有以下两种：1. 样本本身就很难区分，针对所有样本来说；2. 样本不均衡导致的难分。</p>
+</blockquote>
+<p>要想使模型训练过程中聚焦难分类样本，仅仅使得Loss倾向于难分类样本还不够，因为训练过程中模型参数更新取决于Loss的梯度。</p>
+<p>如果Loss中难分类样本权重较高，但是难分类样本的Loss的梯度为0，难分类样本不会影响模型学习过程。</p>
+<p>如下图所示为focal loss的梯度示意图。其中 x_t&#x3D;y*x ，其中 y 为类别， pt &#x3D; sigmoid(x_t) ，对于易分样本， x_t&gt;0 ，即 p_t&gt;0.5 。由图中可以看出，对于focal loss而言，在 x_t&gt;0 时，导数很小，趋近于0。因此对于focal loss，导数中易是难分类样本占主导，因此学习过程更加聚焦正在难分类样本。<br><img src="/pictures/AI/Focal-Loss/img6.png" alt="Focal loss的梯度示意图"></p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p><strong>难分类样本与易分类样本其实是一个动态概念</strong>，也就是说 p_t 会随着训练过程而变化。原先易分类样本即 p_t 大的样本，可能随着训练过程变化为难训练样本即 p_t 小的样本。</p>
+<p>上面讲到，由于Loss梯度中，难训练样本起主导作用，即参数的变化主要是朝着优化难训练样本的方向改变。当参数变化后，可能会使原先易训练的样本 p_t 发生变化，即可能变为难训练样本。当这种情况发生时，可能会造成模型收敛速度慢。</p>
+<p><strong>为了防止难易样本的频繁变化，应当选取小的学习率</strong>。防止学习率过大，造成参数 w 变化较大从而引起 p_t 的巨大变化，造成难易样本的改变。</p>
+ 
+      <!-- reward -->
+      
+    </div>
+    
+
+    <!-- copyright -->
+    
+    <footer class="article-footer">
+       
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/AI/" rel="tag">AI</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Loss/" rel="tag">Loss</a></li></ul>
+
+    </footer>
+  </div>
+
+   
+    
+</article>
+
+    
+    <article
   id="post-LTR/RankNet"
   class="article article-type-post"
   itemscope
@@ -175,7 +251,7 @@
   <time datetime="2022-10-06T06:40:11.122Z" itemprop="datePublished">2022-10-06</time>
 </a> 
   <div class="article-category">
-    <a class="article-category-link" href="/categories/LTR/">LTR</a> / <a class="article-category-link" href="/categories/LTR/Pairwise/">Pairwise</a>
+    <a class="article-category-link" href="/categories/%E6%8E%92%E5%BA%8F%E6%A8%A1%E5%9E%8B/">排序模型</a> / <a class="article-category-link" href="/categories/%E6%8E%92%E5%BA%8F%E6%A8%A1%E5%9E%8B/Pairwise/">Pairwise</a>
   </div>
    
     </div>
@@ -399,7 +475,7 @@
 <h3 id="MAP-Mean-Average-Precision"><a href="#MAP-Mean-Average-Precision" class="headerlink" title="MAP (Mean Average Precision)"></a>MAP (Mean Average Precision)</h3><p>在二分类中，常常使用Precision, Recall, ROC 曲线，AUC来评价一个模型的性能，然而这些指标很难对多分类模型进行准确的评价。</p>
 <p>AP 是指的在所有Recall的可能取值情况下，得到的所有的Precision的平均值。AP衡量的是我们训练得到的模型在每个类别上的好坏，MAP衡量的是该模型在所有类别上的好坏，得到AP后，MAP的计算就变得很简单了，就是取所有AP的平均值。</p>
 <p>MAP（Mean Average Precision）是信息检中的一个评价指标。MAP假定相关度有两个级别 —— 相关与不相关。 首先了解下AP（Average Precision）计算方法：<br><img src="/pictures/LTR/Learning-to-Ranking/img6.png" alt="AP的计算公式"></p>
-<p>上式中，k为文档在排序列表中的位置，p(k) 为前k个结果的准确率，rel(k)表示位置k的文档是否相关，相关为1，不相关为0。MAP为一组查询AP的平均值。</p>
+<p>上式中，k为文档在排序列表中的位置，p(k) 为前k个结果的准确率，<strong>rel(k)表示位置k的文档是否相关，相关为1，不相关为0</strong>。MAP为一组查询AP的平均值。</p>
 <blockquote>
 <p>假设有两个主题，主题1有4个相关网页，主题2有5个相关网页。某系统对于主题1检索出4个相关网页，其rank分别为1, 2, 4, 7；对于主题2检索出3个相关网页，其rank分别为1,3,5。对于主题1，平均准确率为(1&#x2F;1+2&#x2F;2+3&#x2F;4+4&#x2F;7)&#x2F;4&#x3D;0.83。对于主题2，平均准确率为(1&#x2F;1+2&#x2F;3+3&#x2F;5+0+0)&#x2F;5&#x3D;0.45。则MAP&#x3D; (0.83+0.45)&#x2F;2&#x3D;0.64。</p>
 </blockquote>
@@ -1214,84 +1290,6 @@
 <p>Wide部分设置很有意思，作者为什么这么做呢？<br>结合业务思考，在Google Play商店的app下载中，不断有新的app推出，并且有很多“非常冷门、小众”的app，而现在的智能手机user几乎全部会安装一系列必要的app。</p>
 <p>联想前面对Memorization和Generalization的介绍，此时的Deep部分无法很好的为这些app学到有效的embeddding，而这时Wide可以发挥了它“记忆”的优势，作者在这里选择了 <em><strong>“记忆”user下载的app与被推荐的app之间的相关性</strong></em>，有点类似“装个这个app后还可能会装什么”。</p>
 <p>对于Wide来说，它现在的任务是弥补Deep的缺陷，其他大部分的活就交给Deep了，所以这时的Wide相比单独Wide也显得非常“轻量级”，这也是Join相对于Ensemble的优势。</p>
- 
-      <!-- reward -->
-      
-    </div>
-    
-
-    <!-- copyright -->
-    
-    <footer class="article-footer">
-       
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Recom/" rel="tag">Recom</a></li></ul>
-
-    </footer>
-  </div>
-
-   
-    
-</article>
-
-    
-    <article
-  id="post-RecomSys/FM"
-  class="article article-type-post"
-  itemscope
-  itemprop="blogPost"
-  data-scroll-reveal
->
-  <div class="article-inner">
-    
-    <header class="article-header">
-       
-<h2 itemprop="name">
-  <a class="article-title" href="/2022/09/12/RecomSys/FM/"
-    >FM</a> 
-</h2>
- 
-
-      
-    </header>
-     
-    <div class="article-meta">
-      <a href="/2022/09/12/RecomSys/FM/" class="article-date">
-  <time datetime="2022-09-12T03:45:34.425Z" itemprop="datePublished">2022-09-12</time>
-</a> 
-  <div class="article-category">
-    <a class="article-category-link" href="/categories/%E6%8E%A8%E8%8D%90%E7%B3%BB%E7%BB%9F/">推荐系统</a>
-  </div>
-   
-    </div>
-      
-    <div class="article-entry" itemprop="articleBody">
-       
-  <h3 id="FM"><a href="#FM" class="headerlink" title="FM"></a>FM</h3><h4 id="提出背景"><a href="#提出背景" class="headerlink" title="提出背景"></a>提出背景</h4><p>传统线性模型忽略了特征之间的交叉联系；特征高维稀疏，并且容易维度爆炸。</p>
-<p>FM就是Factor Machine，因子分解机。<br>FM通过对两两特征组合，引入交叉项特征，提高模型得分；其次是高维灾难，通过引入隐向量（对参数矩阵进行矩阵分解），完成对特征的参数估计。</p>
-<h4 id="模型公式"><a href="#模型公式" class="headerlink" title="模型公式"></a>模型公式</h4><p><strong>一般的线性模型</strong><br><img src="/pictures/RecomSys/FM/img1.png" alt="一般线性模型"></p>
-<p><strong>二阶多项式模型</strong><br><img src="/pictures/RecomSys/FM/img2.png" alt="二阶多项式模型"><br>上式中，n表示样本的特征数量，x[i]表示第i个特征。<br>与线性模型相比，FM模型多了后面特征组合的部分。</p>
-<h4 id="FM求解"><a href="#FM求解" class="headerlink" title="FM求解"></a>FM求解</h4><p>从上面的式子可以看到，组合部分的特征相关参数有 n(n−1)&#x2F;2 个。但是对于稀疏数据来说，同时满足 x i , x[i], x[j] 都不为0的情况十分少，这就会导致 w[i][j] 无法通过训练得到。</p>
-<p>为了求解得到w[i][j]，我们对于每一个特征分量 x[i] 引入 <strong>隐向量</strong> V[i] &#x3D; (v[i][1], …, v[i][k])，利用v[i]，v[j]对w[i][j]进行求解。<br><img src="/pictures/RecomSys/FM/img3.png" alt="权重矩阵W求解"></p>
-<p>求解v[i]和v[j]的具体过程如下：<br><img src="/pictures/RecomSys/FM/img4.png" alt="核心计算公式"></p>
-<h3 id="FFM"><a href="#FFM" class="headerlink" title="FFM"></a>FFM</h3><h4 id="概念"><a href="#概念" class="headerlink" title="概念"></a>概念</h4><p>同一个categorical特征经过One-Hot编码生成的数值特征都可以放到同一个field，包括用户性别、职业、品类偏好等。</p>
-<p>在FFM中，每一维特征 x[i]，针对其它特征的每一种field f[j]，都会学习一个隐向量 v[i][f]。因此，<em><strong>隐向量不仅与特征相关，也与field相关</strong></em>。也就是说，“Day&#x3D;26&#x2F;11&#x2F;15”这个特征与“Country”特征和“Ad_type”特征进行关联的时候使用不同的隐向量，这与“Country”和“Ad_type”的内在差异相符，也是FFM中“field-aware”的由来。</p>
-<p>假设样本的 n 个特征属于 f 个field，那么FFM的二次项有 nf个隐向量。而在FM模型中，每一维特征的隐向量只有一个，即二次项有n个隐向量。FM可以看作FFM的特例，是把所有特征都归属到一个field时的FFM模型。根据FFM的field敏感特性，可以导出其模型方程。<br><img src="/pictures/RecomSys/FM/img5.png" alt="FFM计算公式"><br>其中，fj 是第 j 个特征所属的field。如果隐向量的长度为 k，那么FFM的二次参数有 nfk 个，远多于FM模型的 nk 个。此外，由于隐向量与field相关，FFM二次项并不能够化简，其预测复杂度是 O(kn2)。</p>
-<h4 id="区别"><a href="#区别" class="headerlink" title="区别"></a>区别</h4><blockquote>
-<ol>
-<li>FM和FFM模型的二次项的个数都是 n(n−1)&#x2F;2 个，区别在于FM模型中二次项<strong>存在重复使用的隐向量</strong>，而FFM模型没有，这正是由于FFM的域的概念的存在</li>
-<li>FM模型的参数量为nk，FFM模型的参数量为nfk个</li>
-<li>FM模型的时间复杂度可以优化为线性的，而FFM模型为nfk（最坏时，即当所有特征都是独自一个域时，为n^2k）</li>
-</ol>
-</blockquote>
-<h4 id="应用"><a href="#应用" class="headerlink" title="应用"></a>应用</h4><p>在DSP或者推荐场景中，FFM主要用来评估站内的CTR和CVR，即一个用户对一个商品的潜在点击率和点击后的转化率。<br>CTR和CVR预估模型都是在线下训练，然后线上预测。两个模型采用的特征大同小异，主要分三类：</p>
-<blockquote>
-<ol>
-<li>用户相关的特征: 年龄、性别、职业、兴趣、品类偏好、浏览&#x2F;购买品类等基本信息，以及用户近期点击量&#x2F;购买量&#x2F;消费额等统计信息</li>
-<li>商品相关的特征: 商品所属品类、销量、价格、评分、历史CTR&#x2F;CVR等信息</li>
-<li>用户-商品匹配特征: 浏览&#x2F;购买品类匹配、浏览&#x2F;购买商家匹配、兴趣偏好匹配等</li>
-</ol>
-</blockquote>
-<p>为了使用FFM方法，所有的特征必须转换成“field_id:feat_id:value”格式，field_id代表特征所属field的编号，feat_id是特征编号，value是特征的值。数值型的特征比较容易处理，只需分配单独的field编号，如用户评论得分、商品的历史CTR&#x2F;CVR等。categorical特征需要经过One-Hot编码成数值型，编码产生的所有特征同属于一个field，而特征的值只能是0或1，如用户的性别、年龄段，商品的品类id等。除此之外，还有第三类特征，如用户浏览&#x2F;购买品类，有多个品类id且用一个数值衡量用户浏览或购买每个品类商品的数量。这类特征按照categorical特征处理，不同的只是特征的值不是0或1，而是代表用户浏览或购买数量的数值。按前述方法得到field_id之后，再对转换后特征顺序编号，得到feat_id，特征的值也可以按照之前的方法获得。 </p>
  
       <!-- reward -->
       

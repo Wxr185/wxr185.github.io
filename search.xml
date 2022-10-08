@@ -1,81 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
-    <title>Normalization</title>
-    <url>/2022/09/25/AI/Normalization/</url>
-    <content><![CDATA[<p>机器学习领域有个很重要的假设：IID (Independent Identically Distribution) 独立同分布假设，即假设训练数据和测试数据是满足同分布的。</p>
-<blockquote>
-<p>神经网络的学习过程本质上是为了学习数据的分布。<br>在mini-batch梯度下降训练的时候，如果每批训练数据的分布不同，那么网络在每次迭代的时候都要学习适应不同的分布，大大降低了网络的训练速度。</p>
-</blockquote>
-<h2 id="BatchNorm"><a href="#BatchNorm" class="headerlink" title="BatchNorm"></a>BatchNorm</h2><p>BatchNorm就是在深度神经网络训练过程中，使得每一层神经网络的输入保持相同分布。</p>
-<p>BN层在激活函数之前。BN层的作用机制：通过平滑隐藏层输入的分布，帮助随机梯度下降的进行，缓解随机梯度下降随遇后续层的负面影响。</p>
-<blockquote>
-<ol>
-<li>sigmoid, tanh激活函数。函数图像两端，梯度较小，容易出现 <strong>梯度衰减</strong> 问题。因此，把BN层放在非线性激活函数之前，将数据分布调整到均值为0附近，加速训练。</li>
-<li>relu激活函数。relu函数负半区的输出值被抑制，正半区的值被保留。因此，BN层放在前面，可以防止某一层的激活值全部被抑制，导致梯度全部为0，梯度消失。同理，防止梯度爆炸。</li>
-</ol>
-</blockquote>
-<h3 id="Internal-Covariate-Shift-问题"><a href="#Internal-Covariate-Shift-问题" class="headerlink" title="Internal Covariate Shift 问题"></a>Internal Covariate Shift 问题</h3><p>在训练过程中，隐层的 <em><strong>输入分布</strong></em> 总是变来变去。导致下一层网络很难进行学习（神经网络本来就是要学习数据分布的）。</p>
-<blockquote>
-<p>Internal Covariate Shift: 发生在神经网络内部；<br>Covariate Shift: 发生在输入数据上。主要描述由于训练数据和测试数据存在分布差异，影响模型的泛化性和训练速度。</p>
-</blockquote>
-<h3 id="BatchNorm基本思想"><a href="#BatchNorm基本思想" class="headerlink" title="BatchNorm基本思想"></a>BatchNorm基本思想</h3><p>深度神经网络在做 <strong>非线性变化前</strong> 的激活输入值随着网络深度加深，在训练过程中，数据分布逐渐向着 <strong>非线性函数取值区间的上下限两端靠近</strong>，导致反向传播时，低层神经网络梯度消失，最终造成收敛变慢。</p>
-<p>BN就是规范化隐层数据分布，将数据分布强制规范到非线形激活函数比较敏感的区域，避免梯度消失问题产生。<br>就是说经过BN后，大部分输出值落在非线形函数的非饱和区，加速收敛过程。</p>
-<blockquote>
-<p>如果都通过BN，那么不就跟把非线性函数替换成线性函数效果相同了？这意味着什么？我们知道，如果是多层的线性函数变换其实这个深层是没有意义的，因为多层线性网络跟一层线性网络是等价的。这意味着网络的表达能力下降了，这也意味着深度的意义就没有了。</p>
-</blockquote>
-<p>BN为了保证模型的非线形，对变换后的数据分布，进行了scale加上shift操作，<strong>这两个参数通过训练学习得到</strong>。等价于非线性函数的值，从正中心周围的线性区域往非线性区域偏移。增强模型的表达能力。</p>
-<blockquote>
-<p><strong>BN的核心思想：</strong>在非线性和线性之间找到较好的平衡点。既能享受非线性较强的表达能力，又能避免非线性激活函数饱和区梯度消失问题。</p>
-</blockquote>
-<h3 id="BatchNorm训练阶段"><a href="#BatchNorm训练阶段" class="headerlink" title="BatchNorm训练阶段"></a>BatchNorm训练阶段</h3><p>对于mini-batch SGD来说，一次训练过程中包含m个训练实例，其具体BN操作就是对于隐层中 <strong>每个神经元</strong> 的激活值，进行如下变换：<br><img src="/pictures/AI/Normal/img1.png" alt="每个神经元数据的标准化操作"></p>
-<p>经过上述变化后，某个神经元的激活值变成了N(0, 1)正态分布。<br>为了防止网络表达能力下降，每个神经元增加两个调节参数，这两个参数通过训练学习得到，用来还原网络非线性表达能力。<br><img src="/pictures/AI/Normal/img2.png" alt="数据的放缩与偏移"></p>
-<p>BN的具体操作流程如下，</p>
-<blockquote>
-<ol>
-<li>先求出此次批量数据x的均值</li>
-<li>求出此次batch的方差</li>
-<li>接下来就是对x做归一化</li>
-<li>最重要的一步，引入缩放和平移变量γ和β ,计算归一化后的值</li>
-</ol>
-</blockquote>
-<p><img src="/pictures/AI/Normal/img3.png" alt="BN具体流程"></p>
-<p>一个简单的代码实现，</p>
-<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">def BatchNorm(x, gamma, beta, bn_param):</span><br><span class="line">&quot;&quot;&quot;</span><br><span class="line">param:x		: 输入数据，shape(B, L)</span><br><span class="line">param:gamma	: 缩放因子</span><br><span class="line">param:beta	: 平移因子</span><br><span class="line">param:bn_param	: batchnorm所需要的一些参数</span><br><span class="line">	eps		: 接近0的数，防止分母出现0</span><br><span class="line">	momentum	: 动量参数，一般为0.9，0.99，0.999</span><br><span class="line">	running_mean	: 滑动平均的方式计算新的均值</span><br><span class="line">	running_var	: 滑动平均的方式计算新的方差</span><br><span class="line">&quot;&quot;&quot;</span><br><span class="line"></span><br><span class="line">    x_mean = x.mean(axis=0)</span><br><span class="line">    x_var = x.var(axis=0)</span><br><span class="line">    x_norm = (x - x_mean) / np.sqrt(x_var + eps)</span><br><span class="line">    x_norm = gamma * x_norm + beta</span><br><span class="line"></span><br><span class="line">    # 滑动平均计算得到均值方差信息，用于推断阶段</span><br><span class="line">    running_mean = bn_param[&#x27;running_mean&#x27;]</span><br><span class="line">    running_var = bn_parma[&#x27;running_var&#x27;]</span><br><span class="line">    momentum = bn_param[&#x27;momentum&#x27;]</span><br><span class="line"></span><br><span class="line">    running_mean = momentum * running_mean + (1-momentum) * x_mean</span><br><span class="line">    running_var = momentum * running_var + (1-momentum) * x_var</span><br><span class="line"></span><br><span class="line">    bn_param[&#x27;running_mean&#x27;] = running_mean</span><br><span class="line">    bn_param[&#x27;running_var&#x27;] = running_var</span><br><span class="line"></span><br><span class="line">    return x_norm, bn_param</span><br></pre></td></tr></table></figure>
-
-<p>在训练中完成的任务，每次训练给一个批量，然后计算批量的均值方差，但是在测试的时候可不是这样，测试的时候 <strong>每次只输入一张图片</strong>，这怎么计算批量的均值和方差，于是，就有了代码中下面两行，在训练的时候实现计算好mean和var，测试的时候直接拿来用就可以了，不用计算均值和方差。</p>
-<h3 id="BatchNorm优势"><a href="#BatchNorm优势" class="headerlink" title="BatchNorm优势"></a>BatchNorm优势</h3><blockquote>
-<ol>
-<li>不仅仅极大提升了训练速度，收敛过程大大加快；</li>
-<li>还能增加分类效果，一种解释是这是类似于Dropout的一种防止过拟合的正则化表达方式，所以不用Dropout也能达到相当的效果；</li>
-<li>另外调参过程也简单多了，对于初始化要求没那么高，而且可以使用大的学习率等；</li>
-<li>batchnorm降低了数据之间的绝对差异，有一个去相关的性质，更多的考虑相对差异性，因此在分类任务上具有更好的效果。</li>
-</ol>
-</blockquote>
-<h2 id="Layer-Normalization"><a href="#Layer-Normalization" class="headerlink" title="Layer Normalization"></a>Layer Normalization</h2><h3 id="BatchNorm缺点"><a href="#BatchNorm缺点" class="headerlink" title="BatchNorm缺点"></a>BatchNorm缺点</h3><p>Batch size太小会影响模型性能。对batchsize的大小比较敏感，由于每次计算均值和方差是在一个batch上，所以 <strong>如果batchsize太小，则计算的均值、方差不足以代表整个数据分布</strong>；</p>
-<p>BN实际使用时需要计算并且保存某一层神经网络batch的均值和方差等统计信息，对于对一个固定深度的前向神经网络（DNN，CNN）使用BN，很方便；但对于RNN来说，sequence的长度是不一致的，换句话说RNN的深度不是固定的，不同的time-step需要保存不同的statics特征，可能存在一个特殊sequence比其他sequence长很多，这样training时，计算很麻烦。</p>
-<p>BN不适用于RNN等动态网络，适用于CNN；LN适用于RNN。</p>
-<blockquote>
-<p>很直观的一个例子：BN计算每个句子同一个位置字的均值和方差，但因为每个句子的长度不一样，最后是padding成一样的长度；那假如在该位置时，最后一句在该位置是没有字的，也就是用0表示了，那就会影响整个结果。</p>
-</blockquote>
-<h3 id="区别"><a href="#区别" class="headerlink" title="区别"></a>区别</h3><p>BN的主要思想：在每一层的每一批数据（一个batch里的同一个通道）上进行归一化；<br>LN的主要思想：在每一个样本（一个样本的不同通道）上计算均值和方差，并不是BN那种在批方向计算均值和方差。<br><img src="/pictures/AI/Normal/img4.png" alt="BN和LN的区别"></p>
-<h3 id="源码实现"><a href="#源码实现" class="headerlink" title="源码实现"></a>源码实现</h3><p>Layer Normalization在NLP的直观图中，就是对一个batch中的同一句话中的 <strong>每个字</strong> 分别进行归一化。</p>
-<p>如果只看 NLP 问题，假设我们的 batch 是（2,3,4）的，也就是 batch_size &#x3D; 2, seq_length &#x3D; 3, dim &#x3D; 4 的，假设第一个句子是 w1 w2 w3，第二个句子是 w4 w5 w6，那么这个 tensor 可以写为</p>
-<blockquote>
-<p>[ [[w11,w12,w13,w14], …]<br>[[w41,w42,w43,w44], …] ]</p>
-</blockquote>
-<p>如果是 BN 的话，会对同一个 batch 里对应位置上的 token 求平均值，也就是说 (w11+w12+w13+w14+w41+w42+w43+w44)&#x2F;8是其中一个 mean，一共会求出 3 个 mean，也就是上图里 C 个（seq_length）个 mean。</p>
-<p>如果是 LN 的话，<strong>看起来（其实并不是）</strong> 是对每个 sample 里的所有 feature 求 mean，也就是(w11+w12+w13+w14+w21+w22+w23+w24+w31+w32+w33+w34)&#x2F;12，可以求出一共 2 个 mean，也就是图里 N（batch_size）个 mean。<br><img src="/pictures/AI/Normal/img5.png" alt="Layer Norm的不同"></p>
-<p>左图和我们认为的 LN 一致，也是我一直认为的 LN，但是右图却是在一个 token 上求平均，带回我们原来的问题，对于一个(2,3,4)的 tensor，(w11+w12+w13+w14)&#x2F;4 是一个 mean，一共会有 2*3&#x3D;6 个 mean。</p>
-]]></content>
-      <categories>
-        <category>人工智能</category>
-      </categories>
-      <tags>
-        <tag>AI</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>TransX</title>
     <url>/2022/09/11/KG/TransX/</url>
     <content><![CDATA[<p>参考信息：<a href="https://zhuanlan.zhihu.com/p/354867179">https://zhuanlan.zhihu.com/p/354867179</a></p>
@@ -152,6 +77,118 @@
       </tags>
   </entry>
   <entry>
+    <title>Focal Loss</title>
+    <url>/2022/10/08/AI/Focal-Loss/</url>
+    <content><![CDATA[<h2 id="提出原因"><a href="#提出原因" class="headerlink" title="提出原因"></a>提出原因</h2><p>Focal Loss的出现是为了 <strong>解决训练集正负样本极度不平衡</strong> 的情况。作者认为更少的部分学习起来更难，于是在Focal Loss上设计得更加倾向于这一类样本。</p>
+<p>作者提出通过reshape标准交叉熵损失解决类别不均衡（Class Imbalance）,这样它就能降低容易分类的样例的比重（Well-classified Examples）。这个方法专注训练在Hard Examples的稀疏集合上，能够防止大量的Easy Negatives在训练中压倒训练器。</p>
+<p>以前的一些思路集中在采样样本，使更少（等同于更难训练）的那类样本在数据中所占的比重更大，Focal Loss并没有进行采样，而是 <strong>对容易的那类进行了降权处理</strong>，结果上有很好的效果。</p>
+<h3 id="交叉熵损失函数"><a href="#交叉熵损失函数" class="headerlink" title="交叉熵损失函数"></a>交叉熵损失函数</h3><p>常用的分类损失函数为交叉熵损失函数：<br><img src="/pictures/AI/Focal-Loss/img1.png" alt="交叉熵损失函数"><br>其中，^p为预测概率大小，y为label在二分类中对应0, 1。</p>
+<h3 id="样本不均衡问题"><a href="#样本不均衡问题" class="headerlink" title="样本不均衡问题"></a>样本不均衡问题</h3><p>对于二分类问题，损失函数可以写为：<br><img src="/pictures/AI/Focal-Loss/img2.png" alt="二分类的交叉熵损失函数"><br>其中m为正样本个数，n为负样本个数，N为样本总数，m+n&#x3D;N。</p>
+<p>当样本分布失衡时，在损失函数L的分布也会发生倾斜，如m&lt;&lt;n时，负样本就会在损失函数占据主导地位。<strong>由于损失函数的倾斜，模型训练过程中会倾向于样本多的类别，造成模型对少样本类别的性能较差</strong>。</p>
+<h3 id="平衡交叉熵函数"><a href="#平衡交叉熵函数" class="headerlink" title="平衡交叉熵函数"></a>平衡交叉熵函数</h3><p>基于样本非平衡造成的损失函数倾斜，一个直观的做法就是在损失函数中添加权重因子，提高少数类别在损失函数中的权重，平衡损失函数的分布。如在上述二分类问题中，添加权重参数 a 和 1-a<br><img src="/pictures/AI/Focal-Loss/img3.png" alt="平衡交叉熵函数"><br>其中，a &#x2F; (1-a) &#x3D; n &#x2F; m，即权重的大小根据正负样本的分布进行设置。</p>
+<h2 id="Focal-Loss"><a href="#Focal-Loss" class="headerlink" title="Focal Loss"></a>Focal Loss</h2><p>focal loss也是针对样本不均衡问题，从loss角度提供的另外一种解决方法。</p>
+<p>focal loss的具体形式为：<br><img src="/pictures/AI/Focal-Loss/img4.png" alt="Focal loss函数"><br>p_t反映了与ground truth即类别y的接近程度，p_t越大说明越接近类别y，即分类越准确。r&gt;0为可调节因子。</p>
+<p>focal loss相比交叉熵多了一个modulating factor即 (1-p_t)^r 。对于分类准确的样本p_t–&gt;1，modulating factor趋近于0。对于分类不准确的样本1-p_t–&gt;1，modulating factor趋近于1。即相比交叉熵损失，focal loss对于分类不准确的样本，损失没有改变，对于分类准确的样本，损失会变小。 整体而言，相当于 <strong>增加了分类不准确样本在损失函数中的权重</strong>。</p>
+<p>p_t也反应了分类的难易程度，p_t越大，说明分类的置信度越高，代表样本越易分；p_t越小，分类的置信度越低，代表样本越难分。因此focal loss相当于增加了难分样本在损失函数的权重，使得损失函数倾向于难分的样本，有助于提高难分样本的准确度。focal loss与交叉熵的对比，可见下图：<br><img src="/pictures/AI/Focal-Loss/img5.png" alt="focal loss使得损失函数更加倾向于难分样本"></p>
+<p><strong>作者最后将 α -balanced loss也加入了公式</strong>，最后公式为：<br><img src="/pictures/AI/Focal-Loss/img7.png" alt="Focal loss函数最终形式"></p>
+<h3 id="VS-平衡交叉熵函数"><a href="#VS-平衡交叉熵函数" class="headerlink" title="VS 平衡交叉熵函数"></a>VS 平衡交叉熵函数</h3><p>focal loss相比balanced cross entropy而言，二者都是试图解决样本不平衡带来的模型训练问题，后者从 <strong>样本分布角度对损失函数添加权重因子</strong>，前者从 <strong>样本分类难易程度出发</strong>，使loss聚焦于难分样本。</p>
+<h2 id="为什么有效？"><a href="#为什么有效？" class="headerlink" title="为什么有效？"></a>为什么有效？</h2><p>focal loss从样本难易分类角度出发，解决样本非平衡带来的模型训练问题。</p>
+<p>相信很多人会在这里有一个疑问，样本难易分类角度怎么能够解决样本非平衡的问题，直觉上来讲样本非平衡造成的问题就是样本数少的类别分类难度较高。因此从样本难易分类角度出发，使得loss聚焦于难分样本，解决了样本少的类别分类准确率不高的问题，当然 <strong>难分样本不限于样本少的类别</strong>，也就是 <strong>focal loss不仅仅解决了样本非平衡的问题，同样有助于模型的整体性能提高</strong>。</p>
+<blockquote>
+<p>样本难分的原因可能有以下两种：1. 样本本身就很难区分，针对所有样本来说；2. 样本不均衡导致的难分。</p>
+</blockquote>
+<p>要想使模型训练过程中聚焦难分类样本，仅仅使得Loss倾向于难分类样本还不够，因为训练过程中模型参数更新取决于Loss的梯度。</p>
+<p>如果Loss中难分类样本权重较高，但是难分类样本的Loss的梯度为0，难分类样本不会影响模型学习过程。</p>
+<p>如下图所示为focal loss的梯度示意图。其中 x_t&#x3D;y*x ，其中 y 为类别， pt &#x3D; sigmoid(x_t) ，对于易分样本， x_t&gt;0 ，即 p_t&gt;0.5 。由图中可以看出，对于focal loss而言，在 x_t&gt;0 时，导数很小，趋近于0。因此对于focal loss，导数中易是难分类样本占主导，因此学习过程更加聚焦正在难分类样本。<br><img src="/pictures/AI/Focal-Loss/img6.png" alt="Focal loss的梯度示意图"></p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p><strong>难分类样本与易分类样本其实是一个动态概念</strong>，也就是说 p_t 会随着训练过程而变化。原先易分类样本即 p_t 大的样本，可能随着训练过程变化为难训练样本即 p_t 小的样本。</p>
+<p>上面讲到，由于Loss梯度中，难训练样本起主导作用，即参数的变化主要是朝着优化难训练样本的方向改变。当参数变化后，可能会使原先易训练的样本 p_t 发生变化，即可能变为难训练样本。当这种情况发生时，可能会造成模型收敛速度慢。</p>
+<p><strong>为了防止难易样本的频繁变化，应当选取小的学习率</strong>。防止学习率过大，造成参数 w 变化较大从而引起 p_t 的巨大变化，造成难易样本的改变。</p>
+]]></content>
+      <categories>
+        <category>人工智能</category>
+        <category>损失函数</category>
+      </categories>
+      <tags>
+        <tag>AI</tag>
+        <tag>Loss</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>Normalization</title>
+    <url>/2022/09/25/AI/Normalization/</url>
+    <content><![CDATA[<p>机器学习领域有个很重要的假设：IID (Independent Identically Distribution) 独立同分布假设，即假设训练数据和测试数据是满足同分布的。</p>
+<blockquote>
+<p>神经网络的学习过程本质上是为了学习数据的分布。<br>在mini-batch梯度下降训练的时候，如果每批训练数据的分布不同，那么网络在每次迭代的时候都要学习适应不同的分布，大大降低了网络的训练速度。</p>
+</blockquote>
+<h2 id="BatchNorm"><a href="#BatchNorm" class="headerlink" title="BatchNorm"></a>BatchNorm</h2><p>BatchNorm就是在深度神经网络训练过程中，使得每一层神经网络的输入保持相同分布。</p>
+<p>BN层在激活函数之前。BN层的作用机制：通过平滑隐藏层输入的分布，帮助随机梯度下降的进行，缓解随机梯度下降随遇后续层的负面影响。</p>
+<blockquote>
+<ol>
+<li>sigmoid, tanh激活函数。函数图像两端，梯度较小，容易出现 <strong>梯度衰减</strong> 问题。因此，把BN层放在非线性激活函数之前，将数据分布调整到均值为0附近，加速训练。</li>
+<li>relu激活函数。relu函数负半区的输出值被抑制，正半区的值被保留。因此，BN层放在前面，可以防止某一层的激活值全部被抑制，导致梯度全部为0，梯度消失。同理，防止梯度爆炸。</li>
+</ol>
+</blockquote>
+<h3 id="Internal-Covariate-Shift-问题"><a href="#Internal-Covariate-Shift-问题" class="headerlink" title="Internal Covariate Shift 问题"></a>Internal Covariate Shift 问题</h3><p>在训练过程中，隐层的 <em><strong>输入分布</strong></em> 总是变来变去。导致下一层网络很难进行学习（神经网络本来就是要学习数据分布的）。</p>
+<blockquote>
+<p>Internal Covariate Shift: 发生在神经网络内部；<br>Covariate Shift: 发生在输入数据上。主要描述由于训练数据和测试数据存在分布差异，影响模型的泛化性和训练速度。</p>
+</blockquote>
+<h3 id="BatchNorm基本思想"><a href="#BatchNorm基本思想" class="headerlink" title="BatchNorm基本思想"></a>BatchNorm基本思想</h3><p>深度神经网络在做 <strong>非线性变化前</strong> 的激活输入值随着网络深度加深，在训练过程中，数据分布逐渐向着 <strong>非线性函数取值区间的上下限两端靠近</strong>，导致反向传播时，低层神经网络梯度消失，最终造成收敛变慢。</p>
+<p>BN就是规范化隐层数据分布，将数据分布强制规范到非线形激活函数比较敏感的区域，避免梯度消失问题产生。<br>就是说经过BN后，大部分输出值落在非线形函数的非饱和区，加速收敛过程。</p>
+<blockquote>
+<p>如果都通过BN，那么不就跟把非线性函数替换成线性函数效果相同了？这意味着什么？我们知道，如果是多层的线性函数变换其实这个深层是没有意义的，因为多层线性网络跟一层线性网络是等价的。这意味着网络的表达能力下降了，这也意味着深度的意义就没有了。</p>
+</blockquote>
+<p>BN为了保证模型的非线形，对变换后的数据分布，进行了scale加上shift操作，<strong>这两个参数通过训练学习得到</strong>。等价于非线性函数的值，从正中心周围的线性区域往非线性区域偏移。增强模型的表达能力。</p>
+<blockquote>
+<p><strong>BN的核心思想：</strong>在非线性和线性之间找到较好的平衡点。既能享受非线性较强的表达能力，又能避免非线性激活函数饱和区梯度消失问题。</p>
+</blockquote>
+<h3 id="BatchNorm训练阶段"><a href="#BatchNorm训练阶段" class="headerlink" title="BatchNorm训练阶段"></a>BatchNorm训练阶段</h3><p>对于mini-batch SGD来说，一次训练过程中包含m个训练实例，其具体BN操作就是对于隐层中 <strong>每个神经元</strong> 的激活值，进行如下变换：<br><img src="/pictures/AI/Normal/img1.png" alt="每个神经元数据的标准化操作"></p>
+<p>经过上述变化后，某个神经元的激活值变成了N(0, 1)正态分布。<br>为了防止网络表达能力下降，每个神经元增加两个调节参数，这两个参数通过训练学习得到，用来还原网络非线性表达能力。<br><img src="/pictures/AI/Normal/img2.png" alt="数据的放缩与偏移"></p>
+<p>BN的具体操作流程如下，</p>
+<blockquote>
+<ol>
+<li>先求出此次批量数据x的均值</li>
+<li>求出此次batch的方差</li>
+<li>接下来就是对x做归一化</li>
+<li>最重要的一步，引入缩放和平移变量γ和β ,计算归一化后的值</li>
+</ol>
+</blockquote>
+<p><img src="/pictures/AI/Normal/img3.png" alt="BN具体流程"></p>
+<p>一个简单的代码实现，</p>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">def BatchNorm(x, gamma, beta, bn_param):</span><br><span class="line">&quot;&quot;&quot;</span><br><span class="line">param:x		: 输入数据，shape(B, L)</span><br><span class="line">param:gamma	: 缩放因子</span><br><span class="line">param:beta	: 平移因子</span><br><span class="line">param:bn_param	: batchnorm所需要的一些参数</span><br><span class="line">	eps		: 接近0的数，防止分母出现0</span><br><span class="line">	momentum	: 动量参数，一般为0.9，0.99，0.999</span><br><span class="line">	running_mean	: 滑动平均的方式计算新的均值</span><br><span class="line">	running_var	: 滑动平均的方式计算新的方差</span><br><span class="line">&quot;&quot;&quot;</span><br><span class="line"></span><br><span class="line">    x_mean = x.mean(axis=0)</span><br><span class="line">    x_var = x.var(axis=0)</span><br><span class="line">    x_norm = (x - x_mean) / np.sqrt(x_var + eps)</span><br><span class="line">    x_norm = gamma * x_norm + beta</span><br><span class="line"></span><br><span class="line">    # 滑动平均计算得到均值方差信息，用于推断阶段</span><br><span class="line">    running_mean = bn_param[&#x27;running_mean&#x27;]</span><br><span class="line">    running_var = bn_parma[&#x27;running_var&#x27;]</span><br><span class="line">    momentum = bn_param[&#x27;momentum&#x27;]</span><br><span class="line"></span><br><span class="line">    running_mean = momentum * running_mean + (1-momentum) * x_mean</span><br><span class="line">    running_var = momentum * running_var + (1-momentum) * x_var</span><br><span class="line"></span><br><span class="line">    bn_param[&#x27;running_mean&#x27;] = running_mean</span><br><span class="line">    bn_param[&#x27;running_var&#x27;] = running_var</span><br><span class="line"></span><br><span class="line">    return x_norm, bn_param</span><br></pre></td></tr></table></figure>
+
+<p>在训练中完成的任务，每次训练给一个批量，然后计算批量的均值方差，但是在测试的时候可不是这样，测试的时候 <strong>每次只输入一张图片</strong>，这怎么计算批量的均值和方差，于是，就有了代码中下面两行，在训练的时候实现计算好mean和var，测试的时候直接拿来用就可以了，不用计算均值和方差。</p>
+<h3 id="BatchNorm优势"><a href="#BatchNorm优势" class="headerlink" title="BatchNorm优势"></a>BatchNorm优势</h3><blockquote>
+<ol>
+<li>不仅仅极大提升了训练速度，收敛过程大大加快；</li>
+<li>还能增加分类效果，一种解释是这是类似于Dropout的一种防止过拟合的正则化表达方式，所以不用Dropout也能达到相当的效果；</li>
+<li>另外调参过程也简单多了，对于初始化要求没那么高，而且可以使用大的学习率等；</li>
+<li>batchnorm降低了数据之间的绝对差异，有一个去相关的性质，更多的考虑相对差异性，因此在分类任务上具有更好的效果。</li>
+</ol>
+</blockquote>
+<h2 id="Layer-Normalization"><a href="#Layer-Normalization" class="headerlink" title="Layer Normalization"></a>Layer Normalization</h2><h3 id="BatchNorm缺点"><a href="#BatchNorm缺点" class="headerlink" title="BatchNorm缺点"></a>BatchNorm缺点</h3><p>Batch size太小会影响模型性能。对batchsize的大小比较敏感，由于每次计算均值和方差是在一个batch上，所以 <strong>如果batchsize太小，则计算的均值、方差不足以代表整个数据分布</strong>；</p>
+<p>BN实际使用时需要计算并且保存某一层神经网络batch的均值和方差等统计信息，对于对一个固定深度的前向神经网络（DNN，CNN）使用BN，很方便；但对于RNN来说，sequence的长度是不一致的，换句话说RNN的深度不是固定的，不同的time-step需要保存不同的statics特征，可能存在一个特殊sequence比其他sequence长很多，这样training时，计算很麻烦。</p>
+<p>BN不适用于RNN等动态网络，适用于CNN；LN适用于RNN。</p>
+<blockquote>
+<p>很直观的一个例子：BN计算每个句子同一个位置字的均值和方差，但因为每个句子的长度不一样，最后是padding成一样的长度；那假如在该位置时，最后一句在该位置是没有字的，也就是用0表示了，那就会影响整个结果。</p>
+</blockquote>
+<h3 id="区别"><a href="#区别" class="headerlink" title="区别"></a>区别</h3><p>BN的主要思想：在每一层的每一批数据（一个batch里的同一个通道）上进行归一化；<br>LN的主要思想：在每一个样本（一个样本的不同通道）上计算均值和方差，并不是BN那种在批方向计算均值和方差。<br><img src="/pictures/AI/Normal/img4.png" alt="BN和LN的区别"></p>
+<h3 id="源码实现"><a href="#源码实现" class="headerlink" title="源码实现"></a>源码实现</h3><p>Layer Normalization在NLP的直观图中，就是对一个batch中的同一句话中的 <strong>每个字</strong> 分别进行归一化。</p>
+<p>如果只看 NLP 问题，假设我们的 batch 是（2,3,4）的，也就是 batch_size &#x3D; 2, seq_length &#x3D; 3, dim &#x3D; 4 的，假设第一个句子是 w1 w2 w3，第二个句子是 w4 w5 w6，那么这个 tensor 可以写为</p>
+<blockquote>
+<p>[ [[w11,w12,w13,w14], …]<br>[[w41,w42,w43,w44], …] ]</p>
+</blockquote>
+<p>如果是 BN 的话，会对同一个 batch 里对应位置上的 token 求平均值，也就是说 (w11+w12+w13+w14+w41+w42+w43+w44)&#x2F;8是其中一个 mean，一共会求出 3 个 mean，也就是上图里 C 个（seq_length）个 mean。</p>
+<p>如果是 LN 的话，<strong>看起来（其实并不是）</strong> 是对每个 sample 里的所有 feature 求 mean，也就是(w11+w12+w13+w14+w21+w22+w23+w24+w31+w32+w33+w34)&#x2F;12，可以求出一共 2 个 mean，也就是图里 N（batch_size）个 mean。<br><img src="/pictures/AI/Normal/img5.png" alt="Layer Norm的不同"></p>
+<p>左图和我们认为的 LN 一致，也是我一直认为的 LN，但是右图却是在一个 token 上求平均，带回我们原来的问题，对于一个(2,3,4)的 tensor，(w11+w12+w13+w14)&#x2F;4 是一个 mean，一共会有 2*3&#x3D;6 个 mean。</p>
+]]></content>
+      <categories>
+        <category>人工智能</category>
+      </categories>
+      <tags>
+        <tag>AI</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>RankNet</title>
     <url>/2022/10/06/LTR/RankNet/</url>
     <content><![CDATA[<p>RankNet是2005年微软提出的一种pairwise的Learning to Rank算法，它从 <strong>概率</strong> 的角度来解决排序问题。RankNet的核心是提出了一种 <strong>概率损失函数来学习Ranking Function</strong>，并应用Ranking Function对文档进行排序。这里的Ranking Function可以是 <strong>任意对参数可微的模型</strong>，也就是说，该概率损失函数并不依赖于特定的机器学习模型，在论文中，RankNet是基于神经网络实现的。除此之外，GDBT等模型也可以应用于该框架。</p>
@@ -187,12 +224,125 @@
 <p>工程上，XGBoost 提供了得天独厚的 LambdaMART 框架，通过指定 objective&#x3D;”rank:map”, eval_metric&#x3D;”map@n” 等参数实现。需要特别注意的是，排序任务需要对 DMatrix 数据结构设置分组信息，使用 set_group() 方法。</p>
 ]]></content>
       <categories>
-        <category>LTR</category>
+        <category>排序模型</category>
         <category>Pairwise</category>
       </categories>
       <tags>
         <tag>LTR</tag>
         <tag>Pairwise</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>BERT</title>
+    <url>/2022/09/04/NLP/BERT/</url>
+    <content><![CDATA[<p>BERT全称为Bidirectional Encoder Representation from Transformers，是一个预训练的语言表征模型。<br>它强调了不再像以往一样采用传统的单向语言模型或者把两个单向语言模型进行浅层拼接的方法进行预训练，而是采用新的 <strong>masked language model（MLM）</strong> ，以致能生成深度的双向语言表征。</p>
+<p>该模型的主要优点：</p>
+<ul>
+<li>采用MLM对双向的Transformers进行预训练，以生成深层的双向语言表征；</li>
+<li>预训练后，只需要添加一个额外的输出层进行fine-tune，就可以在各种各样的下游任务中取得优异的表现。在此过程中不需要对BERT结构进行修改。</li>
+</ul>
+<h3 id="BERT提出动机"><a href="#BERT提出动机" class="headerlink" title="BERT提出动机"></a>BERT提出动机</h3><p>预训练语言模型对于下游很多自然语言处理任务都有着显著改善。现有的训练模型的网络结构限制了模型本身的表达能力，最主要的限制就是没有采用<strong>双向编码</strong>的方法来对输入进行编码。这就导致模型只能看见当前时刻之前的信息，而不能同时捕捉当前时刻之后的信息。</p>
+<p>在论文中，作者提出了采用BERT(Bidirectional Encoder Representations from Transformers)这一网络结构来实现模型的双向编码学习能力。同时，为了使得模型能够有效的学习到双向编码的能力，BERT在训练过程中使用了基于掩盖的语言模型(Masked Language Model, MLM)，即随机对输入序列中的某些位置进行遮蔽，然后通过模型来对其进行预测。</p>
+<p>由于MLM 预测任务能够使得模型编码得到的结果同时包含上下文的语境信息，因此有利于训练得到更深的BERT网络模型。除此之外，在训练BERT的过程中作者还加入了下句预测任务(Next Sentence Prediction, NSP)， 即同时输入两句话到模型中，然后预测第 2 句话是不是第 1 句话的下一句话。</p>
+<h3 id="BERT网络结构"><a href="#BERT网络结构" class="headerlink" title="BERT网络结构"></a>BERT网络结构</h3><p>BERT网络结构整体上就是由多层的Transformer Encoder堆叠所形成。其上半部分的结构与之前介绍的Transformer Encoder差不多，只不过在Input部分多了一个<strong>Segment Embedding</strong>。</p>
+<h4 id="Input-Embedding"><a href="#Input-Embedding" class="headerlink" title="Input Embedding"></a>Input Embedding</h4><p>在 BERT 中 Input Embedding 模块主要包含三个部分:Token Embedding、Positional Embedding 和 Segment Embedding。</p>
+<blockquote>
+<ul>
+<li>这里需要注意的是 BERT 中的 Positional Embedding 对于每个位置的编码并不是采用公式计算得到，而是类似普 通的词嵌入一样为每一个位置初始化了一个向量，然后随着网络一起训练得到。BERT 开源的预训练模型最大只支持 512 个字符的长度，这是因为其在训练过程中(位置)词表的最大长度只有 512。</li>
+<li>Segment Embedding 的作用是用来区分输入序列中的不同部分，其本质就是通过一个普通的词嵌入来区分每一个序列所处的位置。</li>
+</ul>
+</blockquote>
+<p>最后，将这3个Embedding进行相加（并进行标准化）便得到了最终的Input Embedding部分的输出。<br><img src="/pictures/NLP/BERT/img1.png" alt="BERT的Embedding输入"><br>最上面的 Input 表示原始的输入序列，其中第一个字符“[CLS]” 是一个特殊的分类标志，如果下游任务是做文本分类的话，那么在 BERT 的输出 结果中可以只取“[CLS]”对应的向量进行分类即可**(不过实验表明，取所有位置向量的均值往往有着更好的效果)**；而其中的“[SEP]”字符则是用来作为将两句话分开的标志。</p>
+<h4 id="BERT-Encoder"><a href="#BERT-Encoder" class="headerlink" title="BERT Encoder"></a>BERT Encoder</h4><p>在论文中作者分别用 L 来表示 BertLayer 的层数，即 BertEncoder 是由 L 个 BertLayer 所构成;用 H 来表示模型的维度;用 A 来表示多头注意力中多头的个数。<br>同时，在论文中作者分别就 BERT_BASE (L&#x3D;12, H&#x3D;768, A&#x3D;12) 和 BERT_LARGE (L&#x3D;24,H&#x3D;1024,A&#x3D;16)这两种尺寸的 BERT 模型进行了实验对比。</p>
+<h4 id="MLM与NSP"><a href="#MLM与NSP" class="headerlink" title="MLM与NSP"></a>MLM与NSP</h4><p>对于 MLM 任务来说，其做法是随机掩盖掉输入序列中15% 的 Token(即用“[MASK]”替换掉原有的 Token)，然后在 BERT 的输出结果中 取对应掩盖位置上的向量进行真实值预测。<br>虽然 MLM 的这种做法能够得到一个很好的预训练模型，但 是仍旧存在不足之处。由于在 fine-tuning 时，由于输入序列中并不存在“[MASK]” 这样的 Token，因此这将导致 pre-training 和 fine-tuning 之间存在不匹配不一致的 问题(GAP)。<br>为了解决这一问题，作者在原始 MLM 的基础了做了部分改动，即先选定15% 的Token，然后将其中的80%替换为“[MASK]”、10%随机替换为其它Token、 剩下的10% 不变。最后取这15% 的 Token 对应的输出做分类来预测其真实值。</p>
+<p>由于很多下游任务需要依赖于分析两句话之间的关系来进行建模，例如问题 回答等。为了使得模型能够具备有这样的能力，作者在论文中又提出了二分类的 下句预测任务。<br>具体地，对于每个样本来说都是由 A 和 B 两句话构成，其中50%的情况 B 确实为 A 的下一句话(标签为 IsNext)，另外的50%的情况是 B 为语料中其它 的随机句子(标签为 NotNext)，然后模型来预测 B 是否为 A 的下一句话。<br><img src="/pictures/NLP/BERT/img2.png" alt="BERT的训练任务"></p>
+<blockquote>
+<p>总的来说，如果单从网络结构上来看 BERT 并没有太大的创新，这也正如作 者所说“BERT 整体上就是由多层的 Transformer Encoder 堆叠而来”，并且所谓 的“bidirectional”其实指的也就是 Transformer 中的 self-attention 机制。同时， 在掌柜看来真正让 BERT 表现出色的应该是基于 MLM 和 NSP 这两种任务的预 训练过程，使得训练得到的模型具有强大的表征能力。</p>
+</blockquote>
+]]></content>
+      <categories>
+        <category>自然语言处理</category>
+      </categories>
+      <tags>
+        <tag>NLP</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>FastText</title>
+    <url>/2022/09/04/NLP/FastText/</url>
+    <content><![CDATA[<h3 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h3><p>fasttext是facebook开源的一个词向量与文本分类工具，在2016年开源，典型应用场景是“带监督的文本分类问题”。提供简单而高效的 <strong>文本分类</strong> 和 <strong>表征学习</strong> 的方法，性能比肩深度学习而且速度更快。</p>
+<p>FastText结合了自然语言处理和机器学习中的思想：</p>
+<ul>
+<li>使用词袋以及N-gram袋表征语句；</li>
+<li>使用子字信息；</li>
+<li>通过隐藏表征在类别间共享信息</li>
+</ul>
+<h3 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h3><p>核心思想：将整篇文档的词以及N-gram向量 <strong>叠加平均</strong> 得到文档向量，然后使用文档向量做softmax分类。</p>
+<h4 id="模型架构"><a href="#模型架构" class="headerlink" title="模型架构"></a>模型架构</h4><p>FastText架构和CBOW架构类似。不同之处在于，FastText预测标签，CBOW通过上下文预测中间词。<br><img src="/pictures/NLP/FastText/img1.jpg" alt="FastText模型架构"></p>
+<blockquote>
+<p><strong>注意：</strong> 此架构图并没有展示词向量的训练过程。FastText模型也只有三层：输入层，隐含层，输出层。输入是多个向量表示的单词，输出是特定的Target，隐含层是对多个词向量的叠加平均。</p>
+</blockquote>
+<p>与CBOW模型不同的是，</p>
+<ul>
+<li>CBOW的输入是目标单词的上下文，FastText的输入是多个单词以及其N-gram特征，这些特征用来表示单个文档；</li>
+<li>CBOW的输入单词是被one-hot编码过后的，FastText的输入特征是被embedding后的；</li>
+<li>CBOW的输出是目标词汇，FastText的输出是文档对应的类标。</li>
+</ul>
+<h4 id="层序softmax"><a href="#层序softmax" class="headerlink" title="层序softmax"></a>层序softmax</h4><p>对于有大量类别的数据集，FastText使用一个分层分类器，降低计算复杂度。<br>FastText利用了类别不均衡这个事实，通过使用Huffman算法建立用于表征类别的树形结构。因此，出现频次较高的类别更加接近根节点。</p>
+<h4 id="N-gram特征"><a href="#N-gram特征" class="headerlink" title="N-gram特征"></a>N-gram特征</h4><p>Word2Vec把语料库中的每个单词作为一个原子。这忽略了单词内部的形态特征，比如apple和apples。传统的Word2Vec中，这种单词内部形态信息因为它们被转换为不同的id丢失了。</p>
+<p>为了克服这个问题，FastText使用了字符级别的N-gram来表示一个单词。对于单词apple，假设N的取值为3，则它的trigram有：</p>
+<blockquote>
+<p>“&lt;ap”,  “app”,  “ppl”,  “ple”, “le&gt;”</p>
+</blockquote>
+<p>其中，&lt;表示前缀，&gt;表示后缀。于是，我们可以用这些trigram来表示“apple”这个单词，进一步，我们可以用这5个trigram的向量叠加来表示“apple”的词向量。</p>
+<p>这带来两点好处：</p>
+<ul>
+<li>对于低频词生成的词向量效果会更好。因为它们的N-gram可以和其他词共享；</li>
+<li>对于训练词库之外的单词，仍然可以构建它们的词向量。我们可以叠加它们的字符级N-gram向量。</li>
+</ul>
+<h3 id="应用"><a href="#应用" class="headerlink" title="应用"></a>应用</h3><p><strong>模型搭建步骤：</strong></p>
+<ol>
+<li>添加输入层：Embedding层输入是一批文档，每个文档有一个词汇索引序列构成；</li>
+<li>添加隐含层：投影层对一个文档中所有单词的向量进行叠加平均；</li>
+<li>添加输出层：Softmax层</li>
+<li>指定损失函数，优化器类型，评价指标，编译模型。</li>
+</ol>
+<p><strong>训练数据feed模型步骤</strong></p>
+<ol>
+<li>将文档分好词，构建词汇表；</li>
+<li>对类标进行one-hot化；</li>
+<li>对一批文本，将每个文本转化为词索引序列，每个类标转化为one-hot向量</li>
+</ol>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><h4 id="如何获得词向量？"><a href="#如何获得词向量？" class="headerlink" title="如何获得词向量？"></a>如何获得词向量？</h4><p><strong>累加平均</strong> 一个词的N-gram集合包括自身整个词的隐向量表示。</p>
+<h4 id="FastText和Word2Vec区别"><a href="#FastText和Word2Vec区别" class="headerlink" title="FastText和Word2Vec区别"></a>FastText和Word2Vec区别</h4><p>相似处：</p>
+<blockquote>
+<ol>
+<li>图模型结构很想，都是采用embedding向量形式，得到word的隐向量表达；</li>
+<li>采用很多相似的优化，比如使用层级sotmax优化训练和预测中的打分速度</li>
+</ol>
+</blockquote>
+<p>不同之处：</p>
+<blockquote>
+<ol>
+<li>输入层：Word2Vec的输出层，是context window内的term；而FastText对应的整个sentence的内容，包括term和N-gram的内容；</li>
+<li>输出层：Word2Vec的输出层，对应的是每个term，计算某个term的概率最大；而FastText的输出层对应的分类的label</li>
+</ol>
+</blockquote>
+<p>两者本质的不同，体现在H-softmax的使用：</p>
+<blockquote>
+<ul>
+<li>Word2Vec的目标是得到词向量，该词向量最终是在输入层中得到。输出层对应的H-softmax也会生成一系列的向量，但最终都会被抛弃；</li>
+<li>FastText充分利用H-softmax的分类功能，遍历分类树的所有叶节点，找到概率最大的label</li>
+</ul>
+</blockquote>
+<h4 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h4><p>FastText的学习速度比较快，效果不错。fastText适用于分类类别非常大而且数据集足够多的情况。当分类类别比较小或者数据集比较少的话，很容易过拟合。</p>
+<p>可以完成无监督的词向量的学习，可以学习得到词向量；也可以用于有监督学习的分类任务（新闻文本分类，垃圾邮件分类，情感分析，电商中用户评论的褒贬分析）</p>
+]]></content>
+      <categories>
+        <category>自然语言处理</category>
+      </categories>
+      <tags>
+        <tag>NLP</tag>
       </tags>
   </entry>
   <entry>
@@ -332,7 +482,7 @@
 <h3 id="MAP-Mean-Average-Precision"><a href="#MAP-Mean-Average-Precision" class="headerlink" title="MAP (Mean Average Precision)"></a>MAP (Mean Average Precision)</h3><p>在二分类中，常常使用Precision, Recall, ROC 曲线，AUC来评价一个模型的性能，然而这些指标很难对多分类模型进行准确的评价。</p>
 <p>AP 是指的在所有Recall的可能取值情况下，得到的所有的Precision的平均值。AP衡量的是我们训练得到的模型在每个类别上的好坏，MAP衡量的是该模型在所有类别上的好坏，得到AP后，MAP的计算就变得很简单了，就是取所有AP的平均值。</p>
 <p>MAP（Mean Average Precision）是信息检中的一个评价指标。MAP假定相关度有两个级别 —— 相关与不相关。 首先了解下AP（Average Precision）计算方法：<br><img src="/pictures/LTR/Learning-to-Ranking/img6.png" alt="AP的计算公式"></p>
-<p>上式中，k为文档在排序列表中的位置，p(k) 为前k个结果的准确率，rel(k)表示位置k的文档是否相关，相关为1，不相关为0。MAP为一组查询AP的平均值。</p>
+<p>上式中，k为文档在排序列表中的位置，p(k) 为前k个结果的准确率，<strong>rel(k)表示位置k的文档是否相关，相关为1，不相关为0</strong>。MAP为一组查询AP的平均值。</p>
 <blockquote>
 <p>假设有两个主题，主题1有4个相关网页，主题2有5个相关网页。某系统对于主题1检索出4个相关网页，其rank分别为1, 2, 4, 7；对于主题2检索出3个相关网页，其rank分别为1,3,5。对于主题1，平均准确率为(1&#x2F;1+2&#x2F;2+3&#x2F;4+4&#x2F;7)&#x2F;4&#x3D;0.83。对于主题2，平均准确率为(1&#x2F;1+2&#x2F;3+3&#x2F;5+0+0)&#x2F;5&#x3D;0.45。则MAP&#x3D; (0.83+0.45)&#x2F;2&#x3D;0.64。</p>
 </blockquote>
@@ -413,110 +563,56 @@
       </tags>
   </entry>
   <entry>
-    <title>BERT</title>
-    <url>/2022/09/04/NLP/BERT/</url>
-    <content><![CDATA[<p>BERT全称为Bidirectional Encoder Representation from Transformers，是一个预训练的语言表征模型。<br>它强调了不再像以往一样采用传统的单向语言模型或者把两个单向语言模型进行浅层拼接的方法进行预训练，而是采用新的 <strong>masked language model（MLM）</strong> ，以致能生成深度的双向语言表征。</p>
-<p>该模型的主要优点：</p>
-<ul>
-<li>采用MLM对双向的Transformers进行预训练，以生成深层的双向语言表征；</li>
-<li>预训练后，只需要添加一个额外的输出层进行fine-tune，就可以在各种各样的下游任务中取得优异的表现。在此过程中不需要对BERT结构进行修改。</li>
-</ul>
-<h3 id="BERT提出动机"><a href="#BERT提出动机" class="headerlink" title="BERT提出动机"></a>BERT提出动机</h3><p>预训练语言模型对于下游很多自然语言处理任务都有着显著改善。现有的训练模型的网络结构限制了模型本身的表达能力，最主要的限制就是没有采用<strong>双向编码</strong>的方法来对输入进行编码。这就导致模型只能看见当前时刻之前的信息，而不能同时捕捉当前时刻之后的信息。</p>
-<p>在论文中，作者提出了采用BERT(Bidirectional Encoder Representations from Transformers)这一网络结构来实现模型的双向编码学习能力。同时，为了使得模型能够有效的学习到双向编码的能力，BERT在训练过程中使用了基于掩盖的语言模型(Masked Language Model, MLM)，即随机对输入序列中的某些位置进行遮蔽，然后通过模型来对其进行预测。</p>
-<p>由于MLM 预测任务能够使得模型编码得到的结果同时包含上下文的语境信息，因此有利于训练得到更深的BERT网络模型。除此之外，在训练BERT的过程中作者还加入了下句预测任务(Next Sentence Prediction, NSP)， 即同时输入两句话到模型中，然后预测第 2 句话是不是第 1 句话的下一句话。</p>
-<h3 id="BERT网络结构"><a href="#BERT网络结构" class="headerlink" title="BERT网络结构"></a>BERT网络结构</h3><p>BERT网络结构整体上就是由多层的Transformer Encoder堆叠所形成。其上半部分的结构与之前介绍的Transformer Encoder差不多，只不过在Input部分多了一个<strong>Segment Embedding</strong>。</p>
-<h4 id="Input-Embedding"><a href="#Input-Embedding" class="headerlink" title="Input Embedding"></a>Input Embedding</h4><p>在 BERT 中 Input Embedding 模块主要包含三个部分:Token Embedding、Positional Embedding 和 Segment Embedding。</p>
+    <title>K-BERT</title>
+    <url>/2022/09/09/NLP/K-BERT/</url>
+    <content><![CDATA[<h3 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h3><p>预训练的语言表示模型从大型语料库中捕获一般语言的表示，但是 <strong>缺乏领域特定的知识</strong>。</p>
+<p>过多的知识加入会使得 <strong>句子偏离正确的含义</strong>，这就是知识噪声问题。</p>
 <blockquote>
+<p>如何将外部知识整合到模型中成了一个关键点，这一步通常存在两个难点：</p>
 <ul>
-<li>这里需要注意的是 BERT 中的 Positional Embedding 对于每个位置的编码并不是采用公式计算得到，而是类似普 通的词嵌入一样为每一个位置初始化了一个向量，然后随着网络一起训练得到。BERT 开源的预训练模型最大只支持 512 个字符的长度，这是因为其在训练过程中(位置)词表的最大长度只有 512。</li>
-<li>Segment Embedding 的作用是用来区分输入序列中的不同部分，其本质就是通过一个普通的词嵌入来区分每一个序列所处的位置。</li>
+<li>异构嵌入空间（Heterogeneous Embedding Space）： 即文本的单词embedding和知识库的实体embedding通常是通过不同方式获取的，使得向量空间不一致。</li>
+<li>知识噪声（Knowledge Noise）： 即过多的知识融合可能会使原始句子偏离正确的本意。</li>
 </ul>
 </blockquote>
-<p>最后，将这3个Embedding进行相加（并进行标准化）便得到了最终的Input Embedding部分的输出。<br><img src="/pictures/NLP/BERT/img1.png" alt="BERT的Embedding输入"><br>最上面的 Input 表示原始的输入序列，其中第一个字符“[CLS]” 是一个特殊的分类标志，如果下游任务是做文本分类的话，那么在 BERT 的输出 结果中可以只取“[CLS]”对应的向量进行分类即可**(不过实验表明，取所有位置向量的均值往往有着更好的效果)**；而其中的“[SEP]”字符则是用来作为将两句话分开的标志。</p>
-<h4 id="BERT-Encoder"><a href="#BERT-Encoder" class="headerlink" title="BERT Encoder"></a>BERT Encoder</h4><p>在论文中作者分别用 L 来表示 BertLayer 的层数，即 BertEncoder 是由 L 个 BertLayer 所构成;用 H 来表示模型的维度;用 A 来表示多头注意力中多头的个数。<br>同时，在论文中作者分别就 BERT_BASE (L&#x3D;12, H&#x3D;768, A&#x3D;12) 和 BERT_LARGE (L&#x3D;24,H&#x3D;1024,A&#x3D;16)这两种尺寸的 BERT 模型进行了实验对比。</p>
-<h4 id="MLM与NSP"><a href="#MLM与NSP" class="headerlink" title="MLM与NSP"></a>MLM与NSP</h4><p>对于 MLM 任务来说，其做法是随机掩盖掉输入序列中15% 的 Token(即用“[MASK]”替换掉原有的 Token)，然后在 BERT 的输出结果中 取对应掩盖位置上的向量进行真实值预测。<br>虽然 MLM 的这种做法能够得到一个很好的预训练模型，但 是仍旧存在不足之处。由于在 fine-tuning 时，由于输入序列中并不存在“[MASK]” 这样的 Token，因此这将导致 pre-training 和 fine-tuning 之间存在不匹配不一致的 问题(GAP)。<br>为了解决这一问题，作者在原始 MLM 的基础了做了部分改动，即先选定15% 的Token，然后将其中的80%替换为“[MASK]”、10%随机替换为其它Token、 剩下的10% 不变。最后取这15% 的 Token 对应的输出做分类来预测其真实值。</p>
-<p>由于很多下游任务需要依赖于分析两句话之间的关系来进行建模，例如问题 回答等。为了使得模型能够具备有这样的能力，作者在论文中又提出了二分类的 下句预测任务。<br>具体地，对于每个样本来说都是由 A 和 B 两句话构成，其中50%的情况 B 确实为 A 的下一句话(标签为 IsNext)，另外的50%的情况是 B 为语料中其它 的随机句子(标签为 NotNext)，然后模型来预测 B 是否为 A 的下一句话。<br><img src="/pictures/NLP/BERT/img2.png" alt="BERT的训练任务"></p>
-<blockquote>
-<p>总的来说，如果单从网络结构上来看 BERT 并没有太大的创新，这也正如作 者所说“BERT 整体上就是由多层的 Transformer Encoder 堆叠而来”，并且所谓 的“bidirectional”其实指的也就是 Transformer 中的 self-attention 机制。同时， 在掌柜看来真正让 BERT 表现出色的应该是基于 MLM 和 NSP 这两种任务的预 训练过程，使得训练得到的模型具有强大的表征能力。</p>
-</blockquote>
-]]></content>
-      <categories>
-        <category>自然语言处理</category>
-      </categories>
-      <tags>
-        <tag>NLP</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>FastText</title>
-    <url>/2022/09/04/NLP/FastText/</url>
-    <content><![CDATA[<h3 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h3><p>fasttext是facebook开源的一个词向量与文本分类工具，在2016年开源，典型应用场景是“带监督的文本分类问题”。提供简单而高效的 <strong>文本分类</strong> 和 <strong>表征学习</strong> 的方法，性能比肩深度学习而且速度更快。</p>
-<p>FastText结合了自然语言处理和机器学习中的思想：</p>
+<p>为了克服上述问题，K-Bert引入了<strong>软定位</strong> 和 <strong>可见矩阵</strong> 来限制插入知识的影响。</p>
+<p>K-BERT能够从预先训练好的BERT中加载模型参数，因此不需要单独的预训练，只需要一个KG数据，K-BERT就很容易将领域知识注入到模型中。</p>
+<h3 id="模型架构"><a href="#模型架构" class="headerlink" title="模型架构"></a>模型架构</h3><p>K-BERT模型主要包括四部分：知识层（Knowledge layer）、嵌入层（Embedding layer）、可见层（Seeing layer）和 Mask-Transformer编码层（Mask-Transformer Encoder）<br><img src="/pictures/NLP/K-BERT/img1.jpg" alt="K-BERT模型架构"></p>
+<p>如上图所示，K-BERT主要由4个层组成，分别是：</p>
 <ul>
-<li>使用词袋以及N-gram袋表征语句；</li>
-<li>使用子字信息；</li>
-<li>通过隐藏表征在类别间共享信息</li>
+<li>knowledge layer：知识层，顾名思义是将知识图谱的事实融入到输入中，构建 <strong>sentence tree</strong> 作为新的输入。</li>
+<li>embedding layer：将sentence tree 进行embedding，转换成向量表达。</li>
+<li>seeing layer：该层的作用是为了避免知识噪声（Knowledge Noise）而引入的，主要是通过构建 visible matrix，<strong>限定每个字只能够看到跟自己相关的上下文以及知识</strong>，从而避免了知识噪声的引入。</li>
+<li>mask-transformer：mask-transformer 是在对transformer的一个改进，对于其中的self-attention，根据 <strong>visible matrix 限制了每个字的attention的范围</strong>，避免了字对于其他无相关的信息的关注。</li>
 </ul>
-<h3 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h3><p>核心思想：将整篇文档的词以及N-gram向量 <strong>叠加平均</strong> 得到文档向量，然后使用文档向量做softmax分类。</p>
-<h4 id="模型架构"><a href="#模型架构" class="headerlink" title="模型架构"></a>模型架构</h4><p>FastText架构和CBOW架构类似。不同之处在于，FastText预测标签，CBOW通过上下文预测中间词。<br><img src="/pictures/NLP/FastText/img1.jpg" alt="FastText模型架构"></p>
-<blockquote>
-<p><strong>注意：</strong> 此架构图并没有展示词向量的训练过程。FastText模型也只有三层：输入层，隐含层，输出层。输入是多个向量表示的单词，输出是特定的Target，隐含层是对多个词向量的叠加平均。</p>
-</blockquote>
-<p>与CBOW模型不同的是，</p>
-<ul>
-<li>CBOW的输入是目标单词的上下文，FastText的输入是多个单词以及其N-gram特征，这些特征用来表示单个文档；</li>
-<li>CBOW的输入单词是被one-hot编码过后的，FastText的输入特征是被embedding后的；</li>
-<li>CBOW的输出是目标词汇，FastText的输出是文档对应的类标。</li>
-</ul>
-<h4 id="层序softmax"><a href="#层序softmax" class="headerlink" title="层序softmax"></a>层序softmax</h4><p>对于有大量类别的数据集，FastText使用一个分层分类器，降低计算复杂度。<br>FastText利用了类别不均衡这个事实，通过使用Huffman算法建立用于表征类别的树形结构。因此，出现频次较高的类别更加接近根节点。</p>
-<h4 id="N-gram特征"><a href="#N-gram特征" class="headerlink" title="N-gram特征"></a>N-gram特征</h4><p>Word2Vec把语料库中的每个单词作为一个原子。这忽略了单词内部的形态特征，比如apple和apples。传统的Word2Vec中，这种单词内部形态信息因为它们被转换为不同的id丢失了。</p>
-<p>为了克服这个问题，FastText使用了字符级别的N-gram来表示一个单词。对于单词apple，假设N的取值为3，则它的trigram有：</p>
-<blockquote>
-<p>“&lt;ap”,  “app”,  “ppl”,  “ple”, “le&gt;”</p>
-</blockquote>
-<p>其中，&lt;表示前缀，&gt;表示后缀。于是，我们可以用这些trigram来表示“apple”这个单词，进一步，我们可以用这5个trigram的向量叠加来表示“apple”的词向量。</p>
-<p>这带来两点好处：</p>
-<ul>
-<li>对于低频词生成的词向量效果会更好。因为它们的N-gram可以和其他词共享；</li>
-<li>对于训练词库之外的单词，仍然可以构建它们的词向量。我们可以叠加它们的字符级N-gram向量。</li>
-</ul>
-<h3 id="应用"><a href="#应用" class="headerlink" title="应用"></a>应用</h3><p><strong>模型搭建步骤：</strong></p>
+<p>对于一个输入的句子，</p>
 <ol>
-<li>添加输入层：Embedding层输入是一批文档，每个文档有一个词汇索引序列构成；</li>
-<li>添加隐含层：投影层对一个文档中所有单词的向量进行叠加平均；</li>
-<li>添加输出层：Softmax层</li>
-<li>指定损失函数，优化器类型，评价指标，编译模型。</li>
+<li>knowledge layer 首先是从知识图谱KG中找到相关的三元组，</li>
+<li>然后将这些三元组插入到输入的 input sentence 中，形成知识丰富（knowledge-rich）的句子树（sentence tree）。</li>
+<li>句子树然后同时输入给 embedding layer 以及 seeing layer，从而获得一个 token 级别的 embedding 表示以及一个 visible matrix。</li>
+<li>这个visible matrix 是用来控制每个token的可见域（visible scope），以防止输入的句子因为太多的知识嵌入而发生意思的改变。</li>
 </ol>
-<p><strong>训练数据feed模型步骤</strong></p>
-<ol>
-<li>将文档分好词，构建词汇表；</li>
-<li>对类标进行one-hot化；</li>
-<li>对一批文本，将每个文本转化为词索引序列，每个类标转化为one-hot向量</li>
-</ol>
-<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><h4 id="如何获得词向量？"><a href="#如何获得词向量？" class="headerlink" title="如何获得词向量？"></a>如何获得词向量？</h4><p><strong>累加平均</strong> 一个词的N-gram集合包括自身整个词的隐向量表示。</p>
-<h4 id="FastText和Word2Vec区别"><a href="#FastText和Word2Vec区别" class="headerlink" title="FastText和Word2Vec区别"></a>FastText和Word2Vec区别</h4><p>相似处：</p>
+<h4 id="Knowledge-Layer"><a href="#Knowledge-Layer" class="headerlink" title="Knowledge Layer"></a>Knowledge Layer</h4><p>知识层主要用于句子知识嵌入（knowledge injection）以及句子树（sentence tree）的转换。<br><img src="/pictures/NLP/K-BERT/img2.jpg" alt="句子树结构"></p>
+<p>举例说明句子树的构建：<br><img src="/pictures/NLP/K-BERT/img3.jpg" alt="句子树构建的例子"></p>
+<h4 id="Embedding-Layer"><a href="#Embedding-Layer" class="headerlink" title="Embedding Layer"></a>Embedding Layer</h4><p>和 BERT 类似，输入的句子需要经过embedding，作为模型的输入。具体 embedding 由三个部分组成，分别是 token embedding，soft position embedding 以及 segment embedding。<br><img src="/pictures/NLP/K-BERT/img4.jpg" alt="Embedding表示"></p>
+<h5 id="token-embedding"><a href="#token-embedding" class="headerlink" title="token embedding"></a>token embedding</h5><p>token embbeding 是将句子中的每个 token 通过look up table 映射成为一个维度为 H 的向量表示。此外，每个句子的开头有一个 [CLS] 这个特殊token，主要是为了句子分类的作用，同时 [MAKS] 是作为mask任务使用的。</p>
+<h5 id="soft-position-embedding"><a href="#soft-position-embedding" class="headerlink" title="soft-position embedding"></a>soft-position embedding</h5><p>我们可以发现，BERT 使用的时position embedding，并且使用的是绝对的position 表示。<br><img src="/pictures/NLP/K-BERT/img5.jpg" alt="Sentence Tree"></p>
+<p>如果使用BERT的position embedding方式，即hard-position index。这就导致<strong>原本的句子顺序发生了变化，失去了句子主干的信息位置</strong>。<br>解决方案就是：使用soft-position index。</p>
+<p>这就引发了另一个问题：知识噪音。一般字会给周围其他的字很大的attention score。<br>解决方案：引入seeing layer，控制self-attention的可见域。</p>
+<h4 id="seeing-layer"><a href="#seeing-layer" class="headerlink" title="seeing layer"></a>seeing layer</h4><p>Seeing layer是BERT和K-BERT之间最大的不同。</p>
 <blockquote>
-<ol>
-<li>图模型结构很想，都是采用embedding向量形式，得到word的隐向量表达；</li>
-<li>采用很多相似的优化，比如使用层级sotmax优化训练和预测中的打分速度</li>
-</ol>
+<p>我们插入的知识，只作用于它自身的三元组中的元素，对于其他的token，不产生任何影响。</p>
 </blockquote>
-<p>不同之处：</p>
+<p>根据上述规则，我们可以得到一个visible matrix：<br><img src="/pictures/NLP/K-BERT/img6.jpg" alt="Visible Matrix"></p>
+<p>具体可见下图，红色表示可见区域，白色表示不可见区域。<br><img src="/pictures/NLP/K-BERT/img7.jpg" alt="Visible Matrix应用"></p>
+<h4 id="mask-attention"><a href="#mask-attention" class="headerlink" title="mask-attention"></a>mask-attention</h4><p>我们可以认为 visible matrix 获得了它的 sentence tree 的结构信息，我们根据这个矩阵构造 mask-self-attention, 实现了在嵌入知识的情况下，不增加噪音的目的。具体公式如下：<br><img src="/pictures/NLP/K-BERT/img8.png" alt="mask-self-attention计算公式"></p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>K-BERT 主要的创新点是将知识图谱的事实三元组融入到了预训练的语言模型中，并且不要我们自己进行预训练的操作，只需要在 fine-tuning 以及 inference 阶段进行知识嵌入即可，大大地方便了使用，并且在知识驱动的任务，例如QA，NER，推理任务中取得了很好的效果。</p>
 <blockquote>
-<ol>
-<li>输入层：Word2Vec的输出层，是context window内的term；而FastText对应的整个sentence的内容，包括term和N-gram的内容；</li>
-<li>输出层：Word2Vec的输出层，对应的是每个term，计算某个term的概率最大；而FastText的输出层对应的分类的label</li>
-</ol>
-</blockquote>
-<p>两者本质的不同，体现在H-softmax的使用：</p>
-<blockquote>
+<p>文章主要解决了两个问题，包括了</p>
 <ul>
-<li>Word2Vec的目标是得到词向量，该词向量最终是在输入层中得到。输出层对应的H-softmax也会生成一系列的向量，但最终都会被抛弃；</li>
-<li>FastText充分利用H-softmax的分类功能，遍历分类树的所有叶节点，找到概率最大的label</li>
+<li>如何将异质向量空间（heterogeneous embedding space）的知识和预训练的语言空间进行结合，主要就是采用了knowledge layer 结合知识构建 sentence tree。</li>
+<li>另外就是在引入了 knowledge 之后，如何避免 knowledge noise，这边就是采用 soft position embedding 以及 seeing layer 中产生的 visible matrix，通过改造 transformer 的self-attetion 为 mask self-attention，控制每个 token 的可见域，从而解决KN问题。</li>
 </ul>
 </blockquote>
-<h4 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h4><p>FastText的学习速度比较快，效果不错。fastText适用于分类类别非常大而且数据集足够多的情况。当分类类别比较小或者数据集比较少的话，很容易过拟合。</p>
-<p>可以完成无监督的词向量的学习，可以学习得到词向量；也可以用于有监督学习的分类任务（新闻文本分类，垃圾邮件分类，情感分析，电商中用户评论的褒贬分析）</p>
 ]]></content>
       <categories>
         <category>自然语言处理</category>
@@ -595,65 +691,6 @@
 <p>基于 char-level ：原始 BERT 的方式，它通过对输入文本进行启发式的词干化之后处理得到。<br>基于 bytes-level：与 char-level 的区别在于bytes-level 使用 bytes 而不是 unicode 字符作为 sub-word 的基本单位，因此可以编码任何输入文本而不会引入 UNKOWN 标记。</p>
 </blockquote>
 <p>当采用 bytes-level 的 BPE 之后，词表大小从3万（原始 BERT 的 char-level ）增加到5万。这分别为 BERT-base和 BERT-large增加了1500万和2000万额外的参数。</p>
-]]></content>
-      <categories>
-        <category>自然语言处理</category>
-      </categories>
-      <tags>
-        <tag>NLP</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>K-BERT</title>
-    <url>/2022/09/09/NLP/K-BERT/</url>
-    <content><![CDATA[<h3 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h3><p>预训练的语言表示模型从大型语料库中捕获一般语言的表示，但是 <strong>缺乏领域特定的知识</strong>。</p>
-<p>过多的知识加入会使得 <strong>句子偏离正确的含义</strong>，这就是知识噪声问题。</p>
-<blockquote>
-<p>如何将外部知识整合到模型中成了一个关键点，这一步通常存在两个难点：</p>
-<ul>
-<li>异构嵌入空间（Heterogeneous Embedding Space）： 即文本的单词embedding和知识库的实体embedding通常是通过不同方式获取的，使得向量空间不一致。</li>
-<li>知识噪声（Knowledge Noise）： 即过多的知识融合可能会使原始句子偏离正确的本意。</li>
-</ul>
-</blockquote>
-<p>为了克服上述问题，K-Bert引入了<strong>软定位</strong> 和 <strong>可见矩阵</strong> 来限制插入知识的影响。</p>
-<p>K-BERT能够从预先训练好的BERT中加载模型参数，因此不需要单独的预训练，只需要一个KG数据，K-BERT就很容易将领域知识注入到模型中。</p>
-<h3 id="模型架构"><a href="#模型架构" class="headerlink" title="模型架构"></a>模型架构</h3><p>K-BERT模型主要包括四部分：知识层（Knowledge layer）、嵌入层（Embedding layer）、可见层（Seeing layer）和 Mask-Transformer编码层（Mask-Transformer Encoder）<br><img src="/pictures/NLP/K-BERT/img1.jpg" alt="K-BERT模型架构"></p>
-<p>如上图所示，K-BERT主要由4个层组成，分别是：</p>
-<ul>
-<li>knowledge layer：知识层，顾名思义是将知识图谱的事实融入到输入中，构建 <strong>sentence tree</strong> 作为新的输入。</li>
-<li>embedding layer：将sentence tree 进行embedding，转换成向量表达。</li>
-<li>seeing layer：该层的作用是为了避免知识噪声（Knowledge Noise）而引入的，主要是通过构建 visible matrix，<strong>限定每个字只能够看到跟自己相关的上下文以及知识</strong>，从而避免了知识噪声的引入。</li>
-<li>mask-transformer：mask-transformer 是在对transformer的一个改进，对于其中的self-attention，根据 <strong>visible matrix 限制了每个字的attention的范围</strong>，避免了字对于其他无相关的信息的关注。</li>
-</ul>
-<p>对于一个输入的句子，</p>
-<ol>
-<li>knowledge layer 首先是从知识图谱KG中找到相关的三元组，</li>
-<li>然后将这些三元组插入到输入的 input sentence 中，形成知识丰富（knowledge-rich）的句子树（sentence tree）。</li>
-<li>句子树然后同时输入给 embedding layer 以及 seeing layer，从而获得一个 token 级别的 embedding 表示以及一个 visible matrix。</li>
-<li>这个visible matrix 是用来控制每个token的可见域（visible scope），以防止输入的句子因为太多的知识嵌入而发生意思的改变。</li>
-</ol>
-<h4 id="Knowledge-Layer"><a href="#Knowledge-Layer" class="headerlink" title="Knowledge Layer"></a>Knowledge Layer</h4><p>知识层主要用于句子知识嵌入（knowledge injection）以及句子树（sentence tree）的转换。<br><img src="/pictures/NLP/K-BERT/img2.jpg" alt="句子树结构"></p>
-<p>举例说明句子树的构建：<br><img src="/pictures/NLP/K-BERT/img3.jpg" alt="句子树构建的例子"></p>
-<h4 id="Embedding-Layer"><a href="#Embedding-Layer" class="headerlink" title="Embedding Layer"></a>Embedding Layer</h4><p>和 BERT 类似，输入的句子需要经过embedding，作为模型的输入。具体 embedding 由三个部分组成，分别是 token embedding，soft position embedding 以及 segment embedding。<br><img src="/pictures/NLP/K-BERT/img4.jpg" alt="Embedding表示"></p>
-<h5 id="token-embedding"><a href="#token-embedding" class="headerlink" title="token embedding"></a>token embedding</h5><p>token embbeding 是将句子中的每个 token 通过look up table 映射成为一个维度为 H 的向量表示。此外，每个句子的开头有一个 [CLS] 这个特殊token，主要是为了句子分类的作用，同时 [MAKS] 是作为mask任务使用的。</p>
-<h5 id="soft-position-embedding"><a href="#soft-position-embedding" class="headerlink" title="soft-position embedding"></a>soft-position embedding</h5><p>我们可以发现，BERT 使用的时position embedding，并且使用的是绝对的position 表示。<br><img src="/pictures/NLP/K-BERT/img5.jpg" alt="Sentence Tree"></p>
-<p>如果使用BERT的position embedding方式，即hard-position index。这就导致<strong>原本的句子顺序发生了变化，失去了句子主干的信息位置</strong>。<br>解决方案就是：使用soft-position index。</p>
-<p>这就引发了另一个问题：知识噪音。一般字会给周围其他的字很大的attention score。<br>解决方案：引入seeing layer，控制self-attention的可见域。</p>
-<h4 id="seeing-layer"><a href="#seeing-layer" class="headerlink" title="seeing layer"></a>seeing layer</h4><p>Seeing layer是BERT和K-BERT之间最大的不同。</p>
-<blockquote>
-<p>我们插入的知识，只作用于它自身的三元组中的元素，对于其他的token，不产生任何影响。</p>
-</blockquote>
-<p>根据上述规则，我们可以得到一个visible matrix：<br><img src="/pictures/NLP/K-BERT/img6.jpg" alt="Visible Matrix"></p>
-<p>具体可见下图，红色表示可见区域，白色表示不可见区域。<br><img src="/pictures/NLP/K-BERT/img7.jpg" alt="Visible Matrix应用"></p>
-<h4 id="mask-attention"><a href="#mask-attention" class="headerlink" title="mask-attention"></a>mask-attention</h4><p>我们可以认为 visible matrix 获得了它的 sentence tree 的结构信息，我们根据这个矩阵构造 mask-self-attention, 实现了在嵌入知识的情况下，不增加噪音的目的。具体公式如下：<br><img src="/pictures/NLP/K-BERT/img8.png" alt="mask-self-attention计算公式"></p>
-<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>K-BERT 主要的创新点是将知识图谱的事实三元组融入到了预训练的语言模型中，并且不要我们自己进行预训练的操作，只需要在 fine-tuning 以及 inference 阶段进行知识嵌入即可，大大地方便了使用，并且在知识驱动的任务，例如QA，NER，推理任务中取得了很好的效果。</p>
-<blockquote>
-<p>文章主要解决了两个问题，包括了</p>
-<ul>
-<li>如何将异质向量空间（heterogeneous embedding space）的知识和预训练的语言空间进行结合，主要就是采用了knowledge layer 结合知识构建 sentence tree。</li>
-<li>另外就是在引入了 knowledge 之后，如何避免 knowledge noise，这边就是采用 soft position embedding 以及 seeing layer 中产生的 visible matrix，通过改造 transformer 的self-attetion 为 mask self-attention，控制每个 token 的可见域，从而解决KN问题。</li>
-</ul>
-</blockquote>
 ]]></content>
       <categories>
         <category>自然语言处理</category>
@@ -973,6 +1010,93 @@
       </tags>
   </entry>
   <entry>
+    <title>Hadoop</title>
+    <url>/2022/09/05/tools/Hadoop/</url>
+    <content><![CDATA[<h2 id="Hadoop概念"><a href="#Hadoop概念" class="headerlink" title="Hadoop概念"></a>Hadoop概念</h2><p>Hadoop 框架是用于计算机集群大数据处理的框架，所以它必须是一个可以部署在多台计算机上的软件。部署了 Hadoop 软件的主机之间通过<strong>套接字</strong> (网络) 进行通讯。<br>Hadoop 主要包含 <strong>HDFS</strong> 和 <strong>MapReduce</strong> 两大组件。</p>
+<blockquote>
+<ul>
+<li>HDFS 负责分布储存数据;</li>
+<li>MapReduce 负责对数据进行映射、规约处理，并汇总处理结果。</li>
+</ul>
+</blockquote>
+<p>Hadoop 框架最根本的原理就是利用大量的计算机同时运算来加快大量数据的处理速度。</p>
+<h3 id="HDFS"><a href="#HDFS" class="headerlink" title="HDFS"></a>HDFS</h3><p>Hadoop Distributed File System，Hadoop 分布式文件系统，简称 HDFS。<br>HDFS 用于在集群中储存文件，它所使用的核心思想是 Google 的 GFS 思想，可以存储很大的文件。</p>
+<p>在服务器集群中，文件存储往往被要求高效而稳定，HDFS同时实现了这两个优点。</p>
+<blockquote>
+<ul>
+<li>HDFS 高效的存储是通过 <strong>计算机集群独立处理请求</strong> 实现的。因为用户 (一半是后端程序) 在发出数据存储请求时，往往 <em><strong>响应服务器</strong></em> 正在处理其他请求，这是导致服务效率缓慢的主要原因。但如果响应服务器直接分配一个数据服务器给用户，然后 <em><strong>用户直接与数据服务器交互</strong></em>，效率会快很多。</li>
+<li>数据存储的稳定性往往通过”多存几份”的方式实现，HDFS 也使用了这种方式。<strong>HDFS 的存储单位是块 (Block)</strong> ，一个文件可能会被分为多个块储存在物理存储器中。因此 HDFS 往往会按照设定者的要求把数据块复制 n 份并存储在不同的数据节点 (储存数据的服务器) 上，如果一个数据节点发生故障数据也不会丢失。</li>
+</ul>
+</blockquote>
+<p><img src="/pictures/tools/Hadoop/img1.png" alt="HDFS架构图"></p>
+<h4 id="Block数据块"><a href="#Block数据块" class="headerlink" title="Block数据块"></a>Block数据块</h4><ul>
+<li>基本存储单位，一般大小为 <strong>64M</strong> （配置大的块主要是因为：<ul>
+<li>减少搜寻时间，一般硬盘传输速率比寻道时间要快，大的块可以减少寻道时间；</li>
+<li>减少管理块的数据开销，每个块都需要在NameNode上有对应的记录；</li>
+<li>对数据块进行读写，减少建立网络的连接成本）</li>
+</ul>
+</li>
+<li>一个大文件会被拆分成一个个的块，然后存储于不同的机器。如果一个文件少于Block大小，那么实际占用的空间为其文件的大小</li>
+<li>基本的读写单位，类似于磁盘的页，每次都是读写一个块</li>
+<li>每个块都会被复制到多台机器，默认复制 <strong>3</strong> 份</li>
+</ul>
+<blockquote>
+<p>HDFS 2.x以后的block默认为 <strong>128M</strong></p>
+</blockquote>
+<h4 id="HDFS节点"><a href="#HDFS节点" class="headerlink" title="HDFS节点"></a>HDFS节点</h4><p>HDFS 运行在许多不同的计算机上，有的计算机专门用于存储数据，有的计算机专门用于指挥其它计算机储存数据。这里所提到的”计算机”我们可以称之为集群中的节点。</p>
+<h5 id="命名节点-NameNode"><a href="#命名节点-NameNode" class="headerlink" title="命名节点 NameNode"></a>命名节点 NameNode</h5><p>命名节点 (NameNode) 是用于指挥其它节点存储的节点。任何一个”文件系统”(File System, FS) 都需要具备 <strong>根据文件路径映射到文件</strong> 的功能，命名节点就是用于储存这些映射信息并提供映射服务的计算机，在整个 HDFS 系统中扮演”管理员”的角色，因此 <em><strong>一个 HDFS 集群中只有一个命名节点</strong></em>。</p>
+<h5 id="数据节点-DataNode"><a href="#数据节点-DataNode" class="headerlink" title="数据节点 (DataNode)"></a>数据节点 (DataNode)</h5><p>数据节点 (DataNode) 使用来储存数据块的节点。当一个文件被命名节点承认并分块之后将会被储存到被分配的数据节点中去。数据节点具有储存数据、读写数据的功能，其中 <strong>存储的数据块比较类似于硬盘中的”扇区”概念，是 HDFS 存储的基本单位</strong>。</p>
+<blockquote>
+<ol>
+<li>保存具体的block数据</li>
+<li>负责数据的读写操作和复制操作</li>
+<li>DataNode启动时会向NameNode报告当前存储的数据块信息，后续也会定时报告修改信息</li>
+<li>DataNode之间会进行通信，复制数据块，保证数据的冗余性</li>
+</ol>
+</blockquote>
+<h5 id="副命名节点-Secondary-NameNode"><a href="#副命名节点-Secondary-NameNode" class="headerlink" title="副命名节点 (Secondary NameNode)"></a>副命名节点 (Secondary NameNode)</h5><p>副命名节点 (Secondary NameNode) 别名”次命名节点”，是命名节点的”秘书”。这个形容很贴切，因为它并不能代替命名节点的工作，无论命名节点是否有能力继续工作。它主要负责 <strong>分摊命名节点的压力、备份命名节点的状态并执行一些管理工作</strong>，如果命名节点要求它这样做的话。如果命名节点坏掉了，它也可以提供备份数据以恢复命名节点。副命名节点可以有多个。</p>
+<h4 id="Hadoop写文件"><a href="#Hadoop写文件" class="headerlink" title="Hadoop写文件"></a>Hadoop写文件</h4><blockquote>
+<ol>
+<li>客户端将文件写入本地磁盘的 HDFS Client 文件中</li>
+<li>当临时文件大小达到一个 block 大小时，HDFS client 通知 NameNode，申请写入文件</li>
+<li>NameNode 在 HDFS 的文件系统中创建一个文件，并把该 block id 和要写入的 DataNode 的列表返回给客户端</li>
+<li>客户端收到这些信息后，将临时文件写入 DataNodes<br>4.1. 客户端将文件内容写入第一个 DataNode（一般以 4kb 为单位进行传输）<br>4.2. 第一个 DataNode 接收后，将数据写入本地磁盘，同时也传输给第二个 DataNode<br>4.3. 依此类推到最后一个 DataNode，数据在 DataNode 之间是通过 pipeline 的方式进行复制的<br>4.4. 后面的 DataNode 接收完数据后，都会发送一个确认给前一个 DataNode，最终第一个 DataNode 返回确认给客户端<br>4.5. 当客户端接收到整个 block 的确认后，会向 NameNode 发送一个最终的确认信息<br>4.6. 如果写入某个 DataNode 失败，数据会继续写入其他的 DataNode。然后 NameNode 会找另外一个好的 DataNode 继续复制，以保证冗余性<br>4.7. 每个 block 都会有一个校验码，并存放到独立的文件中，以便读的时候来验证其完整性</li>
+<li>文件写完后（客户端关闭），NameNode 提交文件（这时文件才可见，如果提交前，NameNode 垮掉，那文件也就丢失了。fsync：只保证数据的信息写到 NameNode 上，但并不保证数据已经被写到DataNode 中）</li>
+</ol>
+</blockquote>
+<p><img src="/pictures/tools/Hadoop/img2.png" alt="HDFS写入数据流程"></p>
+<h4 id="Hadoop读文件"><a href="#Hadoop读文件" class="headerlink" title="Hadoop读文件"></a>Hadoop读文件</h4><blockquote>
+<ol>
+<li>客户端向NameNode发送读取请求</li>
+<li>NameNode返回文件的所有block和这些block所在的DataNodes（包括复制节点）</li>
+<li>客户端直接从DataNode中读取数据，如果该DataNode读取失败（DataNode失效或校验码不对），则从复制节点中读取（如果读取的数据就在本机，则直接读取，否则通过网络读取）</li>
+</ol>
+</blockquote>
+<p><img src="/pictures/tools/Hadoop/img3.png" alt="HDFS读取数据流程"></p>
+<h3 id="MapReduce"><a href="#MapReduce" class="headerlink" title="MapReduce"></a>MapReduce</h3><p>MapReduce是一种可用于数据处理的编程模型。Hadoop可以运行各种版本的MapReduce程序。MapReduce程序本质上是并行运行的，它可以将大规模的数据分析任务分发给任何一个拥有足够多机器的数据中心。</p>
+<p>MapReduce任务过程分为两个处理阶段：map阶段和reduce阶段。每个阶段都以键值对作为输入和输出，其类型由程序员选择。</p>
+<blockquote>
+<ul>
+<li><strong>map阶段</strong> – 输入是原始数据。键是某一行起始位置相对于文件起始位置的偏移量。map函数是一个数据准备阶段。</li>
+<li><strong>reduce阶段</strong> – 对map阶段的输出值进行处理。reduce函数进行数据进一步的筛选及其他操作。</li>
+</ul>
+</blockquote>
+<p><img src="/pictures/tools/Hadoop/img4.png" alt="MapReduce计算逻辑"></p>
+<blockquote>
+<p>map: (K1, V1) → list(K2, V2)<br>combine: (K2, list(V2)) → list(K2, V2)<br>reduce: (K2, list(V2)) → list(K3, V3)</p>
+</blockquote>
+<p>MapReduce主要是先读取文件数据，然后进行Map处理，接着Reduce处理，最后把处理结果写到文件中<br><img src="/pictures/tools/Hadoop/img5.png" alt="MapReduce基本流程"></p>
+<h3 id="Hadoop数据倾斜"><a href="#Hadoop数据倾斜" class="headerlink" title="Hadoop数据倾斜"></a>Hadoop数据倾斜</h3>]]></content>
+      <categories>
+        <category>工具</category>
+        <category>大数据</category>
+      </categories>
+      <tags>
+        <tag>tools</tag>
+        <tag>Big Data</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>FM</title>
     <url>/2022/09/12/RecomSys/FM/</url>
     <content><![CDATA[<h3 id="FM"><a href="#FM" class="headerlink" title="FM"></a>FM</h3><h4 id="提出背景"><a href="#提出背景" class="headerlink" title="提出背景"></a>提出背景</h4><p>传统线性模型忽略了特征之间的交叉联系；特征高维稀疏，并且容易维度爆炸。</p>
@@ -1063,93 +1187,6 @@
       </categories>
       <tags>
         <tag>Recom</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Hadoop</title>
-    <url>/2022/09/05/tools/Hadoop/</url>
-    <content><![CDATA[<h2 id="Hadoop概念"><a href="#Hadoop概念" class="headerlink" title="Hadoop概念"></a>Hadoop概念</h2><p>Hadoop 框架是用于计算机集群大数据处理的框架，所以它必须是一个可以部署在多台计算机上的软件。部署了 Hadoop 软件的主机之间通过<strong>套接字</strong> (网络) 进行通讯。<br>Hadoop 主要包含 <strong>HDFS</strong> 和 <strong>MapReduce</strong> 两大组件。</p>
-<blockquote>
-<ul>
-<li>HDFS 负责分布储存数据;</li>
-<li>MapReduce 负责对数据进行映射、规约处理，并汇总处理结果。</li>
-</ul>
-</blockquote>
-<p>Hadoop 框架最根本的原理就是利用大量的计算机同时运算来加快大量数据的处理速度。</p>
-<h3 id="HDFS"><a href="#HDFS" class="headerlink" title="HDFS"></a>HDFS</h3><p>Hadoop Distributed File System，Hadoop 分布式文件系统，简称 HDFS。<br>HDFS 用于在集群中储存文件，它所使用的核心思想是 Google 的 GFS 思想，可以存储很大的文件。</p>
-<p>在服务器集群中，文件存储往往被要求高效而稳定，HDFS同时实现了这两个优点。</p>
-<blockquote>
-<ul>
-<li>HDFS 高效的存储是通过 <strong>计算机集群独立处理请求</strong> 实现的。因为用户 (一半是后端程序) 在发出数据存储请求时，往往 <em><strong>响应服务器</strong></em> 正在处理其他请求，这是导致服务效率缓慢的主要原因。但如果响应服务器直接分配一个数据服务器给用户，然后 <em><strong>用户直接与数据服务器交互</strong></em>，效率会快很多。</li>
-<li>数据存储的稳定性往往通过”多存几份”的方式实现，HDFS 也使用了这种方式。<strong>HDFS 的存储单位是块 (Block)</strong> ，一个文件可能会被分为多个块储存在物理存储器中。因此 HDFS 往往会按照设定者的要求把数据块复制 n 份并存储在不同的数据节点 (储存数据的服务器) 上，如果一个数据节点发生故障数据也不会丢失。</li>
-</ul>
-</blockquote>
-<p><img src="/pictures/tools/Hadoop/img1.png" alt="HDFS架构图"></p>
-<h4 id="Block数据块"><a href="#Block数据块" class="headerlink" title="Block数据块"></a>Block数据块</h4><ul>
-<li>基本存储单位，一般大小为 <strong>64M</strong> （配置大的块主要是因为：<ul>
-<li>减少搜寻时间，一般硬盘传输速率比寻道时间要快，大的块可以减少寻道时间；</li>
-<li>减少管理块的数据开销，每个块都需要在NameNode上有对应的记录；</li>
-<li>对数据块进行读写，减少建立网络的连接成本）</li>
-</ul>
-</li>
-<li>一个大文件会被拆分成一个个的块，然后存储于不同的机器。如果一个文件少于Block大小，那么实际占用的空间为其文件的大小</li>
-<li>基本的读写单位，类似于磁盘的页，每次都是读写一个块</li>
-<li>每个块都会被复制到多台机器，默认复制 <strong>3</strong> 份</li>
-</ul>
-<blockquote>
-<p>HDFS 2.x以后的block默认为 <strong>128M</strong></p>
-</blockquote>
-<h4 id="HDFS节点"><a href="#HDFS节点" class="headerlink" title="HDFS节点"></a>HDFS节点</h4><p>HDFS 运行在许多不同的计算机上，有的计算机专门用于存储数据，有的计算机专门用于指挥其它计算机储存数据。这里所提到的”计算机”我们可以称之为集群中的节点。</p>
-<h5 id="命名节点-NameNode"><a href="#命名节点-NameNode" class="headerlink" title="命名节点 NameNode"></a>命名节点 NameNode</h5><p>命名节点 (NameNode) 是用于指挥其它节点存储的节点。任何一个”文件系统”(File System, FS) 都需要具备 <strong>根据文件路径映射到文件</strong> 的功能，命名节点就是用于储存这些映射信息并提供映射服务的计算机，在整个 HDFS 系统中扮演”管理员”的角色，因此 <em><strong>一个 HDFS 集群中只有一个命名节点</strong></em>。</p>
-<h5 id="数据节点-DataNode"><a href="#数据节点-DataNode" class="headerlink" title="数据节点 (DataNode)"></a>数据节点 (DataNode)</h5><p>数据节点 (DataNode) 使用来储存数据块的节点。当一个文件被命名节点承认并分块之后将会被储存到被分配的数据节点中去。数据节点具有储存数据、读写数据的功能，其中 <strong>存储的数据块比较类似于硬盘中的”扇区”概念，是 HDFS 存储的基本单位</strong>。</p>
-<blockquote>
-<ol>
-<li>保存具体的block数据</li>
-<li>负责数据的读写操作和复制操作</li>
-<li>DataNode启动时会向NameNode报告当前存储的数据块信息，后续也会定时报告修改信息</li>
-<li>DataNode之间会进行通信，复制数据块，保证数据的冗余性</li>
-</ol>
-</blockquote>
-<h5 id="副命名节点-Secondary-NameNode"><a href="#副命名节点-Secondary-NameNode" class="headerlink" title="副命名节点 (Secondary NameNode)"></a>副命名节点 (Secondary NameNode)</h5><p>副命名节点 (Secondary NameNode) 别名”次命名节点”，是命名节点的”秘书”。这个形容很贴切，因为它并不能代替命名节点的工作，无论命名节点是否有能力继续工作。它主要负责 <strong>分摊命名节点的压力、备份命名节点的状态并执行一些管理工作</strong>，如果命名节点要求它这样做的话。如果命名节点坏掉了，它也可以提供备份数据以恢复命名节点。副命名节点可以有多个。</p>
-<h4 id="Hadoop写文件"><a href="#Hadoop写文件" class="headerlink" title="Hadoop写文件"></a>Hadoop写文件</h4><blockquote>
-<ol>
-<li>客户端将文件写入本地磁盘的 HDFS Client 文件中</li>
-<li>当临时文件大小达到一个 block 大小时，HDFS client 通知 NameNode，申请写入文件</li>
-<li>NameNode 在 HDFS 的文件系统中创建一个文件，并把该 block id 和要写入的 DataNode 的列表返回给客户端</li>
-<li>客户端收到这些信息后，将临时文件写入 DataNodes<br>4.1. 客户端将文件内容写入第一个 DataNode（一般以 4kb 为单位进行传输）<br>4.2. 第一个 DataNode 接收后，将数据写入本地磁盘，同时也传输给第二个 DataNode<br>4.3. 依此类推到最后一个 DataNode，数据在 DataNode 之间是通过 pipeline 的方式进行复制的<br>4.4. 后面的 DataNode 接收完数据后，都会发送一个确认给前一个 DataNode，最终第一个 DataNode 返回确认给客户端<br>4.5. 当客户端接收到整个 block 的确认后，会向 NameNode 发送一个最终的确认信息<br>4.6. 如果写入某个 DataNode 失败，数据会继续写入其他的 DataNode。然后 NameNode 会找另外一个好的 DataNode 继续复制，以保证冗余性<br>4.7. 每个 block 都会有一个校验码，并存放到独立的文件中，以便读的时候来验证其完整性</li>
-<li>文件写完后（客户端关闭），NameNode 提交文件（这时文件才可见，如果提交前，NameNode 垮掉，那文件也就丢失了。fsync：只保证数据的信息写到 NameNode 上，但并不保证数据已经被写到DataNode 中）</li>
-</ol>
-</blockquote>
-<p><img src="/pictures/tools/Hadoop/img2.png" alt="HDFS写入数据流程"></p>
-<h4 id="Hadoop读文件"><a href="#Hadoop读文件" class="headerlink" title="Hadoop读文件"></a>Hadoop读文件</h4><blockquote>
-<ol>
-<li>客户端向NameNode发送读取请求</li>
-<li>NameNode返回文件的所有block和这些block所在的DataNodes（包括复制节点）</li>
-<li>客户端直接从DataNode中读取数据，如果该DataNode读取失败（DataNode失效或校验码不对），则从复制节点中读取（如果读取的数据就在本机，则直接读取，否则通过网络读取）</li>
-</ol>
-</blockquote>
-<p><img src="/pictures/tools/Hadoop/img3.png" alt="HDFS读取数据流程"></p>
-<h3 id="MapReduce"><a href="#MapReduce" class="headerlink" title="MapReduce"></a>MapReduce</h3><p>MapReduce是一种可用于数据处理的编程模型。Hadoop可以运行各种版本的MapReduce程序。MapReduce程序本质上是并行运行的，它可以将大规模的数据分析任务分发给任何一个拥有足够多机器的数据中心。</p>
-<p>MapReduce任务过程分为两个处理阶段：map阶段和reduce阶段。每个阶段都以键值对作为输入和输出，其类型由程序员选择。</p>
-<blockquote>
-<ul>
-<li><strong>map阶段</strong> – 输入是原始数据。键是某一行起始位置相对于文件起始位置的偏移量。map函数是一个数据准备阶段。</li>
-<li><strong>reduce阶段</strong> – 对map阶段的输出值进行处理。reduce函数进行数据进一步的筛选及其他操作。</li>
-</ul>
-</blockquote>
-<p><img src="/pictures/tools/Hadoop/img4.png" alt="MapReduce计算逻辑"></p>
-<blockquote>
-<p>map: (K1, V1) → list(K2, V2)<br>combine: (K2, list(V2)) → list(K2, V2)<br>reduce: (K2, list(V2)) → list(K3, V3)</p>
-</blockquote>
-<p>MapReduce主要是先读取文件数据，然后进行Map处理，接着Reduce处理，最后把处理结果写到文件中<br><img src="/pictures/tools/Hadoop/img5.png" alt="MapReduce基本流程"></p>
-<h3 id="Hadoop数据倾斜"><a href="#Hadoop数据倾斜" class="headerlink" title="Hadoop数据倾斜"></a>Hadoop数据倾斜</h3>]]></content>
-      <categories>
-        <category>工具</category>
-        <category>大数据</category>
-      </categories>
-      <tags>
-        <tag>tools</tag>
-        <tag>Big Data</tag>
       </tags>
   </entry>
 </search>

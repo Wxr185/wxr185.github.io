@@ -13,7 +13,7 @@
         name="viewport"
         content="width=device-width, initial-scale=1, maximum-scale=1"
       />
-      <title>RankNet |  Alien笔记</title>
+      <title>Focal Loss |  Alien笔记</title>
   <meta name="generator" content="hexo-theme-ayer">
       
       <link rel="shortcut icon" href="/favicon.ico" />
@@ -55,7 +55,7 @@
     <main class="content on">
       <section class="outer">
   <article
-  id="post-LTR/RankNet"
+  id="post-AI/Focal-Loss"
   class="article article-type-post"
   itemscope
   itemprop="blogPost"
@@ -66,7 +66,7 @@
     <header class="article-header">
        
 <h1 class="article-title sea-center" style="border-left:0" itemprop="name">
-  RankNet
+  Focal Loss
 </h1>
  
 
@@ -74,11 +74,11 @@
     </header>
      
     <div class="article-meta">
-      <a href="/2022/10/06/LTR/RankNet/" class="article-date">
-  <time datetime="2022-10-06T06:40:11.122Z" itemprop="datePublished">2022-10-06</time>
+      <a href="/2022/10/08/AI/Focal-Loss/" class="article-date">
+  <time datetime="2022-10-08T07:42:48.013Z" itemprop="datePublished">2022-10-08</time>
 </a> 
   <div class="article-category">
-    <a class="article-category-link" href="/categories/%E6%8E%92%E5%BA%8F%E6%A8%A1%E5%9E%8B/">排序模型</a> / <a class="article-category-link" href="/categories/%E6%8E%92%E5%BA%8F%E6%A8%A1%E5%9E%8B/Pairwise/">Pairwise</a>
+    <a class="article-category-link" href="/categories/%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD/">人工智能</a> / <a class="article-category-link" href="/categories/%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD/%E6%8D%9F%E5%A4%B1%E5%87%BD%E6%95%B0/">损失函数</a>
   </div>
   
 <div class="word_count">
@@ -86,7 +86,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-quill-pen-line"></i>
             <span class="post-meta-item-text"> 字数统计:</span>
-            <span class="post-count">1.4k</span>
+            <span class="post-count">1.6k</span>
         </span>
     </span>
 
@@ -95,7 +95,7 @@
         <span class="post-meta-item-icon">
             <i class="ri-book-open-line"></i>
             <span class="post-meta-item-text"> 阅读时长≈</span>
-            <span class="post-count">4 分钟</span>
+            <span class="post-count">5 分钟</span>
         </span>
     </span>
 </div>
@@ -110,37 +110,30 @@
   
     <div class="article-entry" itemprop="articleBody">
        
-  <p>RankNet是2005年微软提出的一种pairwise的Learning to Rank算法，它从 <strong>概率</strong> 的角度来解决排序问题。RankNet的核心是提出了一种 <strong>概率损失函数来学习Ranking Function</strong>，并应用Ranking Function对文档进行排序。这里的Ranking Function可以是 <strong>任意对参数可微的模型</strong>，也就是说，该概率损失函数并不依赖于特定的机器学习模型，在论文中，RankNet是基于神经网络实现的。除此之外，GDBT等模型也可以应用于该框架。</p>
-<p>算法的核心思想：<em><strong>最小化文档对的排序误差</strong></em>。</p>
-<h3 id="训练数据"><a href="#训练数据" class="headerlink" title="训练数据"></a>训练数据</h3><p>区别于标准的机器学习的数据结构，<br><img src="/pictures/LTR/RankNet/img1.jpeg" alt="标准的机器学习数据结构"></p>
-<p>RankNet做了如下定义，训练样本由 <strong>item对</strong> 构成，最终的训练样本集为：<br><img src="/pictures/LTR/RankNet/img2.png" alt="RankNet数据结构"></p>
-<h4 id="样本标签"><a href="#样本标签" class="headerlink" title="样本标签"></a>样本标签</h4><h5 id="预测相关性概率"><a href="#预测相关性概率" class="headerlink" title="预测相关性概率"></a>预测相关性概率</h5><p>对于任意一个doc对(U_i, U_j)，模型输出的score分别为s_i和s_j。那么根据模型的预测，U_i比U_j与Query更相关的概率为：<br><img src="/pictures/LTR/RankNet/img3.png" alt="预测相关性概率"></p>
-<p>由于RankNet使用的模型一般为神经网络，根据以往经验，sigmoid函数能够提供一个比较好的概率评估。</p>
-<p>RankNet证明了如果知道一个待排序文档的排列中相邻两个文档之间的排序概率，则通过推导可以算出每两个文档之间的排序概率。因此对于一个待排序文档序列，只需计算相邻文档之间的排序概率，不需要计算所有pair，减少计算量。</p>
-<h5 id="真实相关性概率"><a href="#真实相关性概率" class="headerlink" title="真实相关性概率"></a>真实相关性概率</h5><p>对于训练数据中的U_i和U_j，它们都包含有一个与Query相关性的真实label，比如U_i与Query的相关性label为good，U_j与Query的相关性label为bad，那么显然U_i比U_j更相关。我们定义U_i比U_j更相关的真实概率为：<br><img src="/pictures/LTR/RankNet/img4.png" alt="真实相关性概率"></p>
-<p>在RankNet中类别标签记为S_ij ∈ {+1, -1, 0}。由于接下来要使用交叉熵作为损失函数，因此将标签S_ij与真实概率P_ij（真实相关性）进行上图所示的一一映射。<br>如果U_i比U_j更相关，那么Sij&#x3D;1；如果U_i不如U_j相关，那么S_ij&#x3D;−1；如果U_i、U_j与Query的相关程度相同，那么S_ij&#x3D;0。</p>
-<h3 id="假设函数"><a href="#假设函数" class="headerlink" title="假设函数"></a>假设函数</h3><p>f 没有固定的形式，RankNet 设计为两层浅层网络，这也是 RankNet 得名的原因。f 没有固定形式预留了灵活的空间，为后面 LambdaMART 埋下伏笔。<br><img src="/pictures/LTR/RankNet/img8.jpeg" alt="单个样本的交叉熵损失"></p>
-<h3 id="损失函数"><a href="#损失函数" class="headerlink" title="损失函数"></a>损失函数</h3><p>RankNet使用交叉熵作为损失函数，单个样本的交叉熵损失函数为<br><img src="/pictures/LTR/RankNet/img5.png" alt="单个样本的交叉熵损失"></p>
-<p>对于一个排序，RankNet从各个doc的相对关系来评价排序结果的好坏，排序的效果越好，那么有错误相对关系的pair就越少。RankNet本质上就是以 <strong>错误的pair最少</strong> 为优化目标。</p>
-<p>在抽象成cost function时，RankNet实际上是引入了概率的思想：不是直接判断Ui排在Uj前面，而是说Ui以一定的概率P排在Uj前面，即是以预测概率与真实概率的差距最小作为优化目标。最后，RankNet使用Cross Entropy作为cost function，来衡量P_ij和~P_ij的拟合程度。化简后，有<br><img src="/pictures/LTR/RankNet/img6.png" alt="化简后的交叉熵损失"></p>
-<p>下面展示了当S_ij分别取1，0，-1的时候cost function以s_i-s_j为变量的示意图：<br><img src="/pictures/LTR/RankNet/img7.png" alt="损失函数曲线变化"></p>
-<p>可以看到当S_ij&#x3D;1时，模型预测的s_i比s_j越大，其代价越小；S_ij&#x3D;−1时，s_i比s_j越小，代价越小；S_ij&#x3D;0时，代价的最小值在s_i与s_j相等处取得。</p>
-<p>该损失函数有以下几个特点：</p>
+  <h2 id="提出原因"><a href="#提出原因" class="headerlink" title="提出原因"></a>提出原因</h2><p>Focal Loss的出现是为了 <strong>解决训练集正负样本极度不平衡</strong> 的情况。作者认为更少的部分学习起来更难，于是在Focal Loss上设计得更加倾向于这一类样本。</p>
+<p>作者提出通过reshape标准交叉熵损失解决类别不均衡（Class Imbalance）,这样它就能降低容易分类的样例的比重（Well-classified Examples）。这个方法专注训练在Hard Examples的稀疏集合上，能够防止大量的Easy Negatives在训练中压倒训练器。</p>
+<p>以前的一些思路集中在采样样本，使更少（等同于更难训练）的那类样本在数据中所占的比重更大，Focal Loss并没有进行采样，而是 <strong>对容易的那类进行了降权处理</strong>，结果上有很好的效果。</p>
+<h3 id="交叉熵损失函数"><a href="#交叉熵损失函数" class="headerlink" title="交叉熵损失函数"></a>交叉熵损失函数</h3><p>常用的分类损失函数为交叉熵损失函数：<br><img src="/pictures/AI/Focal-Loss/img1.png" alt="交叉熵损失函数"><br>其中，^p为预测概率大小，y为label在二分类中对应0, 1。</p>
+<h3 id="样本不均衡问题"><a href="#样本不均衡问题" class="headerlink" title="样本不均衡问题"></a>样本不均衡问题</h3><p>对于二分类问题，损失函数可以写为：<br><img src="/pictures/AI/Focal-Loss/img2.png" alt="二分类的交叉熵损失函数"><br>其中m为正样本个数，n为负样本个数，N为样本总数，m+n&#x3D;N。</p>
+<p>当样本分布失衡时，在损失函数L的分布也会发生倾斜，如m&lt;&lt;n时，负样本就会在损失函数占据主导地位。<strong>由于损失函数的倾斜，模型训练过程中会倾向于样本多的类别，造成模型对少样本类别的性能较差</strong>。</p>
+<h3 id="平衡交叉熵函数"><a href="#平衡交叉熵函数" class="headerlink" title="平衡交叉熵函数"></a>平衡交叉熵函数</h3><p>基于样本非平衡造成的损失函数倾斜，一个直观的做法就是在损失函数中添加权重因子，提高少数类别在损失函数中的权重，平衡损失函数的分布。如在上述二分类问题中，添加权重参数 a 和 1-a<br><img src="/pictures/AI/Focal-Loss/img3.png" alt="平衡交叉熵函数"><br>其中，a &#x2F; (1-a) &#x3D; n &#x2F; m，即权重的大小根据正负样本的分布进行设置。</p>
+<h2 id="Focal-Loss"><a href="#Focal-Loss" class="headerlink" title="Focal Loss"></a>Focal Loss</h2><p>focal loss也是针对样本不均衡问题，从loss角度提供的另外一种解决方法。</p>
+<p>focal loss的具体形式为：<br><img src="/pictures/AI/Focal-Loss/img4.png" alt="Focal loss函数"><br>p_t反映了与ground truth即类别y的接近程度，p_t越大说明越接近类别y，即分类越准确。r&gt;0为可调节因子。</p>
+<p>focal loss相比交叉熵多了一个modulating factor即 (1-p_t)^r 。对于分类准确的样本p_t–&gt;1，modulating factor趋近于0。对于分类不准确的样本1-p_t–&gt;1，modulating factor趋近于1。即相比交叉熵损失，focal loss对于分类不准确的样本，损失没有改变，对于分类准确的样本，损失会变小。 整体而言，相当于 <strong>增加了分类不准确样本在损失函数中的权重</strong>。</p>
+<p>p_t也反应了分类的难易程度，p_t越大，说明分类的置信度越高，代表样本越易分；p_t越小，分类的置信度越低，代表样本越难分。因此focal loss相当于增加了难分样本在损失函数的权重，使得损失函数倾向于难分的样本，有助于提高难分样本的准确度。focal loss与交叉熵的对比，可见下图：<br><img src="/pictures/AI/Focal-Loss/img5.png" alt="focal loss使得损失函数更加倾向于难分样本"></p>
+<p><strong>作者最后将 α -balanced loss也加入了公式</strong>，最后公式为：<br><img src="/pictures/AI/Focal-Loss/img7.png" alt="Focal loss函数最终形式"></p>
+<h3 id="VS-平衡交叉熵函数"><a href="#VS-平衡交叉熵函数" class="headerlink" title="VS 平衡交叉熵函数"></a>VS 平衡交叉熵函数</h3><p>focal loss相比balanced cross entropy而言，二者都是试图解决样本不平衡带来的模型训练问题，后者从 <strong>样本分布角度对损失函数添加权重因子</strong>，前者从 <strong>样本分类难易程度出发</strong>，使loss聚焦于难分样本。</p>
+<h2 id="为什么有效？"><a href="#为什么有效？" class="headerlink" title="为什么有效？"></a>为什么有效？</h2><p>focal loss从样本难易分类角度出发，解决样本非平衡带来的模型训练问题。</p>
+<p>相信很多人会在这里有一个疑问，样本难易分类角度怎么能够解决样本非平衡的问题，直觉上来讲样本非平衡造成的问题就是样本数少的类别分类难度较高。因此从样本难易分类角度出发，使得loss聚焦于难分样本，解决了样本少的类别分类准确率不高的问题，当然 <strong>难分样本不限于样本少的类别</strong>，也就是 <strong>focal loss不仅仅解决了样本非平衡的问题，同样有助于模型的整体性能提高</strong>。</p>
 <blockquote>
-<ol>
-<li>当两个相关性不同的文档算出来的模型分数相同时，损失函数的值大于0，仍会对这对pair做惩罚，使他们的排序位置区分开；</li>
-<li>损失函数是一个类线性函数，可以有效减少异常样本数据对模型的影响，因此具有鲁棒性。</li>
-</ol>
+<p>样本难分的原因可能有以下两种：1. 样本本身就很难区分，针对所有样本来说；2. 样本不均衡导致的难分。</p>
 </blockquote>
-<h3 id="优化算法"><a href="#优化算法" class="headerlink" title="优化算法"></a>优化算法</h3><p><img src="/pictures/LTR/RankNet/img9.jpeg" alt="损失函数求偏导数"></p>
-<p>损失函数L_ij（上文中表示为C_ij）分别对s_i和s_j求偏微分，可以发现他们之间互为异号，将其定义为lambda：<br><img src="/pictures/LTR/RankNet/img10.jpeg" alt="偏微分互为异号"></p>
-<p>根据上述性质，损失函数的梯度可以改写为：<br><img src="/pictures/LTR/RankNet/img11.webp" alt="损失函数的梯度计算"></p>
-<p>其中，倒数第三行就是 RankNet 的梯度向量，倒数第二行是 <strong>LambdaRank</strong> 的梯度向量，它在 RankNet 的基础上加上了 <strong>nDCG</strong> 的变化量，在优化的过程中融入了评估指标的信息。 nDCG 本身不可微，这里 <strong>只是计算出这个标量，没有涉及到梯度</strong> 的意思。</p>
-<blockquote>
-<p>关于这个变化量的绝对值的物理意义，我个人的理解打个不恰当的比喻就是“火上浇油、推波助澜”，如果一个样本对中的两个样本排序悬殊较大，那么互换位置后的变化量也相对较大，就会产生一个较大的梯度信息，告诉算法这俩不是一路人，你要努力地优化让他们进一步拉开差距；而如果两个样本排序悬殊较小，无论是排名靠前还是靠后，都不会产生较大的梯度信息，或者说是给 RankNet 的原始梯度打了一个大大的折扣，告诉算法这俩是“绝代双骄”或者“难兄难弟”，你不用过分地拆散他们。</p>
-</blockquote>
-<p>最后一行，就是 LambdaMART 的梯度向量，将 Net 换成了 GBDT。</p>
-<p>工程上，XGBoost 提供了得天独厚的 LambdaMART 框架，通过指定 objective&#x3D;”rank:map”, eval_metric&#x3D;”map@n” 等参数实现。需要特别注意的是，排序任务需要对 DMatrix 数据结构设置分组信息，使用 set_group() 方法。</p>
+<p>要想使模型训练过程中聚焦难分类样本，仅仅使得Loss倾向于难分类样本还不够，因为训练过程中模型参数更新取决于Loss的梯度。</p>
+<p>如果Loss中难分类样本权重较高，但是难分类样本的Loss的梯度为0，难分类样本不会影响模型学习过程。</p>
+<p>如下图所示为focal loss的梯度示意图。其中 x_t&#x3D;y*x ，其中 y 为类别， pt &#x3D; sigmoid(x_t) ，对于易分样本， x_t&gt;0 ，即 p_t&gt;0.5 。由图中可以看出，对于focal loss而言，在 x_t&gt;0 时，导数很小，趋近于0。因此对于focal loss，导数中易是难分类样本占主导，因此学习过程更加聚焦正在难分类样本。<br><img src="/pictures/AI/Focal-Loss/img6.png" alt="Focal loss的梯度示意图"></p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p><strong>难分类样本与易分类样本其实是一个动态概念</strong>，也就是说 p_t 会随着训练过程而变化。原先易分类样本即 p_t 大的样本，可能随着训练过程变化为难训练样本即 p_t 小的样本。</p>
+<p>上面讲到，由于Loss梯度中，难训练样本起主导作用，即参数的变化主要是朝着优化难训练样本的方向改变。当参数变化后，可能会使原先易训练的样本 p_t 发生变化，即可能变为难训练样本。当这种情况发生时，可能会造成模型收敛速度慢。</p>
+<p><strong>为了防止难易样本的频繁变化，应当选取小的学习率</strong>。防止学习率过大，造成参数 w 变化较大从而引起 p_t 的巨大变化，造成难易样本的改变。</p>
  
       <!-- reward -->
       
@@ -205,12 +198,12 @@
     <a class="modal-close" href="javascript:;"><i class="ri-close-circle-line"></i></a>
     <p>扫一扫，分享到微信</p>
     <div class="wx-qrcode">
-      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=http://example.com/2022/10/06/LTR/RankNet/" alt="微信分享二维码">
+      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=http://example.com/2022/10/08/AI/Focal-Loss/" alt="微信分享二维码">
     </div>
 </div>
 
 <div id="share-mask"></div>  
-  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/LTR/" rel="tag">LTR</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Pairwise/" rel="tag">Pairwise</a></li></ul>
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/AI/" rel="tag">AI</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Loss/" rel="tag">Loss</a></li></ul>
 
     </footer>
   </div>
@@ -218,19 +211,10 @@
    
   <nav class="article-nav">
     
-      <a href="/2022/10/08/AI/Focal-Loss/" class="article-nav-link">
-        <strong class="article-nav-caption">上一篇</strong>
-        <div class="article-nav-title">
-          
-            Focal Loss
-          
-        </div>
-      </a>
     
-    
-      <a href="/2022/10/06/LTR/Learning-to-Ranking/" class="article-nav-link">
+      <a href="/2022/10/06/LTR/RankNet/" class="article-nav-link">
         <strong class="article-nav-caption">下一篇</strong>
-        <div class="article-nav-title">Learning to Ranking</div>
+        <div class="article-nav-title">RankNet</div>
       </a>
     
   </nav>
